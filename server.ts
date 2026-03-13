@@ -1,32 +1,45 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { runGovernor } from "./server/governors/index.js";
+import { orchestrator } from "./server/orchestrator.js";
+import { GOVERNORATES, type Governorate } from "./server/types.js";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT ?? 3000);
 
   app.use(express.json());
 
-  // API routes
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", agents: orchestrator.listAgents().length });
   });
 
-  // Endpoint to manually trigger a governor
-  app.post("/api/agents/:agentName/run", async (req, res) => {
-    const { agentName } = req.params;
-    try {
-      // In a real app, this would be triggered by a cron job or background worker
-      // We run it asynchronously so we don't block the response
-      runGovernor(agentName).catch(console.error);
-      res.json({ status: "started", agentName });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+  app.get("/api/agents", (_req, res) => {
+    res.json({ agents: orchestrator.listAgents(), governorates: GOVERNORATES });
+  });
+
+  app.post("/api/agents/:governorate/run", async (req, res) => {
+    const governorate = req.params.governorate as Governorate;
+    if (!GOVERNORATES.includes(governorate)) {
+      res.status(404).json({ error: `Unknown governorate ${governorate}` });
+      return;
     }
+
+    const result = await orchestrator.runAgent(governorate);
+    res.json({ governorate, ...result });
   });
 
-  // Vite middleware for development
+  app.post("/api/orchestrator/start", async (_req, res) => {
+    orchestrator.runAllContinuously().catch((error) => {
+      console.error("Orchestrator stopped with error", error);
+    });
+    res.json({ status: "started" });
+  });
+
+  app.post("/api/orchestrator/stop", (_req, res) => {
+    orchestrator.stop();
+    res.json({ status: "stopped" });
+  });
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
