@@ -1,77 +1,203 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { MapPin, Search, ChevronDown } from "lucide-react";
+import { MapPin, Star, Phone, Globe, Search } from "lucide-react";
 import { Link } from "react-router-dom";
-const PAGE_SIZE = 24;
-function catLabel(cat: string) { const m: any = {pharmacy:"Pharmacy",hospital:"Hospital",school:"School",university:"University",restaurant:"Restaurant",fast_food:"Fast Food",cafe:"Cafe",hotel:"Hotel",bank:"Bank",police:"Police",mosque:"Mosque",market:"Market",supermarket:"Supermarket",clinic:"Clinic",dentist:"Dentist",gym:"Gym",park:"Park",fuel:"Fuel",atm:"ATM",kindergarten:"Kindergarten"}; return m[cat] || (cat||"").replace(/_/g," "); }
-function catIcon(cat: string) { const m: any = {pharmacy:"💊",hospital:"🏥",school:"🏫",university:"🎓",restaurant:"🍽️",fast_food:"🍔",cafe:"☕",hotel:"🏨",bank:"🏦",police:"🚓",mosque:"🕌",market:"🛒",supermarket:"🛒",clinic:"🩺",dentist:"🦷",gym:"💪",park:"🌳",fuel:"⛽",atm:"💳"}; return m[cat]||"📍"; }
-function isRTL(s: string) { return /[\u0600-\u06FF]/.test(s); }
+
 export default function Home() {
-  const [rows, setRows] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [cat, setCat] = useState("");
-  const [gov, setGov] = useState("");
-  const [city, setCity] = useState("");
-  const [govs, setGovs] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
-  const [cats, setCats] = useState<string[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [selected, setSelected] = useState<any>(null);
-  useEffect(() => { const t = setTimeout(() => setSearch(searchInput), 400); return () => clearTimeout(t); }, [searchInput]);
-  useEffect(() => { load(true); }, [search, cat, gov, city]);
-  useEffect(() => { supabase.from("directory").select("governorate").limit(2000).then(({data}) => { if(data) setGovs([...new Set(data.map((r:any)=>r.governorate).filter(Boolean))].sort() as string[]); }); supabase.from("directory").select("category").limit(2000).then(({data}) => { if(data) setCats([...new Set(data.map((r:any)=>r.category).filter(Boolean))].sort() as string[]); }); }, []);
-  useEffect(() => { if(!gov){setCities([]);setCity("");return;} supabase.from("directory").select("city").eq("governorate",gov).limit(2000).then(({data})=>{ if(data) setCities([...new Set(data.map((r:any)=>r.city).filter(Boolean))].sort() as string[]); }); setCity(""); }, [gov]);
-  const load = useCallback(async (reset=true) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("All");
+
+  useEffect(() => {
+    fetchBusinesses();
+  }, [category]);
+
+  async function fetchBusinesses() {
     setLoading(true);
-    const off = reset ? 0 : offset;
-    let q = supabase.from("directory").select("id,name,city,governorate,category",{count:"exact"}).order("id").range(off, off+PAGE_SIZE-1);
-    if(search) q = q.ilike("name",`%${search}%`);
-    if(cat) q = q.eq("category",cat);
-    if(gov) q = q.eq("governorate",gov);
-    if(city) q = q.eq("city",city);
-    const {data,count,error} = await q;
-    if(error){console.error(error);setLoading(false);return;}
-    if(reset){setRows(data||[]);setOffset(PAGE_SIZE);}
-    else{setRows(p=>[...p,...(data||[])]);setOffset(off+PAGE_SIZE);}
-    setTotal(count||0);
-    setLoading(false);
-  }, [search,cat,gov,city,offset]);
-  const topCats = ["hospital","pharmacy","school","restaurant","mosque","bank","hotel","fast_food","clinic","market"];
+    try {
+      let query = supabase.from("businesses").select("*").order("rating", { ascending: false });
+      
+      if (category !== "All") {
+        query = query.eq("category", category);
+      }
+      
+      const { data, error } = await query.limit(50);
+      
+      if (error) throw error;
+      setBusinesses(data || []);
+    } catch (error) {
+      console.error("Error fetching businesses:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredBusinesses = businesses.filter((b) =>
+    b.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const categories = [
+    "All",
+    "Restaurants",
+    "Cafes",
+    "Bakeries",
+    "Hotels",
+    "Gyms",
+    "Beauty Salons",
+    "Barbershops",
+    "Pharmacies",
+    "Supermarkets",
+    "Electronics",
+    "Clothing Stores",
+    "Car Services",
+    "Dentists",
+    "Clinics",
+    "Schools",
+    "Co-working Spaces",
+    "Entertainment",
+    "Tourism Locations",
+  ];
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
-      <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2"><span className="text-2xl">🧭</span><div><div className="font-bold text-lg text-amber-400">Iraq Compass</div><div className="text-xs text-neutral-400">Iraqi Business Directory</div></div></div>
-          <div className="flex items-center gap-4"><span className="text-sm text-neutral-400 hidden sm:block"><span className="text-amber-400 font-medium">{total.toLocaleString()}</span> businesses</span><Link to="/admin" className="text-sm text-neutral-400 hover:text-white">Admin</Link></div>
+    <div className="min-h-screen bg-neutral-50">
+      {/* Header */}
+      <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="text-emerald-600 h-6 w-6" />
+            <span className="font-bold text-xl text-neutral-900 tracking-tight">Iraq Compass</span>
+          </div>
+          <Link
+            to="/admin"
+            className="text-sm font-medium text-neutral-600 hover:text-emerald-600 transition-colors"
+          >
+            Admin Dashboard
+          </Link>
         </div>
       </header>
-      <div className="bg-gradient-to-b from-neutral-900 to-neutral-950 py-12 px-4 text-center">
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Discover Iraq Businesses</h1>
-        <p className="text-neutral-400 mb-8">Search across 74,000+ businesses in all governorates</p>
-        <div className="max-w-2xl mx-auto relative mb-6">
-          <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-          <input type="text" className="w-full h-14 bg-neutral-800 border border-neutral-700 rounded-2xl pr-12 pl-4 text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500 text-base" placeholder="Search businesses..." value={searchInput} onChange={e=>setSearchInput(e.target.value)} />
-        </div>
-        <div className="flex gap-3 justify-center flex-wrap max-w-3xl mx-auto mb-4">
-          <select className="h-10 bg-neutral-800 border border-neutral-700 rounded-xl px-3 text-sm text-neutral-300 focus:outline-none focus:border-amber-500" value={gov} onChange={e=>setGov(e.target.value)}><option value="">All Governorates</option>{govs.map(g=><option key={g} value={g}>{g}</option>)}</select>
-          {cities.length>0 && <select className="h-10 bg-neutral-800 border border-neutral-700 rounded-xl px-3 text-sm text-neutral-300 focus:outline-none focus:border-amber-500" value={city} onChange={e=>setCity(e.target.value)}><option value="">All Cities</option>{cities.map(c=><option key={c} value={c}>{c}</option>)}</select>}
-          <select className="h-10 bg-neutral-800 border border-neutral-700 rounded-xl px-3 text-sm text-neutral-300 focus:outline-none focus:border-amber-500" value={cat} onChange={e=>setCat(e.target.value)}><option value="">All Categories</option>{cats.map(c=><option key={c} value={c}>{catLabel(c)}</option>)}</select>
-        </div>
-        <div className="flex gap-2 justify-center flex-wrap max-w-3xl mx-auto">
-          {topCats.map(c=><button key={c} onClick={()=>setCat(cat===c?"":c)} className={`h-9 px-4 rounded-full text-sm border transition-all ${cat===c?"bg-amber-500 border-amber-500 text-neutral-900 font-medium":"bg-transparent border-neutral-700 text-neutral-400 hover:border-amber-500 hover:text-amber-400"}`}>{catIcon(c)} {catLabel(c)}</button>)}
+
+      {/* Hero Section */}
+      <div className="bg-emerald-900 py-16 px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
+          Discover Iraq's Best Businesses
+        </h1>
+        <p className="text-emerald-100 text-lg max-w-2xl mx-auto mb-8">
+          The most comprehensive directory powered by 18 AI Agents working around the clock.
+        </p>
+
+        {/* Search Bar */}
+        <div className="max-w-xl mx-auto relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-neutral-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-10 pr-3 py-4 border border-transparent rounded-xl leading-5 bg-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm shadow-lg"
+            placeholder="Search for restaurants, cafes, hotels..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="text-sm text-neutral-500 mb-6">Showing <span className="text-amber-400 font-medium">{rows.length}</span> of <span className="text-white font-medium">{total.toLocaleString()}</span> results</div>
-        {loading && rows.length===0 ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{Array(12).fill(0).map((_,i)=><div key={i} className="bg-neutral-900 rounded-xl h-32 animate-pulse border border-neutral-800"/>)}</div>
-        : rows.length===0 ? <div className="text-center py-20 text-neutral-500"><div className="text-4xl mb-4">🔍</div><p>No results found</p></div>
-        : <><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{rows.map(b=><div key={b.id} onClick={()=>setSelected(b)} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 cursor-pointer hover:border-amber-500/50 hover:bg-neutral-800 transition-all"><div className="flex items-center gap-1.5 mb-2"><span className="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">{catIcon(b.category)} {catLabel(b.category)}</span></div><h3 className="font-medium text-white mb-2 leading-snug line-clamp-2" dir={isRTL(b.name)?"rtl":"ltr"}>{b.name}</h3><div className="flex items-center gap-1.5 text-xs text-neutral-500"><MapPin className="h-3 w-3"/><span>{b.city}{b.city&&b.governorate?" · ":""}{b.governorate}</span></div></div>)}</div>
-        {rows.length<total&&<div className="text-center mt-10"><button onClick={()=>load(false)} disabled={loading} className="h-12 px-8 border border-neutral-700 rounded-full text-neutral-300 hover:border-amber-500 hover:text-amber-400 transition-all disabled:opacity-40">{loading?"Loading...":"Load More"}</button></div>}</>}
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Filters */}
+          <div className="w-full md:w-64 shrink-0">
+            <h2 className="font-semibold text-neutral-900 mb-4">Categories</h2>
+            <div className="space-y-1">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    category === c
+                      ? "bg-emerald-50 text-emerald-700 font-medium"
+                      : "text-neutral-600 hover:bg-neutral-100"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Business Grid */}
+          <div className="flex-1">
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 animate-pulse h-48"></div>
+                ))}
+              </div>
+            ) : filteredBusinesses.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredBusinesses.map((business) => (
+                  <div
+                    key={business.id}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-semibold text-neutral-900 text-lg leading-tight mb-1">
+                          {business.name}
+                        </h3>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                          {business.category}
+                        </span>
+                      </div>
+                      {business.rating && (
+                        <div className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-lg text-sm font-medium">
+                          <Star className="h-4 w-4 fill-current" />
+                          {business.rating}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 text-sm text-neutral-600">
+                      {business.address && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-neutral-400" />
+                          <span>{business.address}, {business.city}</span>
+                        </div>
+                      )}
+                      {business.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-400" />
+                          <span>{business.phone}</span>
+                        </div>
+                      )}
+                      {business.website && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 shrink-0 text-neutral-400" />
+                          <a
+                            href={business.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-600 hover:underline truncate"
+                          >
+                            {business.website.replace(/^https?:\/\//, '')}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-white rounded-2xl border border-neutral-100">
+                <MapPin className="h-12 w-12 text-neutral-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-900 mb-1">No businesses found</h3>
+                <p className="text-neutral-500">
+                  Try adjusting your search or category filter.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
-      {selected&&<div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={e=>e.target===e.currentTarget&&setSelected(null)}><div className="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 max-w-md w-full"><div className="flex justify-between items-start mb-4"><div><div className="text-xs text-amber-400 mb-1">{catIcon(selected.category)} {catLabel(selected.category)}</div><h2 className="text-xl font-semibold text-white" dir={isRTL(selected.name)?"rtl":"ltr"}>{selected.name}</h2></div><button onClick={()=>setSelected(null)} className="text-neutral-500 hover:text-white text-xl w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-800">✕</button></div><div className="space-y-3 text-sm">{selected.city&&<div className="flex justify-between border-b border-neutral-800 pb-3"><span className="text-neutral-500">City</span><span className="text-white">{selected.city}</span></div>}{selected.governorate&&<div className="flex justify-between border-b border-neutral-800 pb-3"><span className="text-neutral-500">Governorate</span><span className="text-white">{selected.governorate}</span></div>}{selected.phone&&<div className="flex justify-between border-b border-neutral-800 pb-3"><span className="text-neutral-500">Phone</span><span className="text-white" dir="ltr">{selected.phone}</span></div>}{selected.address&&<div className="flex justify-between border-b border-neutral-800 pb-3"><span className="text-neutral-500">Address</span><span className="text-white">{selected.address}</span></div>}</div></div></div>}
     </div>
   );
 }

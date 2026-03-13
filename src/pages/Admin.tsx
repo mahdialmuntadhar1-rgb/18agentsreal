@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Link } from "react-router-dom";
+import { AgentControlPanel } from "../components/admin/AgentControlPanel";
 
 const STATIC_GOVERNORS = [
   { id: 1, name: "Gov-01 Restaurants", category: "Restaurants", emoji: "🍽️", color: "#FF6B35", records: 3247, target: 4000, status: "active", lastRun: "2m ago", errors: 2 },
@@ -360,6 +361,9 @@ export default function Admin() {
             );
           })}
         </div>
+
+        {/* Enrichment Agent Control */}
+        <AgentControlPanel />
 
         {/* Footer */}
         <div style={{
