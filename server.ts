@@ -20,6 +20,7 @@ async function startServer() {
     res.json(orchestrator.getAgents());
   });
 
+  app.post("/api/orchestrator/start", async (req, res) => {
   app.post("/api/orchestrator/start", async (_req, res) => {
     const result = await orchestrator.startAll();
     res.json(result);
