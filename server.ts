@@ -2,7 +2,6 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { runGovernor } from "./server/governors/index.js";
 import { AgentOrchestrator } from "./server/orchestrator.js";
-import { AgentOrchestrator } from "./server/orchestrator";
 
 async function startServer() {
   const app = express();
@@ -21,22 +20,6 @@ async function startServer() {
     res.json(orchestrator.getAgents());
   });
 
-  app.post("/api/orchestrator/start", (req, res) => {
-    orchestrator.startAll();
-
-    res.json({
-      status: "started",
-      agents: orchestrator.getAgents(),
-    });
-  });
-
-  app.post("/api/orchestrator/stop", (req, res) => {
-    orchestrator.stopAll();
-
-    res.json({
-      status: "stopped",
-      agents: orchestrator.getAgents(),
-    });
   app.post("/api/orchestrator/start", async (req, res) => {
     const result = await orchestrator.startAll();
     res.json(result);
@@ -75,7 +58,6 @@ async function startServer() {
     console.log(`Server running on http://localhost:${PORT}`);
 
     console.log("Starting enrichment agents automatically...");
-    orchestrator.startAll();
     void orchestrator.startAll();
   });
 }
