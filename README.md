@@ -33,7 +33,7 @@ You can also trigger it manually:
 ```bash
 curl -X POST http://localhost:3000/api/orchestrator/start
 curl -X POST http://localhost:3000/api/orchestrator/stop
-curl -X POST http://localhost:3000/api/agents/Gov-01%20Restaurants/run
+curl -X POST http://localhost:3000/api/agents/Gov-01%20Baghdad/run
 ```
 
 ### Required environment variables
@@ -43,8 +43,6 @@ curl -X POST http://localhost:3000/api/agents/Gov-01%20Restaurants/run
 - `SUPABASE_SERVICE_ROLE_KEY` (required by server writes)
 
 Optional:
-
-- `GOOGLE_PLACES_API_KEY` (if missing, `RestaurantsGovernor` returns mock data)
 - `GEMINI_API_KEY` (used by the AI Studio app/runtime, not needed for the current governor pipeline)
 - `AGENT_INTERVAL_MINUTES` (orchestrator schedule interval, defaults to 60)
 

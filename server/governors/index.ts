@@ -1,3 +1,12 @@
+import { GovernorateGovernor } from "./governorate-governor.js";
+import { governorateNames } from "./mock-data.js";
+
+const governors = Object.fromEntries(
+  governorateNames.map((name, index) => {
+    const agentName = `Gov-${String(index + 1).padStart(2, "0")} ${name}`;
+    return [agentName, new GovernorateGovernor(agentName, name)];
+  }),
+) as Record<string, GovernorateGovernor>;
 import { RestaurantsGovernor } from "./restaurants.js";
 import { BaghdadGovernor } from "./baghdad.js";
 import { BasraGovernor } from "./basra.js";
