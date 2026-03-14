@@ -39,7 +39,7 @@ This audit is based on direct inspection of the code and git metadata inside thi
 ### External provider dependencies (configured by env)
 - Supabase URL + anon key (frontend).
 - Supabase service role key (backend governor writes).
-- Google Places API key for real gathering; otherwise returns mock data.
+- No external places API key is required; governors use realistic Iraqi mock business datasets.
 - Gemini key appears in setup docs and Vite define for AI Studio context.
 
 ## Repository identity and connection certainty
