@@ -1,0 +1,28 @@
+name: Run agents on schedule
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger-agents:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger orchestrator start endpoint
+        env:
+          ORCHESTRATOR_TRIGGER_URL: ${{ secrets.ORCHESTRATOR_TRIGGER_URL }}
+          ORCHESTRATOR_BEARER_TOKEN: ${{ secrets.ORCHESTRATOR_BEARER_TOKEN }}
+        run: |
+          if [ -z "$ORCHESTRATOR_TRIGGER_URL" ]; then
+            echo "Missing ORCHESTRATOR_TRIGGER_URL secret"
+            exit 1
+          fi
+
+          auth_header=""
+          if [ -n "$ORCHESTRATOR_BEARER_TOKEN" ]; then
+            auth_header="-H Authorization: Bearer $ORCHESTRATOR_BEARER_TOKEN"
+          fi
+
+          # shellcheck disable=SC2086
+          curl -fsS -X POST $auth_header "$ORCHESTRATOR_TRIGGER_URL"
