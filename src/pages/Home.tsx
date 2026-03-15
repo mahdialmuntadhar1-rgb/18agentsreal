@@ -1,306 +1,275 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-import { MapPin, Star, Phone, Globe, Search } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  MapPin, 
+  Search, 
+  Globe, 
+  CheckCircle2, 
+  Coffee, 
+  Stethoscope, 
+  Car, 
+  ShoppingBag, 
+  Activity,
+  ArrowLeft,
+  ExternalLink,
+  Info,
+  Clock
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { motion, AnimatePresence } from "motion/react";
+import { GovernorateGrid } from "../components/GovernorateGrid";
+
+interface Business {
+  id: number;
+  name: string;
+  category: string;
+  city: string;
+  government_rate: string;
+  phone: string;
+  website: string;
+  verification_status: string;
+  created_at: string;
+}
+
+const CATEGORIES = [
+  { id: 'all', icon: <Info size={16} />, label: 'All' },
+  { id: 'health', icon: <Stethoscope size={16} />, label: 'Health' },
+  { id: 'cafes', icon: <Coffee size={16} />, label: 'Cafes' },
+  { id: 'retail', icon: <ShoppingBag size={16} />, label: 'Retail' },
+  { id: 'auto', icon: <Car size={16} />, label: 'Automotive' }
+];
 
 export default function Home() {
-  const [businesses, setBusinesses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [selectedGov, setSelectedGov] = useState<string | null>(null);
+  const [selectedCat, setSelectedCat] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState("All");
-  const [governmentRate, setGovernmentRate] = useState("All");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-
-  const pageSize = 20;
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [agentStatuses, setAgentStatuses] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchBusinesses();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel("public:businesses")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "businesses" },
-        (payload) => {
-          console.log("New business added:", payload.new);
-          // If the new business matches current filters, we might want to refresh
-          // For simplicity, we'll just refresh the first page if we're on it
-          if (currentPage === 1) {
-            fetchBusinesses();
-          }
-        }
-      )
+    fetchAgentStatuses();
+    const subscription = supabase
+      .channel("agent_status_changes")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "agents" }, (payload) => {
+        setAgentStatuses(prev => ({
+          ...prev,
+          [payload.new.agent_name]: payload.new.status
+        }));
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(subscription);
     };
-  }, [category, governmentRate, currentPage]);
+  }, []);
 
-  async function fetchBusinesses() {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from("businesses")
-        .select("*", { count: "exact" })
-        .order("created_at", { ascending: false });
-      
-      if (category !== "All") {
-        query = query.eq("category", category);
-      }
-
-      if (governmentRate !== "All") {
-        query = query.eq("government_rate", governmentRate);
-      }
-      
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      const { data, error, count } = await query.range(from, to);
-      
-      if (error) throw error;
-      setBusinesses(data || []);
-      setTotalCount(count || 0);
-    } catch (error) {
-      console.error("Error fetching businesses:", error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (selectedGov) {
+      fetchBusinesses();
     }
-  }
+  }, [selectedGov, selectedCat]);
 
-  const filteredBusinesses = businesses.filter((b) =>
-    b.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchAgentStatuses = async () => {
+    const { data } = await supabase.from("agents").select("agent_name, status");
+    if (data) {
+      const statusMap: Record<string, string> = {};
+      data.forEach(a => {
+        statusMap[a.agent_name] = a.status;
+      });
+      setAgentStatuses(statusMap);
+    }
+  };
 
-  const categories = [
-    "All",
-    "restaurants",
-    "cafes",
-    "bakeries",
-    "hotels",
-    "gyms",
-    "beauty_salons",
-    "pharmacies",
-    "supermarkets",
-  ];
+  const fetchBusinesses = async () => {
+    setLoading(true);
+    let query = supabase
+      .from("businesses")
+      .select("*")
+      .eq("city", selectedGov);
+
+    if (selectedCat !== "all") {
+      query = query.eq("category", selectedCat);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) console.error("Error fetching businesses:", error);
+    else setBusinesses(data || []);
+    setLoading(false);
+  };
+
+  const filteredBusinesses = useMemo(() => {
+    return businesses.filter(b => 
+      b.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [businesses, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen pb-20">
       {/* Header */}
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MapPin className="text-emerald-600 h-6 w-6" />
-            <span className="font-bold text-xl text-neutral-900 tracking-tight">Iraq Compass</span>
+      <header className="p-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-vibrant-purple rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(188,19,254,0.5)]">
+            <MapPin className="text-white" />
           </div>
-          <Link
-            to="/admin"
-            className="text-sm font-medium text-neutral-600 hover:text-emerald-600 transition-colors"
-          >
-            Admin Dashboard
-          </Link>
+          <h1 className="text-2xl font-bold tracking-tighter text-glow">IRAQ COMPASS</h1>
         </div>
+        <Link to="/admin" className="glass px-4 py-2 rounded-full text-sm font-medium hover:bg-vibrant-purple transition-colors">
+          Admin Portal
+        </Link>
       </header>
 
-      {/* Hero Section */}
-      <div className="bg-emerald-900 py-16 px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
-          Discover Iraq's Best Businesses
-        </h1>
-        <p className="text-emerald-100 text-lg max-w-2xl mx-auto mb-8">
-          The most comprehensive directory powered by 18 AI Agents working around the clock.
-        </p>
-
-        {/* Search Bar */}
-        <div className="max-w-xl mx-auto relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-neutral-400" />
-          </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-4 border border-transparent rounded-xl leading-5 bg-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm shadow-lg"
-            placeholder="Search for restaurants, cafes, hotels..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex gap-8">
-        {/* Sidebar Filters */}
-        <aside className="w-64 shrink-0 hidden lg:block">
-          <div className="bg-white rounded-xl border border-neutral-200 p-6 sticky top-24">
-            <h2 className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-4">Categories</h2>
-            <nav className="space-y-1">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => { setCategory(c); setCurrentPage(1); }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all capitalize ${
-                    category === c
-                      ? "bg-emerald-50 text-emerald-700 font-bold"
-                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                  }`}
-                >
-                  {c.replace("_", " ")}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        {/* Results Area */}
-        <main className="flex-1 min-w-0">
-          {/* Filters Header */}
-          <div className="bg-white rounded-xl border border-neutral-200 p-6 mb-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-bold text-neutral-900">Business Listings</h2>
-                <p className="text-sm text-neutral-500">
-                  Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)}–{Math.min(currentPage * pageSize, totalCount)} of {totalCount.toLocaleString()} businesses collected
+      <main className="max-w-7xl mx-auto mt-8">
+        <AnimatePresence mode="wait">
+          {!selectedGov ? (
+            <motion.div
+              key="gov-grid"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="space-y-8"
+            >
+              <div className="text-center space-y-4 px-6">
+                <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase">
+                  Select <span className="text-vibrant-purple">Governorate</span>
+                </h2>
+                <p className="text-white/60 max-w-xl mx-auto">
+                  Access the real-time business directory factory powered by 18 autonomous agents.
                 </p>
               </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Government Rate</label>
-                  <select
-                    value={governmentRate}
-                    onChange={(e) => { setGovernmentRate(e.target.value); setCurrentPage(1); }}
-                    className="block w-48 pl-3 pr-10 py-2 text-sm border-neutral-200 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 rounded-lg bg-neutral-50"
+
+              <GovernorateGrid onSelect={setSelectedGov} agentStatuses={agentStatuses} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="drill-down"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-8 px-6"
+            >
+              {/* Back & Title */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setSelectedGov(null)}
+                    className="p-3 glass rounded-full hover:bg-vibrant-purple transition-colors"
                   >
-                    <option value="All">All Government Rates</option>
-                    <option value="Rate Level 1">Rate Level 1</option>
-                    <option value="Rate Level 2">Rate Level 2</option>
-                    <option value="Rate Level 3">Rate Level 3</option>
-                    <option value="Rate Level 4">Rate Level 4</option>
-                    <option value="Rate Level 5">Rate Level 5</option>
-                  </select>
+                    <ArrowLeft size={20} />
+                  </button>
+                  <div>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">
+                      {selectedGov} <span className="text-vibrant-purple">Direct Rate</span>
+                    </h2>
+                    <div className="flex items-center gap-2 text-white/40 text-sm">
+                      <Activity size={14} className="text-vibrant-purple" />
+                      <span>Clean Feed Active</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="relative w-full md:w-96">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" size={18} />
+                  <input 
+                    type="text"
+                    placeholder="Search businesses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full glass pl-12 pr-4 py-3 rounded-2xl focus:outline-none focus:border-vibrant-purple transition-colors"
+                  />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Table Container */}
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-neutral-200">
-                <thead className="bg-neutral-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Business Name</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Category</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">City</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Government Rate</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Phone</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Website</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Verification Status</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Date Added</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-neutral-100">
-                  {loading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i} className="animate-pulse">
-                        {Array.from({ length: 8 }).map((_, j) => (
-                          <td key={j} className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-full"></div></td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : filteredBusinesses.length > 0 ? (
-                    filteredBusinesses.map((b) => (
-                      <tr key={b.id} className="hover:bg-neutral-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-bold text-neutral-900">{b.name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 rounded-md uppercase tracking-wider">
-                            {b.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{b.city || "N/A"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs font-medium text-neutral-500">{b.government_rate || "Level 1"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-600">{b.phone || "N/A"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {b.website ? (
-                            <a href={b.website} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700">
-                              <Globe className="h-4 w-4" />
-                            </a>
-                          ) : (
-                            <span className="text-neutral-300">—</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase tracking-wider ${
-                            b.verification_status === "verified" 
-                              ? "bg-emerald-100 text-emerald-700" 
-                              : "bg-amber-100 text-amber-700"
-                          }`}>
-                            {b.verification_status || "pending"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-neutral-400">
-                          {new Date(b.created_at).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-neutral-500 italic">
-                        No businesses found matching your criteria.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+              {/* Category Grid (Horizontal Scroll) */}
+              <div className="flex overflow-x-auto gap-4 py-4 no-scrollbar">
+                {CATEGORIES.map(cat => (
+                  <button 
+                    key={cat.id}
+                    onClick={() => setSelectedCat(cat.id)}
+                    className={`flex-none px-6 py-2 rounded-full border transition-all flex items-center gap-2 ${
+                      selectedCat === cat.id 
+                        ? "bg-vibrant-purple/40 border-vibrant-purple text-white shadow-[0_0_15px_rgba(188,19,254,0.3)]" 
+                        : "bg-purple-900/40 border-purple-500/30 text-white hover:border-vibrant-purple/50"
+                    }`}
+                  >
+                    <span>{cat.icon}</span> {cat.label}
+                  </button>
+                ))}
+              </div>
 
-            {/* Pagination Footer */}
-            <div className="bg-neutral-50 px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  className="px-4 py-2 text-xs font-bold text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Previous
-                </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, Math.ceil(totalCount / pageSize)) }).map((_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 text-xs font-bold rounded-lg transition-all ${
-                          currentPage === pageNum 
-                            ? "bg-emerald-600 text-white" 
-                            : "bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  {Math.ceil(totalCount / pageSize) > 5 && <span className="text-neutral-400 px-2">...</span>}
+              {/* Business List */}
+              <div className="glass rounded-3xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-white/5">
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Business Name</th>
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Category</th>
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Status</th>
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {loading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <tr key={i} className="animate-pulse">
+                            <td colSpan={4} className="px-8 py-10">
+                              <div className="h-4 bg-white/5 rounded w-full"></div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : filteredBusinesses.length > 0 ? (
+                        filteredBusinesses.map((b) => (
+                          <tr key={b.id} className="hover:bg-white/5 transition-colors group">
+                            <td className="px-8 py-6">
+                              <div className="font-bold text-lg">{b.name}</div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-white/60">
+                                  {b.category}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              {b.verification_status === "verified" || b.phone === "Verified" ? (
+                                <div className="flex items-center gap-2 text-vibrant-purple">
+                                  <CheckCircle2 size={16} className="drop-shadow-[0_0_5px_rgba(188,19,254,0.8)]" />
+                                  <span className="text-[10px] font-black uppercase tracking-tighter">Verified ✅</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-white/20">
+                                  <Clock size={16} />
+                                  <span className="text-[10px] font-black uppercase tracking-tighter">Pending ⏳</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              <button className="text-vibrant-purple text-xs font-bold uppercase tracking-widest hover:underline flex items-center gap-1 ml-auto">
+                                [View Map] <ExternalLink size={12} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-8 py-20 text-center text-white/20">
+                            <div className="flex flex-col items-center gap-4">
+                              <Search size={40} />
+                              <div className="font-bold uppercase tracking-widest">No businesses found in this sector</div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <button
-                  disabled={currentPage >= Math.ceil(totalCount / pageSize)}
-                  onClick={() => setCurrentPage(prev => prev + 1)}
-                  className="px-4 py-2 text-xs font-bold text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  Next
-                </button>
               </div>
-              <div className="text-xs text-neutral-400 font-medium">
-                Page {currentPage} of {Math.ceil(totalCount / pageSize) || 1}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
