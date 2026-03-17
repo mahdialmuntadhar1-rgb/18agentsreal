@@ -1,181 +1,119 @@
-import React, { useState } from 'react';
-import { 
-  Upload, 
-  FileJson, 
-  Wand2, 
-  CheckCircle2, 
-  ArrowRight,
-  Loader2,
-  Database
-} from 'lucide-react';
-import { cleaningService } from '../services/dashboardService';
-import { motion } from 'motion/react';
+import { usePipeline } from "../lib/usePipeline";
+import { Sparkles, Play, Square, Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { useState } from "react";
 
-const DataCleaner: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [previewData, setPreviewData] = useState<any[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isPushed, setIsPushed] = useState(false);
+export default function DataCleaner() {
+  const { state, startStage2, stopStage2, startStage3, stopStage3 } = usePipeline();
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = e.target.files?.[0];
-    if (uploadedFile) {
-      setFile(uploadedFile);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const json = JSON.parse(event.target?.result as string);
-          setPreviewData(Array.isArray(json) ? json.slice(0, 10) : [json]);
-        } catch (err) {
-          alert('Invalid JSON file');
-        }
-      };
-      reader.readAsText(uploadedFile);
-    }
+  const act = async (fn: () => Promise<any>, key: string) => {
+    setLoading(key);
+    await fn();
+    setLoading(null);
   };
 
-  const runRepair = () => {
-    setIsProcessing(true);
-    // Simulate processing
-    setTimeout(() => {
-      const repaired = previewData.map(item => ({
-        ...item,
-        name_raw: cleaningService.repairText(item.name_raw || item.name || ''),
-        category_raw: cleaningService.repairText(item.category_raw || item.category || '')
-      }));
-      setPreviewData(repaired);
-      setIsProcessing(false);
-    }, 1500);
-  };
-
-  const pushToSupabase = async () => {
-    if (!file) return;
-    setIsProcessing(true);
-    try {
-      // In a real app, we'd process the whole file, not just preview
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const json = JSON.parse(event.target?.result as string);
-        const records = (Array.isArray(json) ? json : [json]).map(item => ({
-          name_raw: item.name || item.name_raw,
-          category_raw: item.category || item.category_raw,
-          governorate: item.governorate,
-          city: item.city,
-          address: item.address,
-          phone: item.phone,
-          source: 'JSON Upload',
-          coordinates: item.coordinates
-        }));
-        
-        await cleaningService.pushToRaw(records);
-        setIsPushed(true);
-        setIsProcessing(false);
-      };
-      reader.readAsText(file);
-    } catch (error) {
-      alert('Push failed');
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <header>
-        <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">DATA CLEANER</h2>
-        <p className="text-gray-500 font-medium">Repair encoding and normalize raw business data</p>
-      </header>
-
-      {!file ? (
-        <div className="border-4 border-dashed border-gray-200 rounded-3xl p-20 flex flex-col items-center justify-center bg-white hover:border-[#C9A84C] transition-colors group">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 group-hover:text-[#C9A84C] group-hover:bg-[#C9A84C]/5 transition-all mb-6">
-            <Upload size={40} />
-          </div>
-          <h3 className="text-xl font-bold text-[#1B2B5E] mb-2">Upload Raw JSON</h3>
-          <p className="text-gray-400 text-sm mb-8">Drag and drop your business data file here</p>
-          <label className="bg-[#1B2B5E] text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest cursor-pointer hover:scale-105 transition-all shadow-lg">
-            Browse Files
-            <input type="file" accept=".json" className="hidden" onChange={handleFileUpload} />
-          </label>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                <FileJson size={24} />
-              </div>
-              <div>
-                <p className="font-bold text-[#1B2B5E]">{file.name}</p>
-                <p className="text-xs text-gray-400 uppercase font-bold">{(file.size / 1024).toFixed(2)} KB • JSON Format</p>
-              </div>
-            </div>
-            <button onClick={() => setFile(null)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all">
-              Remove
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button 
-              onClick={runRepair}
-              disabled={isProcessing || isPushed}
-              className="flex items-center justify-center gap-3 bg-[#C9A84C] text-[#1B2B5E] p-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="animate-spin" /> : <Wand2 size={20} />}
-              Run Encoding Repair
-            </button>
-            <button 
-              onClick={pushToSupabase}
-              disabled={isProcessing || isPushed}
-              className="flex items-center justify-center gap-3 bg-[#1B2B5E] text-white p-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="animate-spin" /> : <Database size={20} />}
-              Push to raw_businesses
-            </button>
-          </div>
-
-          {isPushed && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-center gap-3 text-emerald-700"
-            >
-              <CheckCircle2 size={20} />
-              <p className="text-sm font-bold">Data successfully pushed to Supabase!</p>
-            </motion.div>
-          )}
-
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h4 className="font-bold text-[#1B2B5E] uppercase text-xs tracking-widest">Data Preview (First 10 Records)</h4>
-              <span className="text-[10px] font-bold text-gray-400 uppercase">Encoding: UTF-8</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    <th className="px-6 py-3">Raw Name</th>
-                    <th className="px-6 py-3">Governorate</th>
-                    <th className="px-6 py-3">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {previewData.map((item, i) => (
-                    <tr key={i}>
-                      <td className="px-6 py-4 font-medium text-[#1B2B5E]">{item.name_raw || item.name}</td>
-                      <td className="px-6 py-4 text-gray-500">{item.governorate}</td>
-                      <td className="px-6 py-4">
-                        <span className="text-[10px] font-black text-emerald-600 uppercase">Ready</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+  if (!state) return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+      <Loader2 className="animate-spin text-amber-500" size={32} />
     </div>
   );
-};
 
-export default DataCleaner;
+  const s1 = state.stage1, s2 = state.stage2, s3 = state.stage3;
+
+  const repairs = [
+    { key: "text-repair",   label: "Text Repair",   desc: "Gemini AI cleans corrupted Arabic & Kurdish text, normalizes encoding errors and OCR artifacts.", stage: s2, startFn: startStage2, stopFn: stopStage2, startKey: "stage2", stopKey: "s2-stop", enabled: s1.status === "done", color: "purple" },
+    { key: "enrichment",    label: "Data Enrichment", desc: "AI fills missing categories, cities, and phone numbers from surrounding context.", stage: s3, startFn: startStage3, stopFn: stopStage3, startKey: "stage3", stopKey: "s3-stop", enabled: s2.status === "done", color: "amber"  },
+  ];
+
+  const COLOR: Record<string, { bg: string; text: string; btn: string; bar: string; border: string }> = {
+    purple: { bg: "bg-purple-50", text: "text-purple-600", btn: "bg-purple-500 hover:bg-purple-600", bar: "bg-purple-500", border: "border-purple-200" },
+    amber:  { bg: "bg-amber-50",  text: "text-amber-600",  btn: "bg-amber-500 hover:bg-amber-600",   bar: "bg-amber-500",  border: "border-amber-200"  },
+  };
+
+  const totalProcessed = (s2.processed ?? 0) + (s3.processed ?? 0);
+  const totalRecords   = state.records.length;
+
+  return (
+    <div className="p-8 space-y-6 bg-slate-100 min-h-screen">
+      <div>
+        <h1 className="text-2xl font-black tracking-wide text-gray-900 uppercase flex items-center gap-2">
+          <Sparkles size={20} className="text-purple-500" /> Data Cleaner
+        </h1>
+        <p className="text-gray-500 text-sm mt-1">AI-powered text repair and data enrichment tools</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Records Processed", value: totalProcessed.toLocaleString(), color: "text-purple-600" },
+          { label: "Text Repaired",     value: s2.processed.toLocaleString(),   color: "text-amber-600"  },
+          { label: "Fields Enriched",   value: s3.processed.toLocaleString(),   color: "text-green-600"  },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className={`text-2xl font-black ${color}`}>{value}</div>
+            <div className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wide">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        {repairs.map(({ key, label, desc, stage, startFn, stopFn, startKey, stopKey, enabled, color }) => {
+          const c = COLOR[color];
+          const isRunning = stage.status === "running";
+          const isDone    = stage.status === "done";
+          const pct = stage.total > 0 ? Math.round((stage.processed / stage.total) * 100) : 0;
+
+          return (
+            <div key={key} className={`bg-white rounded-2xl p-6 shadow-sm border transition-all ${isDone ? c.border : "border-gray-100"}`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center flex-shrink-0`}>
+                  <Sparkles size={20} className={c.text} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="font-bold text-gray-900">{label}</span>
+                    {isDone    && <span className="flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full font-semibold"><CheckCircle2 size={10} /> Done</span>}
+                    {isRunning && <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-semibold"><Loader2 size={10} className="animate-spin" /> Running</span>}
+                    {!isDone && !isRunning && <span className="flex items-center gap-1 text-xs text-gray-400 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full font-semibold"><Clock size={10} /> Idle</span>}
+                  </div>
+                  <div className="text-sm text-gray-400 mb-3">{desc}</div>
+                  {stage.message && <div className="text-xs text-gray-500 mb-2 italic">{stage.message}</div>}
+
+                  {stage.total > 0 && (
+                    <div className="space-y-1 mb-3">
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${c.bar} transition-all duration-700`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-gray-400">
+                        <span>{stage.processed.toLocaleString()} / {stage.total.toLocaleString()} records</span>
+                        <span>{pct}%</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {!enabled && !isDone && (
+                    <div className="text-xs text-gray-400 flex items-center gap-1.5">
+                      <AlertCircle size={11} className="text-amber-400" />
+                      Complete the previous stage first
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-shrink-0">
+                  {isRunning ? (
+                    <button onClick={() => act(stopFn, stopKey)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-semibold shadow-sm transition-all">
+                      <Square size={12} /> Stop
+                    </button>
+                  ) : (
+                    <button onClick={() => act(startFn, startKey)} disabled={!enabled} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-40 ${c.btn}`}>
+                      <Play size={12} /> Run
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
