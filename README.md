@@ -1,36 +1,76 @@
-# Iraq Compass Data Verification Dashboard
+# 18-AGENTS — Iraq Compass Data Dashboard
 
-Internal tool to clean, verify, and approve 70,000+ Iraqi business records.
+  Internal tool to clean, verify, and approve 70,000+ Iraqi business records across 18 governorates.
 
-## Setup Instructions for Replit
+  ## Branch Strategy
 
-1. **Create a new Replit** using the "React" template.
-2. **Upload all files** from this repository to your Replit.
-3. **Configure Environment Variables**:
-   - Go to the **Secrets** tab in Replit.
-   - Add `VITE_SUPABASE_URL` with your Supabase project URL.
-   - Add `VITE_SUPABASE_ANON_KEY` with your Supabase anon key.
-4. **Install Dependencies**:
-   - Replit should automatically detect `package.json` and install dependencies.
-   - If not, run `npm install` in the Shell.
-5. **Run the App**:
-   - Click the **Run** button at the top.
-   - The dashboard will be available in the Webview.
+  - `main` → AI Studio generated code (source of truth)
+  - `production` → Stable, fixed, deployment-ready version
 
-## Supabase Schema
+  ## Project Structure
 
-Before running the app, ensure you have executed the SQL schema provided in the `Step 1` response in your Supabase SQL Editor.
+  ```
+  ├── server.ts          # Express + Vite dev server
+  ├── server/governors/  # Agent governor logic
+  ├── src/               # React frontend
+  │   ├── pages/         # Route pages
+  │   ├── components/    # UI components
+  │   ├── lib/           # Supabase client, utilities
+  │   └── services/      # API services
+  ├── vite.config.ts
+  └── tsconfig.json
+  ```
 
-## Features
+  ## Environment Variables
 
-- **Overview**: Real-time metrics of raw vs verified data.
-- **Review Table**: Batch approve or reject businesses based on verification scores.
-- **Data Cleaner**: Repair encoding issues (mojibake) in Arabic/Kurdish text.
-- **Task Manager**: Launch automated agent tasks for data enrichment.
-- **Export**: Generate clean JSON files ready for the public directory.
+  Copy `.env.example` to `.env` and fill in your values:
 
-## Language Support
+  ```
+  VITE_SUPABASE_URL=         # Your Supabase project URL
+  VITE_SUPABASE_ANON_KEY=    # Your Supabase anon/public key
+  GEMINI_API_KEY=            # Optional: Gemini API key for AI agents
+  ```
 
-- Full RTL support for Arabic and Kurdish.
-- Trilingual data fields (AR, KU, EN).
-- Dir="rtl" implemented on relevant UI components.
+  ## Run on Replit
+
+  1. Import this repository into Replit (use the production branch).
+  2. Go to **Secrets** and add:
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+     - `GEMINI_API_KEY` (optional)
+  3. Run `npm install` in the Shell if dependencies are not auto-installed.
+  4. Click **Run** — the app starts via `npm run dev`.
+
+  ## Commands
+
+  | Command         | Description                                      |
+  |-----------------|--------------------------------------------------|
+  | `npm run dev`   | Start development server (Express + Vite HMR)   |
+  | `npm run build` | Build frontend for production                    |
+  | `npm start`     | Start production server                          |
+  | `npm run lint`  | TypeScript type check                            |
+
+  ## Deploy on Replit
+
+  1. Set **build command** to `npm run build`
+  2. Set **run command** to `npm start`
+  3. Add all environment variables to Replit Secrets
+
+  ## Features
+
+  - **Overview**: Real-time metrics of raw vs verified data
+  - **Review Table**: Batch approve/reject businesses by verification score
+  - **Data Cleaner**: Fix encoding issues in Arabic/Kurdish text
+  - **Task Manager**: Launch automated data enrichment agents
+  - **Export**: Generate clean JSON for the public directory
+  - **Agent Commander**: Control all 18 governorate agents
+
+  ## Supabase Schema
+
+  Execute the SQL in `supabase_schema.sql` in your Supabase SQL Editor before running the app.
+
+  ## Language Support
+
+  - Full RTL support for Arabic and Kurdish
+  - Trilingual data fields (AR, KU, EN)
+  
