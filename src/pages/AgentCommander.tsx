@@ -73,7 +73,17 @@ const AGENTS: Agent[] = [
 
 const AGENT_SYSTEM_PROMPTS: Record<number, string> = {
   1: `You are the Orchestrator for Iraq Compass. Manage 17 specialist agents. Assign tasks, monitor queue health (Pending→Processing→Completed), detect stalled agents, ensure data quality. Categories: restaurants, cafes, bakeries, hotels, gyms, beauty_salons, pharmacies, supermarkets. Be professional.`,
-  2: `You are the Finder Agent for Iraq Compass. Discover real Iraqi business leads. Output JSON: [{raw_name, found_on, source_url, confidence:'high|medium|low', raw_phone, raw_address, notes}]. Never fabricate. HIGH = found on 2+ sources.`,
+  2: `You are the Finder Agent for Iraq Compass. Discover real Iraqi business leads.
+SYSTEM OVERRIDE — LOCATION PROTOCOL v2:
+- GEO-RESTRICTION: Collect only businesses within the assigned governorate's City Center bounding box.
+- SUBURB BLOCK: Skip suburbs, outer districts, and neighboring towns.
+- LANGUAGE RULE: Save name exactly as found in Kurdish/Arabic script (never translate).
+- NAME JSON: {"ku":"...","ar":"...","en":"..."} (only fill available fields).
+- CITY FIELD: Always "[Governorate] City".
+- PHONE VALIDATION: Keep only records with phone length >= 8.
+- CITY CENTER FLAG: Set city_center_only=true for accepted records.
+- DATA REPAIR: Remove trailing tokens like " - Sulaymaniyah" or " (Restaurant)".
+Output JSON only and never fabricate.`,
   3: `You are the Verifier Agent for Iraq Compass. Skeptical validator. Check phones (Zain:0750/0751, Korek:0770/0771, AsiaCell:0770/0772/3), name consistency, address. Score 0-100. Output: {verified, score, recommendation:'publish|hold|reject', failed_fields:[]}`,
   4: `You are the Postcard Designer for Iraq Compass. Create rich business cards: headline(EN/AR/KU max 6 words), tagline, description(2-3 factual sentences), highlights[3], badge(verified/new/popular), call_to_action. Warm local Iraqi tone. Only facts — never invent claims.`,
   5: `You are the Data Cleaner for Iraq Compass. Normalize raw Iraqi business data: deduplicate, fix names(no emojis, correct caps), standardize phones (+964 format), enforce categories: restaurants, cafes, bakeries, hotels, gyms, beauty_salons, pharmacies, supermarkets.`,
@@ -93,6 +103,21 @@ const AGENT_SYSTEM_PROMPTS: Record<number, string> = {
 };
 
 const TASK_TEMPLATES = [
+  { label: 'Apply City Center override', prompt: `SYSTEM OVERRIDE — LOCATION PROTOCOL v2:
+
+GEO-RESTRICTION: Only collect businesses within the City Center bounding box of the assigned governorate. Use the latitude and longitude fields to confirm location. If GPS is unavailable, use address keywords for the city center (not suburbs).
+
+SUBURB BLOCK: Skip and discard any record where the location resolves to a suburb, outer district, or neighboring city. For Sulaymaniyah: skip Chamchamal, Dokan, Rania, Halabja, Penjwin, Said Sadiq. Apply equivalent rules for all other governorates.
+
+LANGUAGE RULE: Save the business name EXACTLY as it appears in its original script (Kurdish or Arabic). Do NOT translate to English. Store as JSON: {"ku": "...", "ar": "...", "en": "..."} — only fill fields that are present.
+
+CITY FIELD: Always save the city field as "[Governorate] City" (e.g., "Sulaymaniyah City").
+
+PHONE VALIDATION: Only save records where phone is not null and has at least 8 characters.
+
+CITY CENTER FLAG: Set city_center_only = true for every accepted record.
+
+DATA REPAIR: Remove trailing text from names like " - Sulaymaniyah" or " (Restaurant)".` },
   { label: 'Find businesses in Sulaymaniyah', prompt: 'Find 10 verified businesses in Sulaymaniyah Iraq. Output JSON: [{name, name_ar, name_ku, category, city, phone, address, website, score, sources:[]}]' },
   { label: 'Clean uploaded dataset', prompt: 'Clean and normalize the attached dataset. Remove duplicates, fix phone format (07XX-XXXXXXX), remove emojis from names. Output corrected JSON array.' },
   { label: 'Verify business list', prompt: 'Verify each business. Phone check: Zain 0750/0751, Korek 0770/0771, AsiaCell 0770/0772/3. Score 0-100. Output: [{name, score, recommendation, issues:[]}]' },
@@ -245,16 +270,25 @@ export default function AgentCommander() {
 
       const cleaned = allRecords.map(r => {
         const nameEn = r.name || r.business_name || r.raw_name || '';
-        const city = r.city || 'Sulaymaniyah';
+        const governorate = r.governorate || r.city || 'Sulaymaniyah';
+        const city = `${governorate} City`;
         const slug = nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
           + '-' + city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         return {
           business_id: slug,
-          name: { en: nameEn, ar: r.name_ar || '', ku: r.name_ku || '' },
+          name: {
+            en: r.name_en || (typeof r.name === 'string' ? r.name : '') || nameEn,
+            ar: r.name_ar || r.name?.ar || '',
+            ku: r.name_ku || r.name?.ku || '',
+          },
           category: r.category || 'restaurants',
+          governorate,
           city,
           phone: r.phone || r.raw_phone || null,
           address: r.address || r.raw_address || null,
+          latitude: r.latitude || r.lat || r.location?.coordinates?.lat || null,
+          longitude: r.longitude || r.lng || r.location?.coordinates?.lng || null,
+          city_center_only: true,
           verification_score: r.data_quality_score || r.score || 0,
           verification_status: 'pending',
           verified: false,

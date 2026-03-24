@@ -43,7 +43,8 @@ export class SocialScraperAgent extends BaseAgent {
       let query = this.supabase
         .from("businesses")
         .select("*")
-        .eq("city", governorate)
+        .ilike("city", `%${governorate}%`)
+        .eq("city_center_only", true)
         .limit(limit);
 
       if (options?.category) {

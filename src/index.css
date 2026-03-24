@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -57,6 +58,13 @@
 }
 
 @layer utilities {
+  .business-name {
+    font-family: 'Vazirmatn', sans-serif;
+    font-weight: 700;
+    direction: rtl;
+    unicode-bidi: embed;
+  }
+
   .glass {
     @apply bg-glass-bg border border-glass-border backdrop-blur-xl;
   }

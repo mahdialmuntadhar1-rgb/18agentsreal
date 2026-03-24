@@ -16,3 +16,20 @@ if (!SUPABASE_URL || !SUPABASE_ANON) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+export const getVerifiedBusinesses = async (governorate?: string) => {
+  let query = supabase
+    .from('businesses')
+    .select('id, name, phone, city, category, address, contact, location, created_at')
+    .eq('verification_status', 'verified')
+    .eq('city_center_only', true)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (governorate) {
+    query = query.ilike('city', `%${governorate}%`);
+  }
+
+  const { data, error } = await query;
+  return { data, error };
+};

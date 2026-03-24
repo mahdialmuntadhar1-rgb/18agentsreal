@@ -27,8 +27,12 @@ CREATE TABLE IF NOT EXISTS businesses (
   name            JSONB NOT NULL DEFAULT '{}',        -- { "en": "", "ar": "", "ku": "" }
   category        TEXT NOT NULL,
   subcategory     TEXT,
+  governorate     TEXT,
   city            TEXT NOT NULL,
   district        TEXT,
+  latitude        FLOAT8,
+  longitude       FLOAT8,
+  city_center_only BOOLEAN DEFAULT false,
 
   -- Verification
   verified              BOOLEAN DEFAULT false,
@@ -154,8 +158,10 @@ CREATE TABLE IF NOT EXISTS agent_logs (
 -- 7. INDEXES
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_businesses_city          ON businesses(city);
+CREATE INDEX IF NOT EXISTS idx_businesses_governorate   ON businesses(governorate);
 CREATE INDEX IF NOT EXISTS idx_businesses_category      ON businesses(category);
 CREATE INDEX IF NOT EXISTS idx_businesses_verified      ON businesses(verified);
+CREATE INDEX IF NOT EXISTS idx_businesses_city_center   ON businesses(city_center_only);
 CREATE INDEX IF NOT EXISTS idx_agent_tasks_status       ON agent_tasks(status);
 CREATE INDEX IF NOT EXISTS idx_agent_tasks_agent        ON agent_tasks(assigned_agent);
 CREATE INDEX IF NOT EXISTS idx_agent_logs_agent         ON agent_logs(agent_name);
@@ -164,7 +170,62 @@ CREATE INDEX IF NOT EXISTS idx_verified_biz_status      ON verified_businesses(s
 CREATE INDEX IF NOT EXISTS idx_raw_biz_governorate      ON raw_businesses(governorate);
 
 -- ============================================================
--- 8. ROW LEVEL SECURITY
+-- 8. CITY-CENTER DIRECTORY VIEW + INITIAL GEOCODING RULES
+-- ============================================================
+CREATE OR REPLACE VIEW live_directory AS
+SELECT *
+FROM businesses
+WHERE verification_status = 'verified'
+  AND city_center_only = true;
+
+-- Optional one-time city-center tagging pass.
+-- The ±0.08/±0.08 box is intentionally conservative for downtown-only filtering.
+WITH governorate_centers(governorate, city_label, center_lat, center_lng) AS (
+  VALUES
+    ('Sulaymaniyah', 'Sulaymaniyah City', 35.5577, 45.4351),
+    ('Baghdad', 'Baghdad City', 33.3152, 44.3661),
+    ('Erbil', 'Erbil City', 36.1911, 44.0090),
+    ('Basra', 'Basra City', 30.5085, 47.7804),
+    ('Duhok', 'Duhok City', 36.8673, 42.9815),
+    ('Najaf', 'Najaf City', 31.9960, 44.3176),
+    ('Karbala', 'Karbala City', 32.6159, 44.0241),
+    ('Kirkuk', 'Kirkuk City', 35.4681, 44.3922),
+    ('Mosul', 'Mosul City', 36.3350, 43.1189),
+    ('Anbar', 'Ramadi City', 33.4358, 43.2996),
+    ('Diyala', 'Baquba City', 33.7450, 44.6386),
+    ('Wasit', 'Kut City', 32.5006, 45.8231),
+    ('Babil', 'Hillah City', 32.4769, 44.4321),
+    ('Muthanna', 'Samawah City', 31.3161, 45.2844),
+    ('Dhi Qar', 'Nasiriyah City', 31.0448, 46.2537),
+    ('Maysan', 'Amarah City', 31.8358, 47.1463),
+    ('Qadisiyyah', 'Diwaniyah City', 31.9888, 44.9291),
+    ('Saladin', 'Tikrit City', 34.6057, 43.6781)
+)
+UPDATE businesses b
+SET city_center_only = true,
+    city = c.city_label
+FROM governorate_centers c
+WHERE b.governorate ILIKE '%' || c.governorate || '%'
+  AND b.latitude IS NOT NULL
+  AND b.longitude IS NOT NULL
+  AND b.latitude BETWEEN (c.center_lat - 0.08) AND (c.center_lat + 0.08)
+  AND b.longitude BETWEEN (c.center_lng - 0.08) AND (c.center_lng + 0.08);
+
+-- Example explicit suburb exclusion for Sulaymaniyah.
+UPDATE businesses
+SET city_center_only = false
+WHERE governorate ILIKE '%Sulaymaniyah%'
+  AND (
+    city ILIKE '%Chamchamal%' OR
+    city ILIKE '%Dokan%' OR
+    city ILIKE '%Rania%' OR
+    city ILIKE '%Halabja%' OR
+    city ILIKE '%Penjwin%' OR
+    city ILIKE '%Said Sadiq%'
+  );
+
+-- ============================================================
+-- 9. ROW LEVEL SECURITY
 -- ============================================================
 ALTER TABLE businesses          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE raw_businesses      ENABLE ROW LEVEL SECURITY;
@@ -236,7 +297,7 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================================
--- 9. RPC: claim_next_task  (concurrency-safe task queue)
+-- 10. RPC: claim_next_task  (concurrency-safe task queue)
 --    Used by BaseGovernor for FOR UPDATE SKIP LOCKED pattern
 -- ============================================================
 CREATE OR REPLACE FUNCTION claim_next_task(p_agent_name TEXT)
@@ -264,7 +325,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================
--- 10. SEED: 18 Governors + QC Overseer
+-- 11. SEED: 18 Governors + QC Overseer
 -- ============================================================
 INSERT INTO agents (agent_name, category, status, target)
 VALUES

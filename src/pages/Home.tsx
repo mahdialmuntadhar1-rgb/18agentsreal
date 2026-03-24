@@ -20,9 +20,10 @@ import {
   MessageCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { getVerifiedBusinesses, supabase } from "../lib/supabase";
 import { motion, AnimatePresence } from "motion/react";
 import { GovernorateGrid } from "../components/GovernorateGrid";
+import { getBusinessName } from "../lib/utils";
 
 interface Business {
   id: string;
@@ -89,23 +90,15 @@ export default function Home() {
 
   const fetchBusinesses = async () => {
     setLoading(true);
-    let query = supabase
-      .from('businesses')
-      .select('*')
-      .eq('verified', true);
-
-    if (selectedGov) {
-      query = query.eq('city', selectedGov);
-    }
-
-    if (selectedCat !== 'all') {
-      query = query.eq('category', selectedCat);
-    }
-
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data, error } = await getVerifiedBusinesses(selectedGov || undefined);
     
     if (error) console.error('Supabase error:', error);
-    else setBusinesses(data ?? []);
+    else {
+      const scoped = (data ?? []).filter((b: Business) =>
+        selectedCat === 'all' ? true : b.category === selectedCat
+      );
+      setBusinesses(scoped);
+    }
     setLoading(false);
   };
 
@@ -239,7 +232,7 @@ export default function Home() {
                         filteredBusinesses.map((b) => (
                           <tr key={b.id} className="hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => setSelectedBusiness(b)}>
                             <td className="px-8 py-6">
-                              <div className="font-bold text-lg">{b.name?.en || 'Unnamed'}</div>
+                              <div className="font-bold text-lg business-name">{getBusinessName(b.name)}</div>
                               <div className="text-xs text-white/40">{b.district}</div>
                             </td>
                             <td className="px-8 py-6">
@@ -346,7 +339,7 @@ function BusinessPostcard({ business, onClose }: { business: Business; onClose: 
             )}
           </div>
           <div className="mb-2">
-            <h3 className="text-3xl font-black uppercase tracking-tighter">{business.name[activeTab]}</h3>
+            <h3 className="text-3xl font-black uppercase tracking-tighter business-name">{business.name[activeTab] || getBusinessName(business.name)}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-vibrant-purple font-bold text-xs uppercase tracking-widest">{business.category}</span>
               <span className="text-white/40 text-xs">•</span>
