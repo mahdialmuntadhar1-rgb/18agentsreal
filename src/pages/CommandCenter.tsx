@@ -1,348 +1,417 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Terminal, Play, Square, Upload, CheckCircle2, AlertCircle, 
-  Clock, Activity, Database, Sparkles, ShieldCheck, FileJson, 
-  FileText, Settings, Zap
+  Terminal, Play, Square, CheckCircle2, AlertCircle, 
+  Activity, Database, ShieldCheck, FileText, 
+  Search, Filter, Zap, Bot, Info, CheckCircle,
+  Wand2, Compass, Globe, Trash2, RefreshCw,
+  LayoutDashboard, Terminal as TerminalIcon,
+  CheckSquare, AlertTriangle, Download
 } from 'lucide-react';
 
-const GOVERNORATES = [
-  'Baghdad', 'Basra', 'Mosul', 'Erbil', 'Sulaymaniyah', 'Karbala', 
-  'Najaf', 'Kirkuk', 'Anbar', 'Duhok', 'Diyala', 'Wasit', 
-  'Babil', 'Qadisiyah', 'Maysan', 'Dhi Qar', 'Salahuddin', 'Muthanna'
+const CITIES = [
+  { id: 'sulaymaniyah', en: 'Sulaymaniyah', ar: 'سلێمانی', count: 5000 },
+  { id: 'baghdad', en: 'Baghdad', ar: 'بغداد', count: 16200 },
+  { id: 'karbala', en: 'Karbala', ar: 'كەربەلا', count: 3900 },
+  { id: 'erbil', en: 'Erbil', ar: 'هەولێر', count: 3300 },
+  { id: 'basra', en: 'Basra', ar: 'بصرة', count: 7000 },
+  { id: 'najaf', en: 'Najaf', ar: 'نجف', count: 2900 },
+  { id: 'mosul', en: 'Mosul', ar: 'موصل', count: 4400 },
+  { id: 'kirkuk', en: 'Kirkuk', ar: 'كەركوك', count: 1800 },
+  { id: 'diyala', en: 'Diyala', ar: 'ديالى', count: 3000 },
+  { id: 'anbar', en: 'Anbar', ar: 'انبار', count: 1800 },
+  { id: 'dohuk', en: 'Dohuk', ar: 'دهوك', count: 1600 },
+  { id: 'wasit', en: 'Wasit', ar: 'واسط', count: 1500 },
+  { id: 'muthanna', en: 'Muthanna', ar: 'مثنى', count: 1000 },
+  { id: 'qadisiyah', en: 'Qadisiyah', ar: 'قادسية', count: 1500 },
+  { id: 'maysan', en: 'Maysan', ar: 'ميسان', count: 1400 },
+  { id: 'thi_qar', en: 'Thi-Qar', ar: 'ذي قار', count: 3200 },
+  { id: 'babil', en: 'Babil', ar: 'بابل', count: 1600 },
+  { id: 'saladin', en: 'Saladin', ar: 'صلاح الدين', count: 1750 },
+];
+
+const AGENTS = [
+  { id: 'cleaner', icon: <Wand2 size={20} />, name: 'Text Cleaner', desc: 'Repairs Arabic/Kurdish text', tasks: 1842, success: 98 },
+  { id: 'enricher', icon: <Database size={20} />, name: 'Data Enrichment', desc: 'Fills phones, categories', tasks: 934, success: 94 },
+  { id: 'validator', icon: <ShieldCheck size={20} />, name: 'Quality Validator', desc: 'Scores & flags entries', tasks: 721, success: 100 },
+  { id: 'verifier', icon: <CheckCircle size={20} />, name: 'Human Verifier', desc: 'Queues for human review', tasks: 312, success: 100 },
+  { id: 'social', icon: <Globe size={20} />, name: 'Social Finder', desc: 'Finds Instagram / Facebook', tasks: 0, success: 0 },
+  { id: 'exporter', icon: <Download size={20} />, name: 'Export Agent', desc: 'Exports to Supabase', tasks: 24, success: 100 },
 ];
 
 interface LogEntry {
   id: string;
   time: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'ok' | 'warn' | 'agent';
 }
 
 export default function CommandCenter() {
-  const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState<{role: string, text: string}[]>([
-    { role: 'agent', text: 'System initialized. Ready for commands.' }
-  ]);
-  const [isAutoMode, setIsAutoMode] = useState(false);
-  const [systemStatus, setSystemStatus] = useState<'idle' | 'running' | 'stopping'>('idle');
-  const [selectedGovs, setSelectedGovs] = useState<string[]>([]);
+  const [selectedCities, setSelectedCities] = useState<Set<string>>(new Set(['sulaymaniyah']));
+  const [selectedTask, setSelectedTask] = useState('social');
+  const [isRunning, setIsRunning] = useState(false);
+  const [instruction, setInstruction] = useState('Search for Instagram and Facebook pages for each business in selected cities. Add found URLs to the directory list.');
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Mock real-time logs
-  useEffect(() => {
-    if (systemStatus === 'running') {
-      const interval = setInterval(() => {
-        const agents = ['Cleaner', 'Enricher', 'Postcard', 'QC'];
-        const govs = selectedGovs.length > 0 ? selectedGovs : ['Baghdad', 'Erbil'];
-        const agent = agents[Math.floor(Math.random() * agents.length)];
-        const gov = govs[Math.floor(Math.random() * govs.length)];
-        const actions = ['processing record', 'removed duplicate', 'categorizing business', 'generated postcard', 'flagged for review'];
-        const action = actions[Math.floor(Math.random() * actions.length)];
-        
-        const newLog: LogEntry = {
-          id: Date.now().toString(),
-          time: new Date().toLocaleTimeString([], { hour12: false }),
-          message: `${agent}-${gov.substring(0,3).toUpperCase()} ${action} ${Math.floor(Math.random() * 1000)}`,
-          type: action.includes('removed') ? 'success' : action.includes('flagged') ? 'warning' : 'info'
-        };
-        
-        setLogs(prev => [newLog, ...prev].slice(0, 50));
-      }, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [systemStatus, selectedGovs]);
+  const [cityProgress, setCityProgress] = useState<Record<string, number>>({});
+  const [doneCount, setDoneCount] = useState(0);
+  const [serverTime, setServerTime] = useState(new Date().toLocaleTimeString([], { hour12: false }));
+  
+  const logEndRef = useRef<HTMLDivElement>(null);
+  const runIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    setChatHistory(prev => [...prev, { role: 'user', text: chatInput }]);
-    
-    // Mock Agent Response
-    setTimeout(() => {
-      let response = `Command received: "${chatInput}". Processing...`;
-      if (chatInput.toLowerCase().includes('clean') && chatInput.toLowerCase().includes('sulaymaniyah')) {
-        response = `Cleaner Agent started for Sulaymaniyah\nProcessing 3,200 records\nEstimated completion: 2 minutes`;
-        setSystemStatus('running');
-        if (!selectedGovs.includes('Sulaymaniyah')) {
-          setSelectedGovs([...selectedGovs, 'Sulaymaniyah']);
-        }
-      }
-      setChatHistory(prev => [...prev, { role: 'agent', text: response }]);
+    const timer = setInterval(() => {
+      setServerTime(new Date().toLocaleTimeString([], { hour12: false }));
     }, 1000);
-    
-    setChatInput('');
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const addLog = (type: LogEntry['type'], message: string) => {
+    const newLog: LogEntry = {
+      id: Math.random().toString(36).substring(7),
+      time: new Date().toLocaleTimeString([], { hour12: false }),
+      message,
+      type,
+    };
+    setLogs(prev => [...prev, newLog].slice(-100));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      setChatHistory(prev => [
-        ...prev, 
-        { role: 'user', text: `Uploaded file: ${file.name}` },
-        { role: 'agent', text: `${file.name.toUpperCase()} uploaded successfully.\nRecords detected: ${Math.floor(Math.random() * 30000) + 1000}\nGovernorates detected: Baghdad, Basra, Erbil.\nStored in pipeline database.` }
-      ]);
+  const toggleCity = (id: string) => {
+    if (isRunning) return;
+    const next = new Set(selectedCities);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedCities(next);
+  };
+
+  const selectAll = () => {
+    if (isRunning) return;
+    setSelectedCities(new Set(CITIES.map(c => c.id)));
+  };
+
+  const clearAll = () => {
+    if (isRunning) return;
+    setSelectedCities(new Set());
+  };
+
+  const launchTasks = () => {
+    if (selectedCities.size === 0) {
+      addLog('warn', 'No cities selected. Tick at least one city.');
+      return;
     }
+    if (!selectedTask) {
+      addLog('warn', 'No task selected.');
+      return;
+    }
+
+    setIsRunning(true);
+    setDoneCount(0);
+    setLogs([]);
+    
+    const cities = Array.from(selectedCities) as string[];
+    const initialProgress: Record<string, number> = {};
+    cities.forEach((id: string) => (initialProgress as any)[id] = 0);
+    setCityProgress(initialProgress);
+
+    addLog('info', `▶ Task launched: "${instruction}"`);
+    addLog('info', `Cities: ${cities.map(id => CITIES.find(c => c.id === id)?.en).join(', ')}`);
+    addLog('agent', `${selectedTask.toUpperCase()} agent activated`);
+
+    const messages: Record<string, ((c: string) => string)[]> = {
+      social: [
+        (c) => `🔍 Searching Instagram for businesses in ${c}…`,
+        (c) => `📘 Scanning Facebook pages for ${c}…`,
+        (c) => `✅ Found ${Math.floor(Math.random() * 120 + 30)} social profiles in ${c}`,
+        (c) => `💾 Writing Instagram URLs to directory for ${c}`,
+        (c) => `💾 Writing Facebook URLs to directory for ${c}`,
+        (c) => `✔ ${c} — social enrichment complete`,
+      ],
+      text: [(c) => `Repairing Arabic text in ${c}…`, (c) => `Fixed encoding in ${c}`],
+      enrich: [(c) => `Filling phones/coords in ${c}…`, (c) => `Enrichment done for ${c}`],
+      qc: [(c) => `Running QC on ${c}…`, (c) => `QC complete for ${c}`],
+      export: [(c) => `Exporting ${c} to Supabase…`, (c) => `Export done for ${c}`],
+    };
+
+    const msgs = messages[selectedTask] || messages.social;
+
+    runIntervalRef.current = setInterval(() => {
+      const cities = [...selectedCities] as string[];
+      const cityId = cities[Math.floor(Math.random() * cities.length)];
+      const cityName = (CITIES.find(c => c.id === cityId)?.en || cityId) as string;
+      const msgsForTask = ((messages as any)[selectedTask] || messages.social) as any[];
+      const msgFn = msgsForTask[Math.floor(Math.random() * msgsForTask.length)] as (c: string) => string;
+      addLog('ok', msgFn(cityName));
+
+      setCityProgress((prev: Record<string, number>) => {
+        const next = { ...prev } as any;
+        let allDone = true;
+        let completedCount = 0;
+
+        cities.forEach((id: string) => {
+          if (next[id] < 100) {
+            next[id] = Math.min(100, next[id] + Math.random() * 10 + 2);
+            if (next[id] < 100) allDone = false;
+            else {
+              addLog('ok', `✔ ${CITIES.find(c => c.id === id)?.en} — task complete`);
+            }
+          }
+          if (next[id] >= 100) completedCount++;
+        });
+
+        setDoneCount(completedCount);
+
+        if (allDone) {
+          if (runIntervalRef.current) clearInterval(runIntervalRef.current);
+          setIsRunning(false);
+          addLog('info', `🏁 All tasks complete · ${cities.length} cities processed`);
+        }
+        return next;
+      });
+    }, 800);
   };
 
-  const toggleGov = (gov: string) => {
-    setSelectedGovs(prev => 
-      prev.includes(gov) ? prev.filter(g => g !== gov) : [...prev, gov]
-    );
+  const stopAll = () => {
+    if (runIntervalRef.current) clearInterval(runIntervalRef.current);
+    setIsRunning(false);
+    addLog('warn', '■ All agents stopped by user');
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-300 font-sans p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
+    <div className="min-h-screen text-[#e2d9c8] font-mono p-4 md:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
         
         {/* Header */}
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#111827] p-6 rounded-2xl border border-slate-800 shadow-2xl">
+        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-gold/20">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-              <Terminal className="text-cyan-400" size={32} />
-              AI AGENT COMMAND CENTER
+            <h1 className="text-2xl font-bold text-gold tracking-wider flex items-center gap-3">
+              <Zap className="text-gold animate-pulse" size={28} />
+              AGENT COMMAND CENTER
             </h1>
-            <p className="text-slate-400 mt-1 text-sm">Iraq Compass Nationwide Business Directory Operations</p>
+            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">
+              AI Operations Cockpit · 18 Governorates · <span className="text-gold">74,049</span> records
+            </p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-lg border border-slate-800">
-              <span className="relative flex h-3 w-3">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${systemStatus === 'running' ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
-                <span className={`relative inline-flex rounded-full h-3 w-3 ${systemStatus === 'running' ? 'bg-emerald-500' : 'bg-slate-500'}`}></span>
-              </span>
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-300">
-                {systemStatus === 'running' ? 'System Active' : 'System Idle'}
-              </span>
+            <div className="text-[10px] text-slate-500 font-mono">
+              Server · {serverTime}
             </div>
-            <button 
-              onClick={() => setIsAutoMode(!isAutoMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-widest transition-all ${
-                isAutoMode 
-                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]' 
-                  : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
-              }`}
-            >
-              <Zap size={16} />
-              Auto Pipeline
-            </button>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full text-[10px] text-green-400 font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              Live
+            </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* LEFT COLUMN: Chat & Controls */}
-          <div className="lg:col-span-5 flex flex-col gap-6">
-            
-            {/* Agent Chat & Task Box */}
-            <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl flex flex-col h-[400px]">
-              <div className="p-4 border-b border-slate-800 bg-slate-900/50 rounded-t-2xl flex justify-between items-center">
-                <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                  <Terminal size={16} className="text-cyan-400" />
-                  Agent Terminal
-                </h2>
-                <div className="flex gap-2">
-                  <button onClick={() => fileInputRef.current?.click()} className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition-colors" title="Upload CSV/JSON">
-                    <Upload size={14} />
-                  </button>
-                  <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".csv,.json" />
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Running', value: isRunning ? ([...selectedCities] as string[]).filter((id: string) => ((cityProgress as any)[id] || 0) < 100).length : 0, color: 'text-gold' },
+            { label: 'Queued', value: isRunning ? ([...selectedCities] as string[]).filter((id: string) => ((cityProgress as any)[id] || 0) === 0).length : 0, color: 'text-gold' },
+            { label: 'Done', value: doneCount, color: 'text-gold', delta: doneCount > 0 ? `+${doneCount} completed` : '' },
+            { label: 'Governorates', value: 18, color: 'text-gold' }
+          ].map((stat, i) => (
+            <div key={i} className="bg-white/5 border border-gold/10 rounded-xl p-4 shadow-xl">
+              <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{stat.label}</div>
+              {stat.delta && <div className="text-[10px] text-green-500 mt-1">{stat.delta}</div>}
+            </div>
+          ))}
+        </div>
+
+        {/* Agent Status Row */}
+        <div className="space-y-4">
+          <div className="text-[10px] text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
+            Agent Status
+            <div className="h-px flex-1 bg-gold/10" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {AGENTS.map(agent => {
+              const isActive = isRunning && (
+                (selectedTask === 'text' && agent.id === 'cleaner') ||
+                (selectedTask === 'enrich' && agent.id === 'enricher') ||
+                (selectedTask === 'social' && agent.id === 'social') ||
+                (selectedTask === 'qc' && agent.id === 'validator') ||
+                (selectedTask === 'export' && agent.id === 'exporter')
+              );
+              return (
+                <div key={agent.id} className="bg-white/5 border border-gold/10 rounded-xl p-3 flex items-center gap-4">
+                  <div className="text-gold/60">{agent.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-bold text-slate-200">{agent.name}</div>
+                    <div className="text-[9px] text-slate-500 truncate">{agent.desc}</div>
+                  </div>
+                  <div className={`text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-widest ${
+                    isActive ? 'bg-green-500/20 text-green-400 animate-pulse' : 'bg-white/5 text-slate-500'
+                  }`}>
+                    {isActive ? 'Running' : 'Idle'}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                {chatHistory.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-xl text-sm font-mono whitespace-pre-wrap ${
-                      msg.role === 'user' 
-                        ? 'bg-cyan-900/30 text-cyan-100 border border-cyan-800/50 rounded-tr-sm' 
-                        : 'bg-slate-800/50 text-slate-300 border border-slate-700 rounded-tl-sm'
-                    }`}>
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-              
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 bg-slate-900/50 rounded-b-2xl flex gap-2">
-                <input 
-                  type="text" 
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="e.g., Clean the businesses in Sulaymaniyah..."
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors font-mono"
-                />
-                <button type="submit" className="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors">
-                  SEND
-                </button>
-              </form>
-            </div>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Start / Stop Control Panel */}
-            <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl p-6">
-              <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Pipeline Controls</h2>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <button 
-                  onClick={() => setSystemStatus('running')}
-                  disabled={systemStatus === 'running'}
-                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl font-bold uppercase tracking-widest transition-all bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Play size={24} />
-                  Start Agents
-                </button>
-                <button 
-                  onClick={() => setSystemStatus('idle')}
-                  disabled={systemStatus === 'idle'}
-                  className="flex flex-col items-center justify-center gap-2 py-4 rounded-xl font-bold uppercase tracking-widest transition-all bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Square size={24} />
-                  Stop Agents
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: 'Running', color: 'bg-emerald-500' },
-                  { label: 'Processing', color: 'bg-amber-500' },
-                  { label: 'Error', color: 'bg-rose-500' },
-                  { label: 'Idle', color: 'bg-slate-500' }
-                ].map(status => (
-                  <div key={status.label} className="flex flex-col items-center gap-1 bg-slate-900/50 py-2 rounded-lg border border-slate-800">
-                    <div className={`w-3 h-3 rounded-full ${status.color} shadow-[0_0_8px_currentColor] opacity-80`} />
-                    <span className="text-[10px] uppercase tracking-wider text-slate-400">{status.label}</span>
-                  </div>
-                ))}
-              </div>
+        {/* Command Box */}
+        <div className="bg-navy/80 border border-gold rounded-2xl p-6 shadow-[0_0_40px_rgba(201,168,76,0.08)] space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="text-2xl">🎯</div>
+            <div>
+              <h2 className="text-sm font-bold text-gold uppercase tracking-widest">Task Commander</h2>
+              <p className="text-[10px] text-slate-500 mt-0.5">Select cities + task type → write instruction → launch</p>
             </div>
-
-            {/* Pipeline Progress View */}
-            <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl p-6">
-              <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-4">Pipeline Progress</h2>
-              <div className="space-y-4">
-                {[
-                  { name: 'Data Ingestion', progress: 100, color: 'bg-blue-500' },
-                  { name: 'Data Cleaning', progress: systemStatus === 'running' ? 75 : 0, color: 'bg-cyan-500' },
-                  { name: 'Data Enrichment', progress: systemStatus === 'running' ? 45 : 0, color: 'bg-purple-500' },
-                  { name: 'Postcard Generation', progress: systemStatus === 'running' ? 10 : 0, color: 'bg-pink-500' },
-                  { name: 'Quality Control', progress: systemStatus === 'running' ? 5 : 0, color: 'bg-emerald-500' }
-                ].map(stage => (
-                  <div key={stage.name}>
-                    <div className="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
-                      <span className="text-slate-300">{stage.name}</span>
-                      <span className="text-slate-400">{stage.progress}%</span>
-                    </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${stage.progress}%` }}
-                        transition={{ duration: 1 }}
-                        className={`h-full ${stage.color} shadow-[0_0_10px_currentColor]`}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
           </div>
 
-          {/* RIGHT COLUMN: Map & Monitor */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-            
-            {/* Governorate Control Map */}
-            <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl p-6 flex-1">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-sm font-bold text-white uppercase tracking-widest">Governorate Control</h2>
-                <span className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Select regions to process</span>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {GOVERNORATES.map(gov => {
-                  const isSelected = selectedGovs.includes(gov);
-                  const isRunning = systemStatus === 'running' && isSelected;
-                  return (
-                    <div 
-                      key={gov}
-                      onClick={() => toggleGov(gov)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                        isSelected 
-                          ? 'bg-cyan-900/20 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
-                          : 'bg-slate-900/50 border-slate-800 hover:border-slate-600'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? 'bg-cyan-500 border-cyan-500' : 'border-slate-600'}`}>
-                          {isSelected && <CheckCircle2 size={12} className="text-white" />}
-                        </div>
-                        <span className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-slate-400'}`}>{gov}</span>
-                      </div>
-                      <div className="space-y-1 pl-6">
-                        <div className="text-[10px] text-slate-500 flex justify-between">
-                          <span>Records:</span>
-                          <span className="font-mono text-slate-300">{Math.floor(Math.random() * 5000) + 1000}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-500 flex justify-between items-center">
-                          <span>Status:</span>
-                          <div className="flex items-center gap-1">
-                            <div className={`w-1.5 h-1.5 rounded-full ${isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
-                            <span className={isRunning ? 'text-emerald-400' : 'text-slate-500'}>{isRunning ? 'Running' : 'Idle'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+          {/* Task Type Chips */}
+          <div className="space-y-3">
+            <div className="text-[9px] text-slate-500 uppercase tracking-widest">Task Type</div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'text', label: '🔤 Text Repair', color: 'bg-blue-500' },
+                { id: 'enrich', label: '📍 Enrich Data', color: 'bg-purple-500' },
+                { id: 'social', label: '📱 Collect Socials', color: 'bg-green-500' },
+                { id: 'qc', label: '✅ Quality Check', color: 'bg-orange-500' },
+                { id: 'export', label: '📤 Export Data', color: 'bg-gold' }
+              ].map(task => (
+                <button
+                  key={task.id}
+                  onClick={() => !isRunning && setSelectedTask(task.id)}
+                  className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                    selectedTask === task.id 
+                      ? `${task.color} text-navy border-transparent` 
+                      : 'bg-white/5 text-slate-400 border-transparent hover:border-white/20'
+                  }`}
+                >
+                  {task.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* City Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-[9px] text-slate-500 uppercase tracking-widest">Select Governorates</div>
+              <div className="flex gap-4">
+                <button onClick={selectAll} className="text-[9px] text-gold underline underline-offset-2 hover:text-gold-bright">Select All</button>
+                <button onClick={clearAll} className="text-[9px] text-gold underline underline-offset-2 hover:text-gold-bright">Clear All</button>
               </div>
             </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {CITIES.map(city => {
+                const isSelected = selectedCities.has(city.id);
+                const progress = cityProgress[city.id] || 0;
+                const isCityRunning = isRunning && isSelected && progress < 100;
+                return (
+                  <div
+                    key={city.id}
+                    onClick={() => toggleCity(city.id)}
+                    className={`relative p-3 rounded-xl border transition-all cursor-pointer group ${
+                      isCityRunning ? 'border-green-500/50 bg-green-500/5 animate-running-pulse' :
+                      isSelected ? 'border-gold bg-gold/10' : 'border-gold/10 bg-white/5 hover:border-gold/30'
+                    }`}
+                  >
+                    <div className={`absolute top-2 right-2 w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                      isSelected ? 'bg-gold border-gold text-navy' : 'border-gold/20'
+                    }`}>
+                      {isSelected && <CheckCircle2 size={10} />}
+                    </div>
+                    <div className="text-[11px] font-bold text-slate-200">{city.en}</div>
+                    <div className="text-[10px] text-slate-500 font-ar mt-0.5">{city.ar}</div>
+                    <div className="text-[9px] text-slate-600 mt-2">{city.count.toLocaleString()} records</div>
+                    
+                    <div className="mt-3 space-y-1">
+                      <div className="flex justify-between items-center text-[8px] uppercase tracking-tighter">
+                        <span className={isCityRunning ? 'text-green-400' : 'text-slate-500'}>
+                          {progress >= 100 ? 'Done' : isCityRunning ? 'Running' : 'Idle'}
+                        </span>
+                        {isRunning && isSelected && <span className="text-slate-400">{Math.floor(progress)}%</span>}
+                      </div>
+                      <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          className={`h-full ${progress >= 100 ? 'bg-blue-400' : 'bg-green-500'}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-            {/* Real-Time Activity Monitor */}
-            <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl flex flex-col h-[300px]">
-              <div className="p-4 border-b border-slate-800 bg-slate-900/50 rounded-t-2xl flex justify-between items-center">
-                <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                  <Activity size={16} className="text-emerald-400" />
-                  Live Activity Monitor
-                </h2>
-                <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Updating every 2s
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 bg-[#0B0F19] font-mono text-xs space-y-2 custom-scrollbar">
-                <AnimatePresence initial={false}>
-                  {logs.map((log) => (
-                    <motion.div 
-                      key={log.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex gap-3 border-b border-slate-800/50 pb-2"
-                    >
-                      <span className="text-slate-500 shrink-0">{log.time}</span>
-                      <span className={`
-                        ${log.type === 'success' ? 'text-emerald-400' : ''}
-                        ${log.type === 'warning' ? 'text-amber-400' : ''}
-                        ${log.type === 'error' ? 'text-rose-400' : ''}
-                        ${log.type === 'info' ? 'text-cyan-400' : ''}
-                      `}>
-                        {log.message}
-                      </span>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {logs.length === 0 && (
-                  <div className="text-slate-600 text-center mt-10 italic">Awaiting system activity...</div>
+          {/* Instruction + Launch */}
+          <div className="space-y-3">
+            <div className="text-[9px] text-slate-500 uppercase tracking-widest">Custom Instruction</div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <textarea
+                value={instruction}
+                onChange={(e) => setInstruction(e.target.value)}
+                className="flex-1 bg-white/5 border border-gold/20 rounded-xl p-4 text-xs text-slate-200 outline-none focus:border-gold transition-all min-h-[60px] resize-none"
+                placeholder="Enter specific instructions for the agents..."
+              />
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={launchTasks}
+                  disabled={isRunning}
+                  className="px-8 py-3 bg-gold hover:bg-gold-bright text-navy font-bold text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_rgba(201,168,76,0.2)]"
+                >
+                  ▶ Launch
+                </button>
+                {isRunning && (
+                  <button
+                    onClick={stopAll}
+                    className="px-8 py-3 bg-transparent border border-rose-500 text-rose-500 hover:bg-rose-500/10 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    ■ Stop
+                  </button>
                 )}
               </div>
             </div>
-
+            <div className="text-[10px] text-slate-500 italic">
+              {selectedCities.size > 0 
+                ? <span className="text-gold">{selectedCities.size} cities selected</span> 
+                : 'No cities selected'} · Task: <span className="text-gold">{selectedTask.toUpperCase()}</span>
+            </div>
           </div>
         </div>
+
+        {/* Activity Log */}
+        <div className="space-y-4">
+          <div className="text-[10px] text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
+            Live Activity Log
+            <div className="h-px flex-1 bg-gold/10" />
+          </div>
+          <div className="bg-black/30 border border-gold/10 rounded-xl p-4 h-[250px] overflow-y-auto custom-scrollbar font-mono text-[10px] space-y-2">
+            {logs.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-2">
+                <div className="text-2xl">📡</div>
+                <div className="uppercase tracking-widest">Awaiting system activity...</div>
+              </div>
+            ) : (
+              logs.map(log => (
+                <div key={log.id} className="flex gap-4 items-start">
+                  <span className="text-slate-600 shrink-0">{log.time}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest shrink-0 ${
+                    log.type === 'info' ? 'bg-blue-500/20 text-blue-400' :
+                    log.type === 'ok' ? 'bg-green-500/20 text-green-400' :
+                    log.type === 'warn' ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-gold/20 text-gold'
+                  }`}>
+                    {log.type}
+                  </span>
+                  <span className="text-slate-300 leading-relaxed">{log.message}</span>
+                </div>
+              ))
+            )}
+            <div ref={logEndRef} />
+          </div>
+        </div>
+
       </div>
     </div>
   );

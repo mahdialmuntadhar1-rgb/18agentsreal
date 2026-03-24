@@ -1,6 +1,46 @@
 @import "tailwindcss";
 
 @theme {
+  --color-navy: #0d1b2e;
+  --color-navy-light: #1B2B5E;
+  --color-gold: #C9A84C;
+  --color-gold-bright: #f0c040;
+  --color-cream: #F5F0E8;
+}
+
+@layer base {
+  body {
+    @apply bg-navy text-[#e2d9c8] font-mono min-h-screen;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(201,168,76,0.18);
+  border-radius: 2px;
+}
+
+@keyframes running-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(34,197,94,0.2); }
+  50% { box-shadow: 0 0 20px rgba(34,197,94,0.4); }
+}
+
+.animate-running-pulse {
+  animation: running-pulse 2s infinite;
+}
+
+@theme {
   --color-midnight: #1a1a2e;
   --color-vibrant-purple: #bc13fe;
   --color-glass-bg: rgba(26, 26, 46, 0.6);
