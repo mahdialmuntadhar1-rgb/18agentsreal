@@ -92,7 +92,7 @@ export default function Home() {
     let query = supabase
       .from('businesses')
       .select('*')
-      .eq('status', 'verified');
+      .eq('verified', true);
 
     if (selectedGov) {
       query = query.eq('city', selectedGov);

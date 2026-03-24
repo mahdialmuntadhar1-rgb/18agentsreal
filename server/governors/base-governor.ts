@@ -88,24 +88,33 @@ export abstract class BaseGovernor {
     let errors = 0;
 
     for (const item of items) {
+      const slug = (item.name || "unknown")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        + "-" + (item.city || "iraq").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
       const businessData = {
-        name: item.name,
-        category: item.category.toLowerCase(),
+        business_id: slug,
+        name: { en: item.name || "", ar: "", ku: "" },
+        category: (item.category || "unknown").toLowerCase(),
+        city: item.city || "Unknown",
+        verified: false,
+        verification_status: "pending",
         government_rate: govRate,
-        city: item.city,
-        address: item.address,
-        phone: item.phone,
-        website: item.website,
-        description: item.description,
-        source_url: item.source_url,
+        phone: item.phone || null,
+        website: item.website || null,
+        address: item.address || null,
+        description: item.description || null,
+        source_url: item.source_url || null,
         created_by_agent: this.agentName,
-        verification_status: "pending"
+        sources: [item.source || "governor-scrape"],
+        agent_notes: `Collected by ${this.agentName}`,
       };
 
-      // Use upsert with onConflict to handle the unique index (name, city)
       const { error } = await this.supabase
         .from("businesses")
-        .upsert(businessData, { onConflict: "name,city" });
+        .upsert(businessData, { onConflict: "business_id" });
 
       if (error) {
         console.error(`Error inserting ${item.name}:`, error.message);

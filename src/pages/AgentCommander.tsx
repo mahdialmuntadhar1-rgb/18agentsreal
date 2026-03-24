@@ -243,21 +243,29 @@ export default function AgentCommander() {
         }
       });
 
-      const cleaned = allRecords.map(r => ({
-        name: r.name || r.business_name || r.raw_name,
-        name_ar: r.name_ar || null,
-        name_ku: r.name_ku || null,
-        category: r.category || 'restaurants',
-        city: r.city || 'Sulaymaniyah',
-        phone: r.phone || r.raw_phone || null,
-        address: r.address || r.raw_address || null,
-        score: r.data_quality_score || r.score || 0,
-        status: 'pending',
-      })).filter(r => r.name);
+      const cleaned = allRecords.map(r => {
+        const nameEn = r.name || r.business_name || r.raw_name || '';
+        const city = r.city || 'Sulaymaniyah';
+        const slug = nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+          + '-' + city.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        return {
+          business_id: slug,
+          name: { en: nameEn, ar: r.name_ar || '', ku: r.name_ku || '' },
+          category: r.category || 'restaurants',
+          city,
+          phone: r.phone || r.raw_phone || null,
+          address: r.address || r.raw_address || null,
+          verification_score: r.data_quality_score || r.score || 0,
+          verification_status: 'pending',
+          verified: false,
+          sources: ['json-import'],
+          agent_notes: 'Imported via AgentCommander',
+        };
+      }).filter(r => r.name.en);
 
       const { error } = await supabase
         .from('businesses')
-        .upsert(cleaned, { onConflict: 'name,city' });
+        .upsert(cleaned, { onConflict: 'business_id' });
 
       if (error) throw error;
       setImportStatus(`✅ Imported ${cleaned.length} records`);
