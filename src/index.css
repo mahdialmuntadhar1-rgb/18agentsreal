@@ -1,29 +1,51 @@
 @import "tailwindcss";
 
+@theme {
+  --color-midnight: #1a1a2e;
+  --color-vibrant-purple: #bc13fe;
+  --color-glass-bg: rgba(26, 26, 46, 0.6);
+  --color-glass-border: rgba(188, 19, 254, 0.2);
+}
+
 @layer base {
   body {
-    background-color: #080d1a;
-    color: white;
-    min-height: 100vh;
-    font-family: system-ui, -apple-system, sans-serif;
+    @apply bg-midnight text-white min-h-screen font-sans;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(188, 19, 254, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(188, 19, 254, 0.1) 0%, transparent 40%);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-glass-bg border border-glass-border backdrop-blur-xl;
+  }
+  
+  .glass-hover {
+    @apply transition-all duration-300;
+  }
+  
+  .glass-hover:hover {
+    background-color: rgba(26, 26, 46, 0.8);
+    border-color: rgba(188, 19, 254, 0.4);
   }
 
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(201, 168, 76, 0.15) transparent;
+  .text-glow {
+    text-shadow: 0 0 10px rgba(188, 19, 254, 0.5);
   }
 
-  *::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+  .animate-pulse-purple {
+    animation: pulse-purple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background: rgba(201, 168, 76, 0.2);
-    border-radius: 2px;
+  @keyframes pulse-purple {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 0 0 rgba(188, 19, 254, 0.4);
+    }
+    50% {
+      opacity: .8;
+      box-shadow: 0 0 20px 10px rgba(188, 19, 254, 0);
+    }
   }
 }

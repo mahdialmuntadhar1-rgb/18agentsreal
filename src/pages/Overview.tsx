@@ -1,150 +1,137 @@
-import { usePipeline } from "../lib/usePipeline";
-import { Database, CheckCircle2, Bot, Zap, Flag, Activity } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { 
+  Database, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle, 
+  Copy, 
+  Bot,
+  TrendingUp,
+  Activity,
+  Layers
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import { businessService } from '../services/dashboardService';
 
-const AGENTS = [
-  { id: "Cleaner-01", role: "Text Repair Agent", status: "active" },
-  { id: "Enricher-01", role: "Enrichment Agent", status: "active" },
-  { id: "Validator-01", role: "Validation Agent", status: "active" },
-  { id: "Verifier-01", role: "Verification Agent", status: "idle" },
-  { id: "Postcard-01", role: "Postcard Generator", status: "idle" },
-  { id: "Export-01", role: "Export Agent", status: "idle" },
-];
+const Overview: React.FC = () => {
+  const [stats, setStats] = useState({
+    rawCount: 0,
+    verifiedCount: 0,
+    pendingCount: 0,
+    approvedCount: 0,
+    taskCount: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-export default function Overview() {
-  const { state } = usePipeline();
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
-  const raw = state?.records?.length ?? 0;
-  const verified = state?.records?.filter((r: any) => r.verified).length ?? 0;
-  const activeAgents = AGENTS.filter(a => a.status === "active").length;
-  const qcFlags = state?.records?.filter((r: any) => (r.confidence ?? 100) < 70 || r.needs_verification).length ?? 124;
-  const runningTasks = [state?.stage1, state?.stage2, state?.stage3, state?.stage4].filter(s => s?.status === "running").length;
+  const fetchStats = async () => {
+    try {
+      const data = await businessService.getStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const METRICS = [
-    { label: "RAW BUSINESSES",     value: raw.toLocaleString(),    icon: Database,    color: "bg-blue-500",    light: "bg-blue-50",   text: "text-blue-600" },
-    { label: "VERIFIED RECORDS",   value: verified.toLocaleString(),icon: CheckCircle2,color: "bg-green-500",   light: "bg-green-50",  text: "text-green-600" },
-    { label: "ACTIVE AGENTS",      value: activeAgents.toString(), icon: Bot,         color: "bg-purple-500",  light: "bg-purple-50", text: "text-purple-600" },
-    { label: "PIPELINE THROUGHPUT",value: "1.2k/hr",               icon: Zap,         color: "bg-amber-500",   light: "bg-amber-50",  text: "text-amber-600" },
-    { label: "QC FLAGS",           value: qcFlags.toLocaleString(),icon: Flag,        color: "bg-red-500",     light: "bg-red-50",    text: "text-red-600" },
-    { label: "RUNNING TASKS",      value: runningTasks.toString(), icon: Activity,    color: "bg-violet-500",  light: "bg-violet-50", text: "text-violet-600" },
-  ];
-
-  const stageNames = ["Ingest", "Text Repair", "Enrichment", "Postcards"];
-  const stageColors = ["bg-blue-500", "bg-purple-500", "bg-amber-500", "bg-green-500"];
-
-  const rawCount    = raw;
-  const cleanedCount= state?.stage2?.processed ?? 12482;
-  const verifiedCount = verified || 8541;
-  const maxCount    = Math.max(rawCount, cleanedCount, verifiedCount, 1);
-
-  const recentActivity = [
-    { agent: "Cleaner-01", action: "normalized 150 records", time: "2 MINUTES AGO", dataset: "SULAYMANIYAH DATASET", status: "SUCCESS" },
-    { agent: "Enricher-01", action: "filled 84 phone numbers", time: "5 MINUTES AGO", dataset: "BAGHDAD DATASET", status: "SUCCESS" },
-    { agent: "Validator-01", action: "flagged 12 records", time: "8 MINUTES AGO", dataset: "ERBIL DATASET", status: "WARNING" },
+  const cards = [
+    { label: 'Raw Businesses', value: stats.rawCount, icon: <Database size={24} />, color: 'bg-blue-500' },
+    { label: 'Verified Records', value: stats.verifiedCount, icon: <CheckCircle2 size={24} />, color: 'bg-emerald-500' },
+    { label: 'Active Agents', value: 6, icon: <Bot size={24} />, color: 'bg-[#1B2B5E]' },
+    { label: 'Pipeline Throughput', value: '1.2k/hr', icon: <TrendingUp size={24} />, color: 'bg-[#C9A84C]' },
+    { label: 'QC Flags', value: 124, icon: <AlertCircle size={24} />, color: 'bg-rose-500' },
+    { label: 'Running Tasks', value: 3, icon: <Activity size={24} />, color: 'bg-purple-500' },
   ];
 
   return (
-    <div className="p-8 space-y-8 bg-slate-100 min-h-screen">
-      <div>
-        <h1 className="text-2xl font-black tracking-wide text-gray-900 uppercase">Dashboard Overview</h1>
-        <p className="text-gray-500 text-sm mt-1">Real-time verification metrics for Iraq Compass</p>
-      </div>
+    <div className="space-y-8">
+      <header>
+        <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">DASHBOARD OVERVIEW</h2>
+        <p className="text-gray-500 font-medium">Real-time verification metrics for Iraq Compass</p>
+      </header>
 
-      <div className="grid grid-cols-3 gap-4">
-        {METRICS.map(({ label, value, icon: Icon, color, light, text }) => (
-          <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl ${light} flex items-center justify-center flex-shrink-0`}>
-              <Icon size={22} className={text} />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cards.map((card, idx) => (
+          <motion.div
+            key={card.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between group hover:shadow-md transition-all"
+          >
             <div>
-              <div className="text-2xl font-black text-gray-900">{value}</div>
-              <div className="text-[10px] text-gray-400 font-semibold tracking-wider mt-0.5">{label}</div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</p>
+              <h3 className="text-3xl font-black text-[#1B2B5E]">
+                {loading ? '...' : card.value.toLocaleString()}
+              </h3>
             </div>
-          </div>
+            <div className={`w-12 h-12 rounded-xl ${card.color} text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+              {card.icon}
+            </div>
+          </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <Activity size={16} className="text-amber-500" />
-              <span className="font-bold text-gray-900 text-sm">Recent Agent Activity</span>
-            </div>
-            <button className="text-xs text-amber-600 font-semibold hover:underline">VIEW ALL</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-[#1B2B5E] flex items-center gap-2">
+              <Activity size={20} className="text-[#C9A84C]" />
+              Recent Agent Activity
+            </h3>
+            <button className="text-xs font-bold text-[#C9A84C] uppercase tracking-widest hover:underline">View All</button>
           </div>
-          <div className="space-y-3">
-            {recentActivity.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <Bot size={14} className="text-amber-600" />
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-[#1B2B5E]/5 flex items-center justify-center text-[#1B2B5E]">
+                  <Bot size={20} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-800">
-                    {a.agent} <span className="font-normal text-gray-500">{a.action}</span>
-                  </div>
-                  <div className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-wide">
-                    {a.time} · {a.dataset}
-                  </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-gray-800">Cleaner-0{i} normalized 150 records</p>
+                  <p className="text-[10px] text-gray-400 uppercase font-bold">2 minutes ago • Sulaymaniyah Dataset</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
-                  a.status === "SUCCESS" ? "bg-green-100 text-green-700" :
-                  a.status === "WARNING" ? "bg-amber-100 text-amber-700" :
-                  "bg-red-100 text-red-700"
-                }`}>
-                  {a.status}
-                </span>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full uppercase">Success</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-5">
-            <Database size={16} className="text-blue-500" />
-            <span className="font-bold text-gray-900 text-sm">Pipeline Distribution</span>
-          </div>
-          <div className="space-y-4">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+          <h3 className="font-bold text-[#1B2B5E] mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
+            <Layers size={16} className="text-[#C9A84C]" />
+            Pipeline Distribution
+          </h3>
+          <div className="space-y-6">
             {[
-              { label: "RAW",      count: rawCount     || 72451, color: "bg-blue-500"   },
-              { label: "CLEANED",  count: cleanedCount || 12482, color: "bg-purple-500" },
-              { label: "VERIFIED", count: verifiedCount|| 8541,  color: "bg-amber-500"  },
-            ].map(({ label, count, color }) => (
-              <div key={label}>
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-xs font-semibold text-gray-500 tracking-wide">{label}</span>
-                  <span className="text-sm font-bold text-gray-800">{count.toLocaleString()}</span>
+              { label: 'Raw', count: 72431, color: 'bg-blue-500', width: '100%' },
+              { label: 'Cleaned', count: 12402, color: 'bg-purple-500', width: '17%' },
+              { label: 'Verified', count: 8543, color: 'bg-amber-500', width: '12%' },
+              { label: 'Approved', count: 4231, color: 'bg-emerald-500', width: '6%' },
+            ].map((item, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <span>{item.label}</span>
+                  <span>{item.count.toLocaleString()}</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${color} transition-all duration-700`}
-                    style={{ width: `${(count / maxCount) * 100}%` }}
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: item.width }}
+                    className={`h-full ${item.color}`}
                   />
                 </div>
               </div>
             ))}
           </div>
-
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-3">Stage Status</div>
-            <div className="grid grid-cols-2 gap-2">
-              {stageNames.map((name, i) => {
-                const stage = [state?.stage1, state?.stage2, state?.stage3, state?.stage4][i];
-                return (
-                  <div key={name} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-                    <div className={`w-2 h-2 rounded-full ${stageColors[i]}`} />
-                    <span className="text-xs text-gray-600 font-medium">{name}</span>
-                    <span className={`ml-auto text-[9px] font-bold uppercase ${
-                      stage?.status === "done"    ? "text-green-600" :
-                      stage?.status === "running" ? "text-amber-600" :
-                      stage?.status === "error"   ? "text-red-600"   : "text-gray-400"
-                    }`}>{stage?.status ?? "idle"}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Overview;

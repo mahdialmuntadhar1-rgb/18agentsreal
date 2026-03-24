@@ -1,6 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "placeholder";
+const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!SUPABASE_URL || !SUPABASE_ANON) {
+  console.error('⚠️ Supabase env vars missing!');
+}
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);

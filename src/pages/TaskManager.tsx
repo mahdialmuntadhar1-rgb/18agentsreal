@@ -1,97 +1,203 @@
-import { usePipeline } from "../lib/usePipeline";
-import { ListTodo, CheckCircle2, Loader2, Clock, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { 
+  Bot, 
+  Plus, 
+  Play, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2,
+  Terminal,
+  Activity
+} from 'lucide-react';
+import { taskService } from '../services/dashboardService';
+import { AgentTask } from '../types';
+import { motion } from 'motion/react';
 
-export default function TaskManager() {
-  const { state } = usePipeline();
+const TaskManager: React.FC = () => {
+  const [tasks, setTasks] = useState<AgentTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showNewTask, setShowNewTask] = useState(false);
+  const [newTask, setNewTask] = useState({
+    task_name: '',
+    task_type: 'Verification',
+    assigned_to: 'Agent-Alpha',
+    governorate: 'All'
+  });
 
-  const stages = state ? [
-    { id: "T-001", name: "Ingest from Supabase",   agent: "Ingest-01",   stage: state.stage1, priority: "high"   },
-    { id: "T-002", name: "Arabic/Kurdish Text Repair", agent: "Cleaner-01", stage: state.stage2, priority: "high" },
-    { id: "T-003", name: "Data Enrichment",         agent: "Enricher-01", stage: state.stage3, priority: "medium" },
-    { id: "T-004", name: "Postcard Generation",     agent: "Postcard-01", stage: state.stage4, priority: "low"    },
-  ] : [];
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
-  const extraTasks = [
-    { id: "T-005", name: "Human Review Queue",      agent: "Verifier-01", status: "pending",  priority: "medium", processed: 0, total: 0 },
-    { id: "T-006", name: "Export to Supabase",      agent: "Export-01",   status: "pending",  priority: "low",    processed: 0, total: 0 },
-    { id: "T-007", name: "Quality Score Audit",     agent: "Validator-01",status: "done",     priority: "medium", processed: 74049, total: 74049 },
-  ];
+  const fetchTasks = async () => {
+    try {
+      const data = await taskService.getTasks();
+      setTasks(data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  function StatusIcon({ status }: { status: string }) {
-    if (status === "done")    return <CheckCircle2 size={14} className="text-green-500" />;
-    if (status === "running") return <Loader2 size={14} className="text-amber-500 animate-spin" />;
-    if (status === "error")   return <AlertCircle size={14} className="text-red-500" />;
-    return <Clock size={14} className="text-gray-400" />;
-  }
-
-  function PriorityBadge({ priority }: { priority: string }) {
-    const map: Record<string, string> = {
-      high:   "bg-red-50 text-red-700 border-red-200",
-      medium: "bg-amber-50 text-amber-700 border-amber-200",
-      low:    "bg-gray-100 text-gray-500 border-gray-200",
-    };
-    return <span className={`text-[10px] font-bold px-2 py-0.5 rounded border capitalize ${map[priority] ?? map.low}`}>{priority}</span>;
-  }
-
-  const allTasks = [
-    ...stages.map(s => ({ id: s.id, name: s.name, agent: s.agent, status: s.stage?.status ?? "idle", priority: s.priority, processed: s.stage?.processed ?? 0, total: s.stage?.total ?? 0 })),
-    ...extraTasks,
-  ];
-
-  const done    = allTasks.filter(t => t.status === "done").length;
-  const running = allTasks.filter(t => t.status === "running").length;
-  const pending = allTasks.filter(t => t.status === "idle" || t.status === "pending").length;
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await taskService.createTask({
+        ...newTask,
+        status: 'pending'
+      });
+      setShowNewTask(false);
+      fetchTasks();
+    } catch (error) {
+      alert('Failed to create task');
+    }
+  };
 
   return (
-    <div className="p-8 space-y-6 bg-slate-100 min-h-screen">
-      <div>
-        <h1 className="text-2xl font-black tracking-wide text-gray-900 uppercase flex items-center gap-2">
-          <ListTodo size={20} className="text-blue-500" /> Task Manager
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">Monitor all pipeline and agent tasks</p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: "Completed",  value: done,    color: "text-green-600", bg: "bg-green-50" },
-          { label: "Running",    value: running, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Pending",    value: pending, color: "text-gray-600",  bg: "bg-gray-100" },
-        ].map(({ label, value, color, bg }) => (
-          <div key={label} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className={`text-2xl font-black ${color}`}>{value}</div>
-            <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">{label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <span className="font-bold text-gray-900 text-sm">All Tasks</span>
+    <div className="space-y-8">
+      <header className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">AGENT TASKS</h2>
+          <p className="text-gray-500 font-medium">Automated data verification and enrichment</p>
         </div>
-        <div className="divide-y divide-gray-50">
-          {allTasks.map(task => (
-            <div key={task.id} className="px-5 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors">
-              <StatusIcon status={task.status} />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-sm">{task.name}</div>
-                <div className="text-xs text-gray-400 mt-0.5">Agent: {task.agent}</div>
-              </div>
-              {task.total > 0 && (
-                <div className="text-xs text-gray-500 flex-shrink-0">
-                  {task.processed.toLocaleString()} / {task.total.toLocaleString()}
-                </div>
-              )}
-              <PriorityBadge priority={task.priority} />
-              <span className={`text-xs font-semibold capitalize flex-shrink-0 ${
-                task.status === "done"    ? "text-green-600" :
-                task.status === "running" ? "text-amber-600" :
-                task.status === "error"   ? "text-red-600"   : "text-gray-400"
-              }`}>{task.status}</span>
-              <span className="text-[10px] text-gray-300 font-mono flex-shrink-0">{task.id}</span>
+        <button 
+          onClick={() => setShowNewTask(true)}
+          className="bg-[#1B2B5E] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all"
+        >
+          <Plus size={18} />
+          New Task
+        </button>
+      </header>
+
+      {showNewTask && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-8 rounded-3xl shadow-xl border border-gray-200"
+        >
+          <h3 className="text-xl font-black text-[#1B2B5E] mb-6 uppercase tracking-tight">Configure New Agent Task</h3>
+          <form onSubmit={handleCreateTask} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Task Name</label>
+              <input 
+                required
+                type="text" 
+                value={newTask.task_name}
+                onChange={e => setNewTask({...newTask, task_name: e.target.value})}
+                placeholder="e.g., Verify Basra Restaurants"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
+              />
             </div>
-          ))}
-        </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Task Type</label>
+              <select 
+                value={newTask.task_type}
+                onChange={e => setNewTask({...newTask, task_type: e.target.value})}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
+              >
+                <option>Verification</option>
+                <option>Cleaning</option>
+                <option>Enrichment</option>
+                <option>Deduplication</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Agent</label>
+              <select 
+                value={newTask.assigned_to}
+                onChange={e => setNewTask({...newTask, assigned_to: e.target.value})}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
+              >
+                <option>Agent-Alpha (Fast)</option>
+                <option>Agent-Beta (Deep Scan)</option>
+                <option>Agent-Gamma (Cleaning)</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Target Governorate</label>
+              <select 
+                value={newTask.governorate}
+                onChange={e => setNewTask({...newTask, governorate: e.target.value})}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
+              >
+                <option>All</option>
+                <option>Baghdad</option>
+                <option>Basra</option>
+                <option>Erbil</option>
+                <option>Sulaymaniyah</option>
+              </select>
+            </div>
+            <div className="md:col-span-2 flex justify-end gap-3 pt-4">
+              <button 
+                type="button"
+                onClick={() => setShowNewTask(false)}
+                className="px-6 py-3 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                className="bg-[#C9A84C] text-[#1B2B5E] px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+              >
+                Launch Agent
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 gap-6">
+        {loading ? (
+          <div className="flex items-center justify-center p-20">
+            <Loader2 className="animate-spin text-[#C9A84C]" size={48} />
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="bg-white p-20 rounded-3xl border border-gray-200 text-center">
+            <Bot size={48} className="mx-auto text-gray-200 mb-4" />
+            <p className="text-gray-400 font-bold uppercase tracking-widest">No active tasks</p>
+          </div>
+        ) : (
+          tasks.map((task) => (
+            <div key={task.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex items-center gap-6 group hover:shadow-md transition-all">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${
+                task.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                task.status === 'running' ? 'bg-blue-50 text-blue-600' :
+                task.status === 'failed' ? 'bg-rose-50 text-rose-600' :
+                'bg-gray-50 text-gray-400'
+              }`}>
+                {task.status === 'running' ? <Loader2 className="animate-spin" /> : <Bot size={28} />}
+              </div>
+              
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1">
+                  <h4 className="font-black text-[#1B2B5E] uppercase tracking-tight">{task.task_name}</h4>
+                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
+                    task.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                    task.status === 'running' ? 'bg-blue-100 text-blue-700' :
+                    task.status === 'failed' ? 'bg-rose-100 text-rose-700' :
+                    'bg-gray-100 text-gray-500'
+                  }`}>
+                    {task.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <span className="flex items-center gap-1"><Activity size={10} /> {task.task_type}</span>
+                  <span className="flex items-center gap-1"><Terminal size={10} /> {task.assigned_to}</span>
+                  <span className="flex items-center gap-1"><Clock size={10} /> {new Date(task.created_at).toLocaleTimeString()}</span>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xs font-medium text-gray-500 mb-2">{task.result_summary || 'Waiting for results...'}</p>
+                <button className="text-[10px] font-black text-[#C9A84C] uppercase tracking-widest hover:underline">View Logs</button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default TaskManager;
