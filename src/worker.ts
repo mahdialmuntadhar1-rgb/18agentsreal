@@ -41,19 +41,35 @@ function findAgent(name: string) {
   return AGENT_CONFIGS.find((agent) => agent.name.toLowerCase() === name.toLowerCase());
 }
 
+const REQUIRED_SECRETS: Array<keyof Env> = ['GEMINI_API_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+
 function getMissingEnv(env: Env): string[] {
-  const missing: string[] = [];
-  if (!env.GEMINI_API_KEY) missing.push('GEMINI_API_KEY');
-  if (!env.VITE_SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
-  if (!env.VITE_SUPABASE_ANON_KEY) missing.push('VITE_SUPABASE_ANON_KEY');
-  return missing;
+  return REQUIRED_SECRETS.filter((key) => !String(env[key] ?? '').trim());
+}
+
+function getEnvHealth(env: Env) {
+  const missing = getMissingEnv(env);
+  const missingSet = new Set(missing);
+  const present = REQUIRED_SECRETS.filter((secret) => !missingSet.has(secret));
+  return { present, missing };
+}
+
+function missingSecretsResponse(env: Env): Response | null {
+  const missing = getMissingEnv(env);
+  if (missing.length === 0) return null;
+  return json(
+    {
+      error: `Missing required Worker secrets: ${missing.join(', ')}`,
+      missing,
+    },
+    500,
+  );
 }
 
 async function routeApi(request: Request, env: Env, pathname: string): Promise<Response | null> {
   if (pathname === '/api/task/run' && request.method === 'POST') {
-    if (!env.VITE_SUPABASE_URL || !env.GEMINI_API_KEY) {
-      return json({ error: 'Missing required Cloudflare secrets: VITE_SUPABASE_URL and/or GEMINI_API_KEY.' }, 500);
-    }
+    const missingResponse = missingSecretsResponse(env);
+    if (missingResponse) return missingResponse;
 
     const { taskType, cities, instruction } = (await request.json()) as {
       taskType: string;
@@ -86,7 +102,6 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
           return;
         }
 
-        for await (const event of runAgent(env, taskType, Array.isArray(cities) ? cities : [], instruction ?? '')) {
         for await (const event of runAgent(env, taskType, requestedCities, instruction ?? '')) {
           await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
         }
@@ -114,10 +129,22 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   }
 
   if (pathname === '/api/health' && request.method === 'GET') {
-    return json({ status: 'ok', timestamp: new Date().toISOString() });
+    const { present, missing } = getEnvHealth(env);
+    return json({
+      status: missing.length === 0 ? 'ok' : 'degraded',
+      timestamp: new Date().toISOString(),
+      secrets: {
+        required: REQUIRED_SECRETS,
+        present,
+        missing,
+      },
+    });
   }
 
   if (pathname === '/api/agents' && request.method === 'GET') {
+    const missingResponse = missingSecretsResponse(env);
+    if (missingResponse) return missingResponse;
+
     try {
       const dashboard = await getAgentDashboard(env, AGENT_CONFIGS);
       return json(dashboard);
@@ -127,6 +154,9 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   }
 
   if (pathname === '/api/orchestrator/start' && request.method === 'POST') {
+    const missingResponse = missingSecretsResponse(env);
+    if (missingResponse) return missingResponse;
+
     const results: Array<{ name: string; status: string; inserted?: number; error?: string }> = [];
 
     for (const config of AGENT_CONFIGS) {
@@ -142,6 +172,9 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
   }
 
   if (pathname === '/api/orchestrator/stop' && request.method === 'POST') {
+    const missingResponse = missingSecretsResponse(env);
+    if (missingResponse) return missingResponse;
+
     try {
       await stopAllAgents(env, AGENT_CONFIGS.map((agent) => agent.name));
       return json({ status: 'stopped' });
@@ -152,6 +185,9 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
 
   const agentMatch = pathname.match(/^\/api\/agents\/([^/]+)\/run$/);
   if (agentMatch && request.method === 'POST') {
+    const missingResponse = missingSecretsResponse(env);
+    if (missingResponse) return missingResponse;
+
     const agentName = decodeURIComponent(agentMatch[1]);
     const config = findAgent(agentName);
 
