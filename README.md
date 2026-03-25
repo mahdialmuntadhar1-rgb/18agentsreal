@@ -1,6 +1,13 @@
-# Iraq Compass Data Verification Dashboard
+# 18-AGENTS Internal Dashboard
 
-Internal tool to clean, verify, and approve 70,000+ Iraqi business records.
+Internal AI agent management dashboard for orchestration, review, QA, and reporting workflows.
+
+## Project Scope
+
+- This repository is **only** for the 18-AGENTS dashboard.
+- Supabase project for this app: `https://mxxaxhrtccomkazpvthn.supabase.co`.
+- Do **not** reference Iraq Compass frontend design in this codebase.
+- Do **not** use or modify the Iraq Compass Supabase project from this repository.
 
 ## Setup Instructions for Replit
 
@@ -32,13 +39,13 @@ Before running the app, ensure you have executed the SQL schema provided in the 
 ## Features
 
 - **Overview**: Real-time metrics of raw vs verified data.
-- **Review Table**: Batch approve or reject businesses based on verification scores.
-- **Data Cleaner**: Repair encoding issues (mojibake) in Arabic/Kurdish text.
-- **Task Manager**: Launch automated agent tasks for data enrichment.
-- **Export**: Generate clean JSON files ready for the public directory.
+- **Review Table**: Batch approve or reject records based on verification scores.
+- **Data Cleaner**: Repair encoding issues (mojibake) in multilingual text.
+- **Task Manager**: Launch automated agent tasks for enrichment.
+- **Export**: Generate clean JSON outputs for downstream systems.
 
 ## Language Support
 
 - Full RTL support for Arabic and Kurdish.
 - Trilingual data fields (AR, KU, EN).
-- Dir="rtl" implemented on relevant UI components.
+- `dir="rtl"` implemented on relevant UI components.
