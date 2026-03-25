@@ -46,12 +46,11 @@ export class QualityControlGovernor extends BaseGovernor {
 
   async flagIncompleteData() {
     console.log("QC: Flagging incomplete data...");
-    // Flag businesses missing flat phone or website fields
+    // Flag businesses missing phone or website
     await this.supabase
       .from("businesses")
-      .update({ verification_status: "flagged" })
-      .is("phone", null)
-      .is("website", null);
+      .update({ verification_status: "Flagged" })
+      .or("phone.is.null,website.is.null");
   }
 
   async monitorAgents() {

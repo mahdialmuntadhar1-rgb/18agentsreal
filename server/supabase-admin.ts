@@ -3,14 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const supabaseUrl =
-  process.env.VITE_SUPABASE_URL ||
-  "https://hsadukhmcclwixuntqwu.supabase.co";
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder";
 
-// Use service-role key for server-side writes; falls back to anon key for read-only
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
-  "";
-
-export const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);

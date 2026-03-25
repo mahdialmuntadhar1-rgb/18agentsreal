@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { getBusinessName } from '../lib/utils';
 
 // --- Types ---
 interface Business {
@@ -84,8 +83,6 @@ export default function Admin() {
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
-        .eq('verification_status', 'verified')
-        .eq('city_center_only', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -269,7 +266,7 @@ export default function Admin() {
                               )}
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900 business-name">{getBusinessName(b.name)}</div>
+                              <div className="font-medium text-gray-900">{b.name?.en || 'Unnamed'}</div>
                               <div className="text-xs text-gray-500">{b.business_id}</div>
                             </div>
                           </div>
@@ -451,7 +448,7 @@ function PostcardDrawer({ business, onClose }: { business: Business; onClose: ()
       <div className="mt-12 px-6 pb-8 space-y-8">
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900 business-name">{business.name?.[activeTab] || getBusinessName(business.name)}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{business.name?.[activeTab] || 'Unnamed'}</h2>
             <div className="flex bg-gray-100 p-1 rounded-lg">
               {(['en', 'ar', 'ku'] as const).map(lang => (
                 <button
