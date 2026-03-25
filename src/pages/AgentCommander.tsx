@@ -115,6 +115,9 @@ export default function AgentCommander() {
   const [customPrompt, setCustomPrompt] = useState('');
   const [taskHistory, setTaskHistory] = useState<AgentTask[]>([]);
   const [importStatus, setImportStatus] = useState('');
+  const [cityCenterOnly, setCityCenterOnly] = useState(true);
+  const [localScriptPriority, setLocalScriptPriority] = useState(true);
+  const [forceColumnWrite, setForceColumnWrite] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -148,6 +151,18 @@ export default function AgentCommander() {
     if (!text.trim() || isLoading) return;
 
     let fullPrompt = text;
+    const intelligenceControls = [
+      cityCenterOnly
+        ? "- City Center Only: enforce 6km geofence from Saray Square, exclude Bakrajo and Pira Magrun."
+        : "- City Center Only: disabled.",
+      localScriptPriority
+        ? "- Kurdish/Arabic Priority: preserve native script in name_primary, provide commercial English in name_en."
+        : "- Kurdish/Arabic Priority: disabled.",
+      forceColumnWrite
+        ? "- Force Column Write: write social links directly to link_instagram and link_facebook columns."
+        : "- Force Column Write: disabled."
+    ].join("\n");
+    fullPrompt = `Intelligence Layer Controls:\n${intelligenceControls}\n\n${fullPrompt}`;
     if (uploadedFiles.length > 0) {
       fullPrompt += "\n\n";
       uploadedFiles.forEach(file => {
@@ -464,6 +479,22 @@ export default function AgentCommander() {
               >
                 Assign task to agent
               </button>
+
+              <div className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                <h4 className="text-[10px] font-black text-[#1B2B5E] uppercase">Agent Commander Update</h4>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  City Center Only
+                  <input type="checkbox" checked={cityCenterOnly} onChange={(e) => setCityCenterOnly(e.target.checked)} />
+                </label>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  Kurdish/Arabic Priority
+                  <input type="checkbox" checked={localScriptPriority} onChange={(e) => setLocalScriptPriority(e.target.checked)} />
+                </label>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  Force Column Write
+                  <input type="checkbox" checked={forceColumnWrite} onChange={(e) => setForceColumnWrite(e.target.checked)} />
+                </label>
+              </div>
 
               <div className="p-4 bg-[#1B2B5E]/5 rounded-2xl border border-[#1B2B5E]/10">
                 <h4 className="text-[10px] font-black text-[#1B2B5E] uppercase mb-2">Agent Specialty</h4>

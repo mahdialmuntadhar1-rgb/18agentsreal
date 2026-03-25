@@ -1,8 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { runGovernor } from "./server/governors/index.js";
 import { runAllGovernors } from "./server/orchestrator.js";
-import { runAllGovernors, runGovernor } from "./server/governors/index.js";
+import { runGovernor } from "./server/governors/index.js";
 import { securityMiddleware } from "./server/security-middleware.js";
 import { llmRouter } from "./server/llm/llm-router.js";
 import { supabaseAdmin } from "./server/supabase-admin.js";
@@ -115,11 +114,6 @@ export async function createApp(options?: { withFrontend?: boolean }) {
   });
 
   app.post("/api/orchestrator/start", (req, res) => {
-    agents = agents.map(a => ({ ...a, status: "running" }));
-    runAllGovernors().catch((error) => {
-      console.error("Failed to start orchestrator:", error);
-    });
-    res.json({ status: "started", agents });
     if (isOrchestratorRunning) {
       res.status(409).json({ status: "already_running" });
       return;
