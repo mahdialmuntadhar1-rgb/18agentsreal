@@ -121,6 +121,9 @@ export default function AgentCommander() {
   const [customPrompt, setCustomPrompt] = useState('');
   const [taskHistory, setTaskHistory] = useState<AgentTask[]>([]);
   const [importStatus, setImportStatus] = useState('');
+  const [cityCenterOnly, setCityCenterOnly] = useState(true);
+  const [localScriptPriority, setLocalScriptPriority] = useState(true);
+  const [forceColumnWrite, setForceColumnWrite] = useState(true);
   const [pipelineConfig, setPipelineConfig] = useState<PipelineConfig>({
     cityCenterOnly: true,
     languagePriority: true,
@@ -158,6 +161,18 @@ export default function AgentCommander() {
     if (!text.trim() || isLoading) return;
 
     let fullPrompt = text;
+    const intelligenceControls = [
+      cityCenterOnly
+        ? "- City Center Only: enforce 6km geofence from Saray Square, exclude Bakrajo and Pira Magrun."
+        : "- City Center Only: disabled.",
+      localScriptPriority
+        ? "- Kurdish/Arabic Priority: preserve native script in name_primary, provide commercial English in name_en."
+        : "- Kurdish/Arabic Priority: disabled.",
+      forceColumnWrite
+        ? "- Force Column Write: write social links directly to link_instagram and link_facebook columns."
+        : "- Force Column Write: disabled."
+    ].join("\n");
+    fullPrompt = `Intelligence Layer Controls:\n${intelligenceControls}\n\n${fullPrompt}`;
     fullPrompt += `\n\n--- Pipeline Settings ---\ncity_center_only: ${pipelineConfig.cityCenterOnly}\nlanguage_priority: ${pipelineConfig.languagePriority ? 'native-first' : 'balanced'}\n`;
     if (uploadedFiles.length > 0) {
       fullPrompt += "\n\n";
@@ -476,6 +491,19 @@ export default function AgentCommander() {
                 Assign task to agent
               </button>
 
+              <div className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+                <h4 className="text-[10px] font-black text-[#1B2B5E] uppercase">Agent Commander Update</h4>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  City Center Only
+                  <input type="checkbox" checked={cityCenterOnly} onChange={(e) => setCityCenterOnly(e.target.checked)} />
+                </label>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  Kurdish/Arabic Priority
+                  <input type="checkbox" checked={localScriptPriority} onChange={(e) => setLocalScriptPriority(e.target.checked)} />
+                </label>
+                <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  Force Column Write
+                  <input type="checkbox" checked={forceColumnWrite} onChange={(e) => setForceColumnWrite(e.target.checked)} />
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-3">
                 <h4 className="text-[10px] font-black text-[#1B2B5E] uppercase">Real AI Upgrade</h4>
                 <label className="flex items-center justify-between text-[10px] font-bold text-gray-600">

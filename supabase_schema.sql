@@ -7,6 +7,8 @@ create extension if not exists "uuid-ossp";
 create table if not exists public.businesses (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
+  name_primary text,
+  name_en text,
   name_native text,
   name_ar text,
   name_en text,
@@ -15,6 +17,8 @@ create table if not exists public.businesses (
   government_rate text,
   city text not null,
   address text,
+  latitude double precision,
+  longitude double precision,
   phone text,
   website text,
   link_instagram text,
@@ -22,6 +26,9 @@ create table if not exists public.businesses (
   latitude double precision,
   longitude double precision,
   description text,
+  link_instagram text,
+  link_facebook text,
+  scope_status text default 'in_scope',
   source_url text,
   created_by_agent text,
   verification_status text default 'pending',
@@ -29,6 +36,14 @@ create table if not exists public.businesses (
   updated_at timestamptz default now(),
   unique (name, city)
 );
+
+alter table public.businesses add column if not exists name_primary text;
+alter table public.businesses add column if not exists name_en text;
+alter table public.businesses add column if not exists latitude double precision;
+alter table public.businesses add column if not exists longitude double precision;
+alter table public.businesses add column if not exists link_instagram text;
+alter table public.businesses add column if not exists link_facebook text;
+alter table public.businesses add column if not exists scope_status text default 'in_scope';
 
 -- Agent registry and runtime state
 create table if not exists public.agents (
