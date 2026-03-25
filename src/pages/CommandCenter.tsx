@@ -94,6 +94,24 @@ export default function CommandCenter() {
   useEffect(() => {
     if (!currentTaskId || !user) return;
     const unsubscribe = onSnapshot(doc(db, 'agent_tasks', currentTaskId), (snapshot) => {
+      if (typeof snapshot.exists !== 'function') {
+        setLogs((prev) => {
+          if (prev.some((entry) => entry.message.includes('Firestore SDK mismatch detected'))) {
+            return prev;
+          }
+          return [
+            ...prev,
+            {
+              id: 'firestore-sdk-mismatch',
+              time: new Date().toLocaleTimeString([], { hour12: false }),
+              message: 'Firestore SDK mismatch detected. Rebuild with the official firebase package and reload.',
+              type: 'warn'
+            }
+          ];
+        });
+        return;
+      }
+
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.status === 'completed' || data.status === 'stopped') {
