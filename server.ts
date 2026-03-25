@@ -1,12 +1,14 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { runGovernor } from "./server/governors/index.js";
+import { securityMiddleware } from "./server/security-middleware.js";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+  app.use(securityMiddleware());
 
   // Mock agent state
   let agents: any[] = [
