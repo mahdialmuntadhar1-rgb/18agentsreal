@@ -26,6 +26,8 @@ const CONTROL_PLANE_ROUTES = [
   "/api/orchestrator/",
   "/api/agents",
   "/api/agents/",
+  "/api/llm",
+  "/api/llm/",
 ];
 
 const API_KEY_ROUTES = ["/api/internal/"];

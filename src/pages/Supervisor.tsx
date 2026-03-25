@@ -6,10 +6,6 @@ import {
   Download, Loader2, MessageCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize Gemini for the Supervisor Chat
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 interface Message {
   id: string;
@@ -87,21 +83,32 @@ export default function Supervisor() {
     setIsTyping(true);
 
     try {
-      const model = "gemini-3-flash-preview";
-      const response = await genAI.models.generateContent({
-        model,
-        contents: [
-          { role: 'user', parts: [{ text: `You are the AI Supervisor for Iraq Compass, a business directory. You help the user manage data agents and clean business listings. User says: ${inputText}` }] }
-        ],
-        config: {
-          systemInstruction: "You are a professional, efficient AI Supervisor for the Iraq Compass project. You speak with authority and technical precision. Keep responses concise but helpful."
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch('/api/llm/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          taskType: 'supervisor-chat',
+          prompt: `You are the AI Supervisor for Iraq Compass, a business directory. You help the user manage data agents and clean business listings. User says: ${inputText}`,
+        }),
       });
 
+      if (!response.ok) {
+        throw new Error('LLM request failed');
+      }
+
+      const result = await response.json();
       const supervisorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'supervisor',
-        text: response.text || "I'm processing your request. Please stand by.",
+        text: result?.data?.text || "I'm processing your request. Please stand by.",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, supervisorMsg]);
