@@ -74,7 +74,6 @@ async function routeApi(request: Request, env: Env, pathname: string): Promise<R
               })}\n\n`,
             ),
           );
-          await writer.write(encoder.encode('data: {"type":"done"}\n\n'));
           return;
         }
 
