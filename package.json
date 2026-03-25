@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "start": "node dist-server/server.js",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
