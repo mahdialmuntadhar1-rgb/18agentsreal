@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { runGovernor } from "./server/governors/index.js";
 import { securityMiddleware } from "./server/security-middleware.js";
+import { llmRouter } from "./server/llm/llm-router.js";
 
 export async function createApp(options?: { withFrontend?: boolean }) {
   const app = express();
@@ -10,6 +11,11 @@ export async function createApp(options?: { withFrontend?: boolean }) {
 
   app.use(express.json());
   app.use(securityMiddleware());
+
+  if (process.env.NODE_ENV === "production" && !process.env.GEMINI_API_KEY) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
 
   // Mock agent state
   let agents: any[] = [
@@ -33,6 +39,8 @@ export async function createApp(options?: { withFrontend?: boolean }) {
     { name: "Agent-18", governorate: "Diyala", category: "Tourism", status: "active", governmentRate: "Rate Level 5", recordsInserted: 512, lastActivity: "22m ago" },
     { name: "QC Overseer", governorate: "QC Overseer", category: "Quality Control", status: "active", governmentRate: "Supervisory", recordsInserted: 15420, lastActivity: "1m ago" },
   ];
+
+  app.use("/api/llm", llmRouter);
 
   // API routes
   app.get("/api/health", (req, res) => {

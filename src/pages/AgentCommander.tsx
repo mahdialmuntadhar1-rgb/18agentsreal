@@ -18,7 +18,6 @@ import {
   Info,
   Globe
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -167,18 +166,34 @@ export default function AgentCommander() {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      
-      const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        config: { systemInstruction: AGENT_SYSTEM_PROMPTS[selectedAgent.id] },
-        contents: newHistory.map(m => ({
-          role: m.role,
-          parts: [{ text: m.parts[0].text }]
-        }))
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Authentication required");
+      }
+
+      const promptWithContext = [
+        AGENT_SYSTEM_PROMPTS[selectedAgent.id],
+        ...newHistory.map((m) => `${m.role.toUpperCase()}: ${m.parts[0].text}`),
+      ].join("\n\n");
+
+      const response = await fetch('/api/llm/run', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          taskType: 'agent-run',
+          prompt: promptWithContext,
+        }),
       });
 
-      const agentResponse = result.text || "⚠️ Agent unavailable. Please retry.";
+      if (!response.ok) {
+        throw new Error('LLM request failed');
+      }
+
+      const result = await response.json();
+      const agentResponse = result?.data?.text || "⚠️ Agent unavailable. Please retry.";
       const agentMessage: Message = { role: 'model', parts: [{ text: agentResponse }] };
       
       setChatHistories(prev => ({
@@ -199,7 +214,7 @@ export default function AgentCommander() {
       fetchTaskHistory();
 
     } catch (error) {
-      console.error('Gemini error:', error);
+      console.error('LLM proxy error:', error);
       const errorMessage: Message = { role: 'model', parts: [{ text: "⚠️ Agent unavailable. Please retry." }] };
       setChatHistories(prev => ({
         ...prev,
