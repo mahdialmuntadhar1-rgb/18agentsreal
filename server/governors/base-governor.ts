@@ -1,5 +1,20 @@
 import { supabaseAdmin } from "../supabase-admin.js";
 
+type GovernorTask = {
+  id: number;
+  category?: string;
+  city?: string;
+  government_rate: string;
+  prompt?: string | null;
+  city_center_only?: boolean;
+  language_priority?: "native-first" | "balanced";
+};
+
+type EnrichmentConfig = {
+  cityCenterOnly: boolean;
+  languagePriority: "native-first" | "balanced";
+};
+
 export abstract class BaseGovernor {
   protected supabase = supabaseAdmin;
   abstract category: string;
@@ -22,13 +37,26 @@ export abstract class BaseGovernor {
       
       // 2. Scrape/Gather data
       const businesses = await this.gather(task.city, task.category);
+      const config = this.getTaskConfig(task);
+      const processed: any[] = [];
+      let skipped = 0;
+
+      for (const record of businesses) {
+        const result = await this.processBusiness(record, config);
+        if (result.status === "processed" && result.record) {
+          processed.push(result.record);
+          continue;
+        }
+
+        skipped++;
+        console.log(`${this.agentName}: skipped "${record?.name ?? "unknown"}" (${result.reason})`);
+      }
       
-      if (businesses.length > 0) {
+      if (processed.length > 0) {
         // 3. Validate and 4. Insert (Supabase handles duplicate protection via unique index)
-        const validated = await this.validate(businesses);
+        const validated = await this.validate(processed);
         const { added, errors } = await this.store(validated, task.government_rate);
-        
-        await this.log("success", added, errors);
+        await this.log("success", added, errors + skipped);
       }
 
       // 5. Mark task as complete
@@ -44,7 +72,7 @@ export abstract class BaseGovernor {
   /**
    * Calls the Supabase RPC for concurrency-safe task claiming
    */
-  private async claimTask() {
+  private async claimTask(): Promise<GovernorTask | null> {
     // This RPC must be created in Supabase SQL editor:
     // CREATE OR REPLACE FUNCTION claim_next_task(agent_name TEXT)
     // RETURNS SETOF agent_tasks AS $$
@@ -90,12 +118,20 @@ export abstract class BaseGovernor {
     for (const item of items) {
       const businessData = {
         name: item.name,
+        name_native: item.name_native ?? item.name,
+        name_ar: item.name_ar ?? null,
+        name_en: item.name_en ?? item.name,
+        name_ku: item.name_ku ?? null,
         category: item.category.toLowerCase(),
         government_rate: govRate,
         city: item.city,
         address: item.address,
         phone: item.phone,
         website: item.website,
+        link_instagram: item.link_instagram ?? "Requires Human Review",
+        link_facebook: item.link_facebook ?? "Requires Human Review",
+        latitude: item.latitude ?? null,
+        longitude: item.longitude ?? null,
         description: item.description,
         source_url: item.source_url,
         created_by_agent: this.agentName,
@@ -151,5 +187,98 @@ export abstract class BaseGovernor {
 
   async validate(items: any[]) {
     return items.filter((i) => i.name && (i.address || i.city));
+  }
+
+  private getTaskConfig(task: GovernorTask): EnrichmentConfig {
+    const prompt = (task.prompt ?? "").toLowerCase();
+    const forceCityCenter = task.city_center_only ?? prompt.includes("city center only");
+    const nativeFirst = task.language_priority
+      ? task.language_priority === "native-first"
+      : prompt.includes("language priority");
+
+    return {
+      cityCenterOnly: forceCityCenter,
+      languagePriority: nativeFirst ? "native-first" : "balanced",
+    };
+  }
+
+  protected async processBusiness(record: any, config: EnrichmentConfig) {
+    if (config.cityCenterOnly && !this.isWithinCityCenter(record)) {
+      return { status: "skipped" as const, reason: "Outside City Center" };
+    }
+
+    const localizedNames = this.getLocalizedNames(record.name, config.languagePriority);
+    const socials = this.findSocialLinks(record);
+
+    return {
+      status: "processed" as const,
+      record: {
+        ...record,
+        ...localizedNames,
+        link_instagram: socials.instagram,
+        link_facebook: socials.facebook,
+      },
+    };
+  }
+
+  protected isWithinCityCenter(record: any): boolean {
+    const city = String(record.city ?? "").toLowerCase();
+    const address = String(record.address ?? "").toLowerCase();
+    const excludedSuburbs = ["bazyan", "tasluja", "bakrajo"];
+
+    if (excludedSuburbs.some((suburb) => city.includes(suburb) || address.includes(suburb))) {
+      return false;
+    }
+
+    if (!city.includes("sulaymaniyah") && !city.includes("sulaymani")) {
+      return true;
+    }
+
+    const lat = Number(record.latitude);
+    const lng = Number(record.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return true;
+    }
+
+    const center = { lat: 35.5613, lng: 45.4302 };
+    const distanceKm = this.distanceKm(center.lat, center.lng, lat, lng);
+    return distanceKm <= 6;
+  }
+
+  private distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+    const toRad = (v: number) => (v * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2
+      + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+
+  private getLocalizedNames(name: string, priority: "native-first" | "balanced") {
+    const raw = String(name ?? "").trim();
+    const hasArabicScript = /[\u0600-\u06FF]/.test(raw);
+    const hasSoraniMarkers = /[ێۆڵڕڤگچژ]/.test(raw);
+    const isKurdish = hasSoraniMarkers;
+
+    const name_native = raw;
+    const name_ku = isKurdish ? raw : null;
+    const name_ar = hasArabicScript && !isKurdish ? raw : raw;
+    const name_en = hasArabicScript
+      ? (priority === "native-first" ? `Transliteration required: ${raw}` : `English translation required: ${raw}`)
+      : raw;
+
+    return { name_native, name_ku, name_ar, name_en };
+  }
+
+  private findSocialLinks(record: any) {
+    const text = `${record.website ?? ""} ${record.source_url ?? ""} ${record.description ?? ""}`;
+    const ig = text.match(/https?:\/\/(?:www\.)?instagram\.com\/[A-Za-z0-9._-]+/i)?.[0];
+    const fb = text.match(/https?:\/\/(?:www\.)?facebook\.com\/[A-Za-z0-9._-]+/i)?.[0];
+
+    return {
+      instagram: ig ?? "Requires Human Review",
+      facebook: fb ?? "Requires Human Review",
+    };
   }
 }
