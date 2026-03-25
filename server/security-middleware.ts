@@ -21,12 +21,11 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
 ];
 
-const PROTECTED_ROUTES = [
-  "/api/agent/launch",
-  "/api/agent/stop",
-  "/api/agent/reset",
-  "/api/export",
-  "/api/admin",
+const CONTROL_PLANE_ROUTES = [
+  "/api/orchestrator",
+  "/api/orchestrator/",
+  "/api/agents",
+  "/api/agents/",
 ];
 
 const API_KEY_ROUTES = ["/api/internal/"];
@@ -113,7 +112,11 @@ function isInternal(path: string) {
 }
 
 function isProtected(path: string) {
-  return PROTECTED_ROUTES.some((route) => path.startsWith(route));
+  return CONTROL_PLANE_ROUTES.some((route) => path.startsWith(route));
+}
+
+function isControlPlaneWrite(req: Request) {
+  return isProtected(req.path) && req.method !== "GET";
 }
 
 function isRateLimited(ip: string) {
@@ -225,7 +228,12 @@ export function securityMiddleware(): RequestHandler {
     }
 
     if (!isProtected(path)) {
-      next();
+      jsonResponse(
+        res,
+        403,
+        { error: "Forbidden", reason: `Route ${path} is not allowed by API policy` },
+        corsHeaders
+      );
       return;
     }
 
@@ -264,9 +272,20 @@ export function securityMiddleware(): RequestHandler {
       return;
     }
 
+    const role = payload.app_metadata?.role ?? "user";
+    if (isControlPlaneWrite(req) && !["admin", "operator"].includes(role)) {
+      jsonResponse(
+        res,
+        403,
+        { error: "Forbidden", reason: `Role ${role} cannot perform control-plane write actions.` },
+        corsHeaders
+      );
+      return;
+    }
+
     req.headers["x-authenticated-email"] = userEmail;
     req.headers["x-authenticated-user-id"] = payload.sub ?? "";
-    req.headers["x-auth-role"] = payload.app_metadata?.role ?? "user";
+    req.headers["x-auth-role"] = role;
     console.info(`[ACCESS_GRANTED] Email: ${userEmail}, Path: ${path}`);
     next();
   };

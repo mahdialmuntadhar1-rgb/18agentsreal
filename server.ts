@@ -3,8 +3,9 @@ import { createServer as createViteServer } from "vite";
 import { runGovernor } from "./server/governors/index.js";
 import { securityMiddleware } from "./server/security-middleware.js";
 
-async function startServer() {
+export async function createApp(options?: { withFrontend?: boolean }) {
   const app = express();
+  const withFrontend = options?.withFrontend ?? true;
   const PORT = 3000;
 
   app.use(express.json());
@@ -66,19 +67,27 @@ async function startServer() {
   });
 
   // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
+  if (withFrontend && process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (withFrontend) {
     app.use(express.static("dist"));
   }
 
+  return { app, PORT };
+}
+
+async function startServer() {
+  const { app, PORT } = await createApp({ withFrontend: true });
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 
-startServer();
+const isDirectExecution = process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
+if (isDirectExecution) {
+  startServer();
+}
