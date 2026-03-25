@@ -142,3 +142,17 @@ create policy "Admin All Businesses" on public.businesses for all using (auth.ro
 create policy "Admin All Agents" on public.agents for all using (auth.role() = 'authenticated');
 create policy "Admin All Tasks" on public.agent_tasks for all using (auth.role() = 'authenticated');
 create policy "Admin All Logs" on public.agent_logs for all using (auth.role() = 'authenticated');
+
+-- Unified operational view for dashboard polling
+create or replace view public.internal_audit_view as
+select
+  id,
+  name_primary as "Native Name",
+  name_en as "English Name",
+  city as "City Center",
+  link_instagram as "Instagram",
+  null::numeric as "AI Confidence",
+  updated_at as "Last Activity"
+from public.businesses
+where scope_status = 'in_scope'
+order by updated_at desc;

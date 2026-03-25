@@ -1,6 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { runAllGovernors } from "./server/orchestrator.js";
+import { getOrchestratorState, runAllGovernors, stopOrchestrator } from "./server/orchestrator.js";
 import { runGovernor } from "./server/governors/index.js";
 import { securityMiddleware } from "./server/security-middleware.js";
 import { llmRouter } from "./server/llm/llm-router.js";
@@ -44,8 +44,6 @@ const DEFAULT_AGENTS: Array<{
   { agent_name: "Agent-18", category: "cafes", target: 1000, government_rate: "Rate Level 5" },
   { agent_name: "QC Overseer", category: "quality_control", target: 1000, government_rate: "Supervisory" },
 ];
-
-let isOrchestratorRunning = false;
 
 async function ensureAgentsSeeded() {
   const { count, error: countError } = await supabaseAdmin
@@ -106,7 +104,7 @@ export async function createApp(options?: { withFrontend?: boolean }) {
   app.get("/api/agents", (req, res) => {
     fetchAgentState()
       .then((agents) => {
-        res.json({ orchestratorRunning: isOrchestratorRunning, agents });
+        res.json({ orchestrator: getOrchestratorState(), agents });
       })
       .catch((error: Error) => {
         res.status(500).json({ error: error.message });
@@ -114,25 +112,20 @@ export async function createApp(options?: { withFrontend?: boolean }) {
   });
 
   app.post("/api/orchestrator/start", (req, res) => {
-    if (isOrchestratorRunning) {
+    if (getOrchestratorState().running) {
       res.status(409).json({ status: "already_running" });
       return;
     }
 
-    isOrchestratorRunning = true;
-    runAllGovernors()
-      .catch((error) => {
-        console.error("Orchestrator failed:", error);
-      })
-      .finally(() => {
-        isOrchestratorRunning = false;
-      });
+    runAllGovernors().catch((error) => {
+      console.error("Orchestrator failed:", error);
+    });
 
-    res.json({ status: "started" });
+    res.json({ status: "started", orchestrator: getOrchestratorState() });
   });
 
   app.post("/api/orchestrator/stop", async (req, res) => {
-    isOrchestratorRunning = false;
+    stopOrchestrator();
     const { error } = await supabaseAdmin
       .from("agents")
       .update({ status: "idle", updated_at: new Date().toISOString() })
@@ -148,6 +141,25 @@ export async function createApp(options?: { withFrontend?: boolean }) {
     res.json({ status: "stopped" });
   });
 
+
+
+  app.get("/api/orchestrator/status", (req, res) => {
+    res.json({ orchestrator: getOrchestratorState() });
+  });
+
+  app.get("/api/internal-audit", async (req, res) => {
+    const { data, error } = await supabaseAdmin
+      .from("internal_audit_view")
+      .select("*")
+      .limit(30);
+
+    if (error) {
+      res.status(500).json({ error: error.message });
+      return;
+    }
+
+    res.json({ rows: data ?? [] });
+  });
   // Endpoint to manually trigger a governor
   app.post("/api/agents/:agentName/run", async (req, res) => {
     const { agentName } = req.params;

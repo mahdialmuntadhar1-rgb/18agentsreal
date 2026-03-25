@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Bot, Activity, Play, RefreshCw, AlertCircle } from 'lucide-react';
+import { Bot, Activity, Play, RefreshCw, AlertCircle, Wifi } from 'lucide-react';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
@@ -14,12 +14,39 @@ type ApiAgent = {
   last_run: string | null;
 };
 
+type OrchestratorStatus = {
+  running: boolean;
+  startedAt: string | null;
+  lastHeartbeatAt: string | null;
+  cycles: number;
+  connectionStatus: 'LIVE' | 'IDLE';
+  lastError: string | null;
+};
+
+type InternalAuditRow = {
+  id: string | number;
+  'Native Name'?: string;
+  'English Name'?: string;
+  'City Center'?: string;
+  Instagram?: string;
+  'AI Confidence'?: number;
+  'Last Activity'?: string;
+};
+
 export default function Agents() {
   const [agents, setAgents] = useState<ApiAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyAgent, setBusyAgent] = useState<string | null>(null);
-  const [orchestratorRunning, setOrchestratorRunning] = useState(false);
+  const [orchestrator, setOrchestrator] = useState<OrchestratorStatus>({
+    running: false,
+    startedAt: null,
+    lastHeartbeatAt: null,
+    cycles: 0,
+    connectionStatus: 'IDLE',
+    lastError: null,
+  });
+  const [internalAuditRows, setInternalAuditRows] = useState<InternalAuditRow[]>([]);
 
   const activeCount = useMemo(
     () => agents.filter((agent) => ['active', 'running', 'processing'].includes(agent.status)).length,
@@ -47,7 +74,9 @@ export default function Agents() {
         throw new Error(payload?.error || 'Failed to load agents');
       }
       setAgents(payload.agents || []);
-      setOrchestratorRunning(Boolean(payload.orchestratorRunning));
+      if (payload.orchestrator) {
+        setOrchestrator(payload.orchestrator);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load agents');
     } finally {
@@ -55,10 +84,29 @@ export default function Agents() {
     }
   };
 
+  const loadInternalAudit = async () => {
+    try {
+      const headers = await withAuthHeaders();
+      const response = await fetch('/api/internal-audit', { headers });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to load internal audit view');
+      }
+      setInternalAuditRows(payload.rows || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load internal audit view');
+    }
+  };
+
   useEffect(() => {
     loadAgents();
-    const timer = setInterval(loadAgents, 7000);
-    return () => clearInterval(timer);
+    loadInternalAudit();
+    const agentTimer = setInterval(loadAgents, 7000);
+    const auditTimer = setInterval(loadInternalAudit, 10000);
+    return () => {
+      clearInterval(agentTimer);
+      clearInterval(auditTimer);
+    };
   }, []);
 
   const startStopOrchestrator = async (action: 'start' | 'stop') => {
@@ -71,7 +119,7 @@ export default function Agents() {
       if (!response.ok) {
         throw new Error(payload?.error || payload?.status || `Failed to ${action} orchestrator`);
       }
-      await loadAgents();
+      await Promise.all([loadAgents(), loadInternalAudit()]);
     } catch (e) {
       setError(e instanceof Error ? e.message : `Failed to ${action} orchestrator`);
     } finally {
@@ -109,20 +157,23 @@ export default function Agents() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={loadAgents}
+            onClick={() => {
+              loadAgents();
+              loadInternalAudit();
+            }}
             className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-black uppercase tracking-widest flex items-center gap-2"
           >
             <RefreshCw size={14} /> Refresh
           </button>
           <button
-            disabled={orchestratorRunning || busyAgent !== null}
+            disabled={orchestrator.running || busyAgent !== null}
             onClick={() => startStopOrchestrator('start')}
             className="px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50"
           >
             Start All
           </button>
           <button
-            disabled={!orchestratorRunning || busyAgent !== null}
+            disabled={!orchestrator.running || busyAgent !== null}
             onClick={() => startStopOrchestrator('stop')}
             className="px-3 py-2 rounded-xl bg-rose-600 text-white text-xs font-black uppercase tracking-widest disabled:opacity-50"
           >
@@ -133,14 +184,41 @@ export default function Agents() {
 
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex items-center justify-between">
         <div className="text-xs uppercase tracking-widest font-bold text-gray-500">Orchestrator</div>
-        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${orchestratorRunning ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-          {orchestratorRunning ? 'Running' : 'Idle'}
+        <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${orchestrator.running ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+          {orchestrator.running ? 'Running' : 'Idle'}
         </div>
         <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
           <Activity size={14} />
           {activeCount} Agents Active
         </div>
       </div>
+
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+          <Wifi size={14} className={orchestrator.connectionStatus === 'LIVE' ? 'text-emerald-600' : 'text-gray-500'} />
+          Server Connection: {orchestrator.connectionStatus}
+        </div>
+        <div className="text-xs text-gray-600">Cycles: {orchestrator.cycles}</div>
+        <div className="text-xs text-gray-600">Last heartbeat: {orchestrator.lastHeartbeatAt ? new Date(orchestrator.lastHeartbeatAt).toLocaleString() : 'N/A'}</div>
+      </div>
+
+      {internalAuditRows.length > 0 && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+          <h3 className="text-sm font-black uppercase tracking-widest text-[#1B2B5E] mb-3">Unified View (internal_audit_view)</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {internalAuditRows.slice(0, 8).map((row) => (
+              <div key={row.id} className="rounded-lg border border-gray-100 p-2 text-xs grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div>
+                  <p className="font-bold text-gray-800">{row['Native Name'] || row['English Name'] || 'Unknown'}</p>
+                  <p className="text-gray-500">{row['City Center'] || 'Unknown city'}</p>
+                </div>
+                <div className="text-gray-600">Confidence: {row['AI Confidence'] ?? 'N/A'}</div>
+                <div className="text-gray-400">Last Activity: {row['Last Activity'] ? new Date(row['Last Activity']).toLocaleString() : 'N/A'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700 text-sm flex items-center gap-2">
