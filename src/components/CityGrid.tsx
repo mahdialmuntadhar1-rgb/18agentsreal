@@ -2,27 +2,27 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin } from 'lucide-react';
 
-const governorates = [
-  "Baghdad", "Erbil", "Sulaymaniyah", "Basra", "Duhok", "Kirkuk", 
-  "Najaf", "Karbala", "Dhi Qar", "Babil", "Anbar", "Diyala", 
-  "Muthanna", "Al-Qadisiyah", "Maysan", "Wasit", "Saladin", "Nineveh"
+const cities = [
+  "Baghdad City", "Erbil City", "Sulaymaniyah City", "Basra City", "Duhok City", "Kirkuk City", 
+  "Najaf City", "Karbala City", "Dhi Qar City", "Babil City", "Anbar City", "Diyala City", 
+  "Muthanna City", "Al-Qadisiyah City", "Maysan City", "Wasit City", "Saladin City", "Nineveh City"
 ];
 
-interface GovernorateGridProps {
+interface CityGridProps {
   onSelect: (city: string) => void;
   agentStatuses: Record<string, string>;
 }
 
-export const GovernorateGrid: React.FC<GovernorateGridProps> = ({ onSelect, agentStatuses }) => {
-  const isAgentActive = (gov: string) => {
+export const CityGrid: React.FC<CityGridProps> = ({ onSelect, agentStatuses }) => {
+  const isAgentActive = (city: string) => {
     return Object.entries(agentStatuses).some(([name, status]) => 
-      name.toLowerCase().includes(gov.toLowerCase()) && status === "active"
+      name.toLowerCase().includes(city.toLowerCase()) && status === "active"
     );
   };
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-6">
-      {governorates.map((city) => (
+      {cities.map((city) => (
         <motion.div
           key={city}
           whileHover={{ scale: 1.05, borderColor: '#bc13fe' }}

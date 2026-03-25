@@ -1,0 +1,56 @@
+{
+  "entities": {
+    "Business": {
+      "title": "Business",
+      "description": "A business listing in the Iraq Compass directory.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name_en": { "type": "string" },
+        "name_ar": { "type": "string" },
+        "city": { "type": "string" },
+        "category": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "instagram_url": { "type": "string" },
+        "facebook_url": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified", "flagged"] },
+        "last_updated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name_en", "city"]
+    },
+    "AgentTask": {
+      "title": "Agent Task",
+      "description": "A task for an AI agent to process.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "enrich", "social", "qc", "export"] },
+        "instruction": { "type": "string" },
+        "cities": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["queued", "running", "completed", "stopped"] },
+        "progress": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "instruction", "cities", "status"]
+    },
+    "Log": {
+      "title": "Log",
+      "description": "An activity log entry.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "ok", "warn", "agent"] },
+        "taskId": { "type": "string" }
+      },
+      "required": ["timestamp", "message", "type"]
+    }
+  },
+  "firestore": {
+    "/businesses": { "schema": "Business", "description": "Collection of business listings." },
+    "/agent_tasks": { "schema": "AgentTask", "description": "Collection of agent tasks." },
+    "/logs": { "schema": "Log", "description": "Collection of activity logs." }
+  }
+}

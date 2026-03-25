@@ -18,8 +18,9 @@ import {
   Info,
   Globe
 } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
-import { supabase } from '../lib/supabase';
+import { db, auth } from '../firebase';
+import { collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
 
 // --- Types ---
@@ -80,7 +81,7 @@ const AGENT_SYSTEM_PROMPTS: Record<number, string> = {
   6: `You are the AR/KU Translator for Iraq Compass. Translate between English, Iraqi Arabic, and Sorani Kurdish. Use established local names when they exist. Output trilingual JSON {en, ar, ku}.`,
   7: `You are the Phone Normalizer for Iraq Compass. Operators: Zain 0750/0751, Korek 0770/0771, AsiaCell 0770/0772/0773. Output: {original, normalized, operator, valid:bool}. Flag suspicious.`,
   8: `You are the Category Classifier for Iraq Compass. Classify into exactly one: restaurants, cafes, bakeries, hotels, gyms, beauty_salons, pharmacies, supermarkets. Know Iraqi naming patterns. Flag unclear cases for review.`,
-  9: `You are the Address Resolver for Iraq Compass. Parse Iraqi addresses to: neighborhood, district, city, governorate, Iraq. Know all 18 Iraqi governorates. Infer location from context.`,
+  9: `You are the Address Resolver for Iraq Compass. Parse Iraqi addresses to: neighborhood, district, city, Iraq. Know all 18 Iraqi cities. Infer location from context. Use Google Maps to verify city-level locations. Focus on the city, not the suburb.`,
   10: `You are the Social Scraper for Iraq Compass. Analyze Iraqi business accounts on Instagram and Facebook: existence, follower count, last post (active = <6 months), extract contact info from bio. Flag inactive accounts.`,
   11: `You are the Review Aggregator for Iraq Compass. Analyze reviews from Google Maps, TripAdvisor, Facebook. Output: avg_rating, review_count, sentiment_summary, most_mentioned_features[].`,
   12: `You are the Image Hunter for Iraq Compass. Find logo_url and cover_image_url from Facebook, Instagram, or website. Provide real direct URLs only. Set null if not found. No placeholders.`,
@@ -93,7 +94,7 @@ const AGENT_SYSTEM_PROMPTS: Record<number, string> = {
 };
 
 const TASK_TEMPLATES = [
-  { label: 'Find businesses in Sulaymaniyah', prompt: 'Find 10 verified businesses in Sulaymaniyah Iraq. Output JSON: [{name, name_ar, name_ku, category, city, phone, address, website, score, sources:[]}]' },
+  { label: 'Find businesses in Sulaymaniyah City', prompt: 'Find 10 verified businesses in Sulaymaniyah City, Iraq. Output JSON: [{name, name_ar, name_ku, category, city, phone, address, website, score, sources:[]}]' },
   { label: 'Clean uploaded dataset', prompt: 'Clean and normalize the attached dataset. Remove duplicates, fix phone format (07XX-XXXXXXX), remove emojis from names. Output corrected JSON array.' },
   { label: 'Verify business list', prompt: 'Verify each business. Phone check: Zain 0750/0751, Korek 0770/0771, AsiaCell 0770/0772/3. Score 0-100. Output: [{name, score, recommendation, issues:[]}]' },
   { label: 'Create postcards (EN/AR/KU)', prompt: 'Create postcard JSON per business: headline(EN/AR/KU max 6 words), tagline, description(2-3 factual sentences), highlights[3], badge, call_to_action. Factual only.' },
@@ -133,15 +134,20 @@ export default function AgentCommander() {
   }, []);
 
   const fetchTaskHistory = async () => {
-    const { data, error } = await supabase
-      .from('agent_tasks')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-    
-    if (error) console.error('Error fetching tasks:', error);
-    else setTaskHistory(data || []);
+    const q = query(collection(db, 'agent_tasks'), orderBy('created_at', 'desc'), limit(20));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+      setTaskHistory(tasks);
+    });
+    return unsubscribe;
   };
+
+  useEffect(() => {
+    const unsubscribePromise = fetchTaskHistory();
+    return () => {
+      unsubscribePromise.then(unsubscribe => unsubscribe());
+    };
+  }, []);
 
   const currentHistory = chatHistories[selectedAgent.id] || [];
 
@@ -170,8 +176,11 @@ export default function AgentCommander() {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       
       const result = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        config: { systemInstruction: AGENT_SYSTEM_PROMPTS[selectedAgent.id] },
+        model: "gemini-3-flash-preview",
+        config: { 
+          systemInstruction: AGENT_SYSTEM_PROMPTS[selectedAgent.id],
+          tools: selectedAgent.id === 9 || selectedAgent.id === 2 ? [{ googleMaps: {} }] : []
+        },
         contents: newHistory.map(m => ({
           role: m.role,
           parts: [{ text: m.parts[0].text }]
@@ -186,18 +195,17 @@ export default function AgentCommander() {
         [selectedAgent.id]: [...newHistory, agentMessage]
       }));
 
-      // Save task to Supabase
-      await supabase.from('agent_tasks').insert({
+      // Save task to Firestore
+      await addDoc(collection(db, 'agent_tasks'), {
         agent_id: selectedAgent.id,
         agent_name: selectedAgent.name,
         task_type: 'chat',
         prompt: text,
         status: 'completed',
-        result: agentResponse
+        result: agentResponse,
+        created_at: serverTimestamp()
       });
       
-      fetchTaskHistory();
-
     } catch (error) {
       console.error('Gemini error:', error);
       const errorMessage: Message = { role: 'model', parts: [{ text: "⚠️ Agent unavailable. Please retry." }] };
@@ -244,23 +252,23 @@ export default function AgentCommander() {
       });
 
       const cleaned = allRecords.map(r => ({
-        name: r.name || r.business_name || r.raw_name,
+        name_en: r.name || r.business_name || r.raw_name,
         name_ar: r.name_ar || null,
         name_ku: r.name_ku || null,
         category: r.category || 'restaurants',
-        city: r.city || 'Sulaymaniyah',
+        city: r.city || 'Sulaymaniyah City',
         phone: r.phone || r.raw_phone || null,
         address: r.address || r.raw_address || null,
         score: r.data_quality_score || r.score || 0,
         status: 'pending',
-      })).filter(r => r.name);
+        last_updated: new Date().toISOString()
+      })).filter(r => r.name_en);
 
-      const { error } = await supabase
-        .from('businesses')
-        .upsert(cleaned, { onConflict: 'name,city' });
+      for (const record of cleaned) {
+        await addDoc(collection(db, 'businesses'), record);
+      }
 
-      if (error) throw error;
-      setImportStatus(`✅ Imported ${cleaned.length} records`);
+      setImportStatus(`✅ Imported ${cleaned.length} records to Firestore`);
     } catch (error: any) {
       setImportStatus(`Error: ${error.message}`);
     }
@@ -500,7 +508,7 @@ export default function AgentCommander() {
                     onClick={importToSupabase}
                     className="w-full bg-[#1B2B5E] text-[#C9A84C] py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all"
                   >
-                    Import to Supabase
+                    Import to Firestore
                   </button>
                   {importStatus && <p className="text-[10px] text-center font-bold text-[#1B2B5E]">{importStatus}</p>}
                 </div>
@@ -521,8 +529,11 @@ export default function AgentCommander() {
                 <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Recent Tasks</h4>
                 <button 
                   onClick={async () => {
-                    await supabase.from('agent_tasks').delete().eq('status', 'completed');
-                    fetchTaskHistory();
+                    const q = query(collection(db, 'agent_tasks'), where('status', '==', 'completed'));
+                    const snapshot = await getDocs(q);
+                    for (const doc of snapshot.docs) {
+                      await deleteDoc(doc.ref);
+                    }
                   }}
                   className="text-[9px] font-black text-rose-500 uppercase tracking-widest"
                 >
@@ -545,7 +556,13 @@ export default function AgentCommander() {
                       </span>
                     </div>
                     <p className="text-[10px] text-gray-500 line-clamp-2 italic">"{task.prompt}"</p>
-                    <p className="text-[8px] text-gray-400">{new Date(task.created_at).toLocaleTimeString()}</p>
+                    <p className="text-[8px] text-gray-400">
+                      {task.created_at ? (
+                        (task.created_at as any).toDate 
+                          ? (task.created_at as any).toDate().toLocaleTimeString() 
+                          : new Date(task.created_at as any).toLocaleTimeString()
+                      ) : '...'}
+                    </p>
                   </div>
                 ))}
               </div>
