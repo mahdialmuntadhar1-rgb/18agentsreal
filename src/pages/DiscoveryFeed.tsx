@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { toast } from 'sonner';
 
 export default function DiscoveryFeed() {
   const [businesses, setBusinesses] = useState<any[]>([]);
@@ -24,7 +23,6 @@ export default function DiscoveryFeed() {
     });
 
     if (error) {
-      toast.error('Failed to fetch nearby businesses');
       // Fallback to all businesses if RPC fails
       const { data: allData } = await supabase.from('businesses').select('*').limit(20);
       setBusinesses(allData || []);
@@ -43,7 +41,6 @@ export default function DiscoveryFeed() {
           fetchNearby(loc.lat, loc.lng);
         },
         () => {
-          toast.error('Location access denied. Showing all businesses.');
           fetchNearby(33.3152, 44.3661); // Default to Baghdad
         }
       );
@@ -51,7 +48,7 @@ export default function DiscoveryFeed() {
   }, [radius]);
 
   const filteredBusinesses = businesses.filter(b => 
-    b.name.en.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    String(b.name?.en ?? b.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -107,7 +104,7 @@ export default function DiscoveryFeed() {
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img 
                   src={business.scraped_photo_url || `https://picsum.photos/seed/${business.id}/800/600`} 
-                  alt={business.name.en}
+                  alt={business.name?.en ?? business.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
@@ -130,7 +127,7 @@ export default function DiscoveryFeed() {
               <div className="p-6 space-y-4 flex-1 flex flex-col">
                 <div className="space-y-1">
                   <h3 className="text-lg font-black text-white leading-tight group-hover:text-emerald-400 transition-colors">
-                    {business.name.en}
+                    {business.name?.en ?? business.name}
                   </h3>
                   <div className="flex items-center gap-1 text-amber-400">
                     <Star size={12} fill="currentColor" />

@@ -22,25 +22,26 @@ async function executeAgent(env: Env, agent: Agent): Promise<void> {
   const db = createRuntimeDb(config.supabaseUrl, config.supabaseServiceRoleKey);
   const correlationId = createCorrelationId(agent.id);
   const runId = await db.createRun(agent.id, correlationId, 'running');
+  let claimedTask: AgentTask | null = null;
 
   try {
     await db.setAgentStatus(agent.id, 'running');
-    const task = await db.claimNextTask(agent.id, 5);
+    claimedTask = await db.claimNextTask(agent.id, 5);
 
-    if (!task) {
+    if (!claimedTask) {
       await logRuntime(db, 'info', 'no_pending_task', correlationId, { agentId: agent.id, runId });
       await db.finishRun(runId, 'completed', { processed: 0 });
       await db.setAgentStatus(agent.id, 'idle');
       return;
     }
 
-    const businesses = await fetchBusinesses(env, task);
+    const businesses = await fetchBusinesses(env, claimedTask);
     const upserts: BusinessUpsert[] = [];
 
     for (const business of businesses) {
       const sourceHash = await buildBusinessSourceHash(agent.id, business);
       upserts.push({
-        governorate_id: task.governorate_id,
+        governorate_id: claimedTask.governorate_id,
         external_id: business.externalId,
         name: business.name,
         category: business.category,
@@ -59,40 +60,54 @@ async function executeAgent(env: Env, agent: Agent): Promise<void> {
         collected_at: new Date().toISOString(),
         created_by_agent_id: agent.id,
         updated_by_agent_id: agent.id,
-        last_task_id: task.id,
+        last_task_id: claimedTask.id,
       });
     }
 
     await db.upsertBusinesses(upserts);
-    await db.completeTask(task.id);
+    await db.completeTask(claimedTask.id);
     await logRuntime(db, 'info', 'task_completed', correlationId, {
       agentId: agent.id,
       runId,
-      taskId: task.id,
+      taskId: claimedTask.id,
       details: { upserts: upserts.length },
     });
-    await db.finishRun(runId, 'completed', { taskId: task.id, upserts: upserts.length });
+
+    await db.finishRun(runId, 'completed', { taskId: claimedTask.id, upserts: upserts.length });
     await db.setAgentStatus(agent.id, 'idle');
   } catch (error) {
     if (error instanceof ConnectorNotConfiguredError) {
       await db.setAgentStatus(agent.id, 'not_configured', error.message);
-      await db.finishRun(runId, 'not_configured', { reason: error.message });
-      await logRuntime(db, 'warn', 'connector_not_configured', correlationId, { agentId: agent.id, runId, details: error.message });
+      await db.finishRun(runId, 'not_configured', { reason: error.message, taskId: claimedTask?.id ?? null });
+      await logRuntime(db, 'warn', 'connector_not_configured', correlationId, {
+        agentId: agent.id,
+        runId,
+        taskId: claimedTask?.id,
+        details: error.message,
+      });
       return;
     }
 
     const message = error instanceof Error ? error.message : 'unknown_error';
-    const task = await db.claimNextTask(agent.id, 5);
-    if (task) {
-      const attempt = task.attempt_count;
-      const backoff = computeBackoffSeconds(attempt, config.backoffBaseSeconds, config.backoffMaxSeconds);
+    if (claimedTask) {
+      const backoff = computeBackoffSeconds(
+        claimedTask.attempt_count,
+        config.backoffBaseSeconds,
+        config.backoffMaxSeconds,
+      );
       const nextRun = new Date(Date.now() + backoff * 1000).toISOString();
-      const status = attempt >= task.max_attempts ? 'failed' : 'retrying';
-      await db.failTask(task.id, status, message, status === 'retrying' ? nextRun : undefined);
+      const shouldRetry = claimedTask.attempt_count < claimedTask.max_attempts;
+      await db.failTask(claimedTask.id, shouldRetry ? 'retrying' : 'failed', message, shouldRetry ? nextRun : undefined);
     }
+
     await db.setAgentStatus(agent.id, 'error', message);
-    await db.finishRun(runId, 'failed', { error: message });
-    await logRuntime(db, 'error', 'run_failed', correlationId, { agentId: agent.id, runId, details: message });
+    await db.finishRun(runId, 'failed', { error: message, taskId: claimedTask?.id ?? null });
+    await logRuntime(db, 'error', 'run_failed', correlationId, {
+      agentId: agent.id,
+      runId,
+      taskId: claimedTask?.id,
+      details: message,
+    });
   }
 }
 
@@ -158,6 +173,7 @@ export default {
             body: JSON.stringify({ checkpoint: { lastRunAt: new Date().toISOString() } }),
           });
         }
+
         message.ack();
       } catch (error) {
         console.error(error);

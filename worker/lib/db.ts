@@ -58,21 +58,24 @@ class SupabaseRuntimeDb implements RuntimeDb {
   }
 
   async completeTask(taskId: number): Promise<void> {
-    const { error } = await this.client.from('agent_tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId);
+    const now = new Date().toISOString();
+    const { error } = await this.client
+      .from('agent_tasks')
+      .update({ status: 'completed', completed_at: now, failed_at: null, last_error: null, run_after: now, updated_at: now })
+      .eq('id', taskId);
     if (error) throw error;
   }
 
   async failTask(taskId: number, status: 'retrying' | 'failed', lastError: string, runAfterIso?: string): Promise<void> {
+    const now = new Date().toISOString();
     const updates: Record<string, string | null> = {
       status,
       last_error: lastError,
-      updated_at: new Date().toISOString(),
-      failed_at: status === 'failed' ? new Date().toISOString() : null,
+      updated_at: now,
+      completed_at: null,
+      failed_at: status === 'failed' ? now : null,
+      run_after: status === 'retrying' ? runAfterIso ?? now : now,
     };
-
-    if (runAfterIso) {
-      updates.run_after = runAfterIso;
-    }
 
     const { error } = await this.client.from('agent_tasks').update(updates).eq('id', taskId);
     if (error) throw error;
