@@ -15,24 +15,33 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const ReviewTable: React.FC = () => {
   const [businesses, setBusinesses] = useState<VerifiedBusiness[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
   const [filters, setFilters] = useState({
-    status: 'All',
-    city: 'All',
-    category: 'All',
+    status: 'All Status',
+    city: 'All Cities',
+    category: 'All Categories',
+    search: '',
     minScore: 0
   });
 
   useEffect(() => {
     fetchBusinesses();
-  }, [filters]);
+  }, [filters, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters.status, filters.city, filters.category, filters.search, filters.minScore]);
 
   const fetchBusinesses = async () => {
     setLoading(true);
     try {
-      const data = await businessService.getVerifiedBusinesses(filters);
-      setBusinesses(data);
+      const result = await businessService.getVerifiedBusinesses(filters, { page, pageSize });
+      setBusinesses(result.data);
+      setTotalCount(result.total);
     } catch (error) {
       console.error('Error fetching businesses:', error);
     } finally {
@@ -65,6 +74,8 @@ const ReviewTable: React.FC = () => {
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
     <div className="space-y-6">
@@ -115,11 +126,28 @@ const ReviewTable: React.FC = () => {
           <option>Basra</option>
         </select>
         <div className="flex-1" />
+        <select 
+          value={filters.category}
+          onChange={(e) => setFilters({...filters, category: e.target.value})}
+          className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#C9A84C]"
+        >
+          <option>All Categories</option>
+          <option>restaurants</option>
+          <option>cafes</option>
+          <option>bakeries</option>
+          <option>hotels</option>
+          <option>gyms</option>
+          <option>beauty_salons</option>
+          <option>pharmacies</option>
+          <option>supermarkets</option>
+        </select>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input 
             type="text" 
             placeholder="Search businesses..."
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-[#C9A84C]"
           />
         </div>
@@ -187,11 +215,11 @@ const ReviewTable: React.FC = () => {
                       <div className="flex flex-col items-center gap-1">
                         <div className="flex gap-0.5">
                           {[1, 2, 3].map(s => (
-                            <div key={s} className={`w-2 h-2 rounded-full ${s <= b.verification_score ? 'bg-[#C9A84C]' : 'bg-gray-200'}`} />
+                            <div key={s} className={`w-2 h-2 rounded-full ${s <= (b.verification_score || 0) ? 'bg-[#C9A84C]' : 'bg-gray-200'}`} />
                           ))}
                         </div>
-                        <span className={`text-[10px] font-black ${b.confidence_score >= 80 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                          {b.confidence_score}%
+                        <span className={`text-[10px] font-black ${(b.confidence_score || 0) >= 80 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {b.confidence_score || 0}%
                         </span>
                       </div>
                     </td>
@@ -202,8 +230,8 @@ const ReviewTable: React.FC = () => {
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleStatusUpdate(b.id, 'approved')}
-                          disabled={b.confidence_score < 80}
-                          className={`p-2 rounded-lg transition-all ${b.confidence_score >= 80 ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-200 cursor-not-allowed'}`}
+                          disabled={(b.confidence_score || 0) < 80}
+                          className={`p-2 rounded-lg transition-all ${(b.confidence_score || 0) >= 80 ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-200 cursor-not-allowed'}`}
                           title="Approve"
                         >
                           <CheckCircle size={18} />
@@ -229,6 +257,27 @@ const ReviewTable: React.FC = () => {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-sm text-gray-500 px-2">
+        <p>Showing {businesses.length} of {totalCount} filtered records.</p>
+        <div className="flex items-center gap-2">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span>Page {page} / {totalPages}</span>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
