@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, where, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
-import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
 
 // --- Types ---
@@ -172,21 +171,28 @@ export default function AgentCommander() {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      
-      const result = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        config: { 
-          systemInstruction: AGENT_SYSTEM_PROMPTS[selectedAgent.id],
-          tools: selectedAgent.id === 9 || selectedAgent.id === 2 ? [{ googleMaps: {} }] : []
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        contents: newHistory.map(m => ({
-          role: m.role,
-          parts: [{ text: m.parts[0].text }]
-        }))
+        body: JSON.stringify({
+          model: "gemini-2.0-flash",
+          systemInstruction: AGENT_SYSTEM_PROMPTS[selectedAgent.id],
+          tools: selectedAgent.id === 9 || selectedAgent.id === 2 ? [{ googleMaps: {} }] : [],
+          contents: newHistory.map(m => ({
+            role: m.role,
+            parts: [{ text: m.parts[0].text }]
+          })),
+        }),
       });
 
-      const agentResponse = result.text || "⚠️ Agent unavailable. Please retry.";
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || 'AI request failed.');
+      }
+
+      const agentResponse = payload.text || "⚠️ Agent unavailable. Please retry.";
       const agentMessage: Message = { role: 'model', parts: [{ text: agentResponse }] };
       
       setChatHistories(prev => ({

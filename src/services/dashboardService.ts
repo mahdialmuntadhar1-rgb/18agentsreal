@@ -15,6 +15,39 @@ import {
 } from 'firebase/firestore';
 import { RawBusiness, VerifiedBusiness, AgentTask } from '../types';
 
+const DEFAULT_PAGE_SIZE = 25;
+
+const normalizeFilterValue = (value?: string) => {
+  if (!value) return undefined;
+  const normalized = value.toLowerCase();
+  if (normalized.startsWith('all')) return undefined;
+  return value;
+};
+
+const buildBusinessQuery = (filters: any) => {
+  let q = query(collection(db, 'businesses'), orderBy('created_at', 'desc'));
+
+  const status = normalizeFilterValue(filters.status)?.toLowerCase();
+  const city = normalizeFilterValue(filters.city);
+  const category = normalizeFilterValue(filters.category);
+  const minScore = Number(filters.minScore || 0);
+
+  if (status) {
+    q = query(q, where('status', '==', status));
+  }
+  if (city) {
+    q = query(q, where('city', '==', city));
+  }
+  if (category) {
+    q = query(q, where('category', '==', category));
+  }
+  if (minScore > 0) {
+    q = query(q, where('confidence_score', '>=', minScore));
+  }
+
+  return q;
+};
+
 export const businessService = {
   async getStats() {
     const [
@@ -40,24 +73,35 @@ export const businessService = {
     };
   },
 
-  async getVerifiedBusinesses(filters: any) {
-    let q = query(collection(db, 'businesses'), orderBy('created_at', 'desc'));
-    
-    if (filters.status && filters.status !== 'All') {
-      q = query(q, where('status', '==', filters.status.toLowerCase()));
-    }
-    if (filters.city && filters.city !== 'All') {
-      q = query(q, where('city', '==', filters.city));
-    }
-    if (filters.category && filters.category !== 'All') {
-      q = query(q, where('category', '==', filters.category));
-    }
-    if (filters.minScore) {
-      q = query(q, where('confidence_score', '>=', filters.minScore));
-    }
+  async getVerifiedBusinesses(filters: any, options?: { page?: number; pageSize?: number }) {
+    const q = buildBusinessQuery(filters);
+    const [snapshot, countSnapshot] = await Promise.all([
+      getDocs(q),
+      getCountFromServer(q)
+    ]);
 
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as VerifiedBusiness[];
+    const allRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as VerifiedBusiness[];
+    const searchTerm = (filters.search || '').toString().trim().toLowerCase();
+    const filteredRecords = searchTerm
+      ? allRecords.filter((business) =>
+          [business.name_ar, business.name_en, business.name_ku, business.phone]
+            .filter(Boolean)
+            .some((value) => value!.toString().toLowerCase().includes(searchTerm))
+        )
+      : allRecords;
+
+    const page = Math.max(1, options?.page || 1);
+    const pageSize = Math.max(1, options?.pageSize || DEFAULT_PAGE_SIZE);
+    const startIndex = (page - 1) * pageSize;
+    const data = filteredRecords.slice(startIndex, startIndex + pageSize);
+
+    return {
+      data,
+      total: filteredRecords.length,
+      totalFromFilteredQuery: countSnapshot.data().count || 0,
+      page,
+      pageSize
+    };
   },
 
   async updateStatus(id: string, status: string) {

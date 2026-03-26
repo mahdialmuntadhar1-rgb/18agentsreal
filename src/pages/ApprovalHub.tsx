@@ -40,9 +40,9 @@ export default function ApprovalHub() {
           <div>
             <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
               <ShieldCheck className="text-emerald-400" size={32} />
-              APPROVAL HUB
+              APPROVAL HUB (DEMO)
             </h1>
-            <p className="text-slate-400 mt-1 text-sm">Review and approve AI-generated business listings</p>
+            <p className="text-slate-400 mt-1 text-sm">Demo-only mock screen. Do not use for production decisions.</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -60,6 +60,10 @@ export default function ApprovalHub() {
             </button>
           </div>
         </header>
+
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-200 text-sm">
+          This section is backed by static sample records and is intentionally disabled for launch readiness.
+        </div>
 
         <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">

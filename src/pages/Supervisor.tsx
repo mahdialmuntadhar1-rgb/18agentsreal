@@ -6,10 +6,6 @@ import {
   Download, Loader2, MessageCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize Gemini for the Supervisor Chat
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 interface Message {
   id: string;
@@ -92,21 +88,31 @@ export default function Supervisor() {
     setIsTyping(true);
 
     try {
-      const model = "gemini-3-flash-preview";
-      const response = await genAI.models.generateContent({
-        model,
-        contents: [
-          { role: 'user', parts: [{ text: `You are the AI Supervisor for Iraq Compass, a business directory. You help the user manage data agents and clean business listings. User says: ${inputText}` }] }
-        ],
-        config: {
-          systemInstruction: "You are a professional, efficient AI Supervisor for the Iraq Compass project. You speak with authority and technical precision. Keep responses concise but helpful."
-        }
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gemini-2.0-flash',
+          systemInstruction: "You are a professional, efficient AI Supervisor for the Iraq Compass project. You speak with authority and technical precision. Keep responses concise but helpful.",
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `You are the AI Supervisor for Iraq Compass, a business directory. You help the user manage data agents and clean business listings. User says: ${inputText}` }]
+            }
+          ],
+        }),
       });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload?.error || 'AI request failed.');
+      }
 
       const supervisorMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'supervisor',
-        text: response.text || "I'm processing your request. Please stand by.",
+        text: payload.text || "I'm processing your request. Please stand by.",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, supervisorMsg]);
