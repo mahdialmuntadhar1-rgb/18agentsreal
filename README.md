@@ -26,9 +26,10 @@ npm run lint
 npm run build
 ```
 
-## Architecture
+## Runtime truthfulness
 
-- Frontend uses Supabase browser client (`src/lib/supabase.ts`).
-- Auth is Supabase Auth only (`src/AuthContext.tsx`).
-- Server APIs persist operational agent state in Supabase (`server.ts`).
+- Runtime agent status, task queueing, and log history are read from/written to Supabase tables (`agents`, `agent_tasks`, `agent_logs`).
+- Orchestrator endpoints (`/api/orchestrator/start`, `/api/orchestrator/stop`) persist status/task/log changes before responding.
+- Manual agent runs (`/api/agents/:agentName/run`) create and update persisted run-task records.
+- Pages still marked as placeholders (for example `/overview`) are explicitly labeled as non-operational and are not part of production runtime control flow.
 - No Firebase runtime paths are retained.

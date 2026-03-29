@@ -9,24 +9,10 @@ class GenericWorkerGovernor extends BaseGovernor {
 
   async gather(city?: string): Promise<any[]> {
     const targetCity = city || "Baghdad";
-    console.log(`Generic Agent ${this.agentName} gathering for ${this.category} in ${targetCity}...`);
-    // Simulate finding 1-3 businesses
-    return [
-      {
-        name: `${this.category} Hub ${Math.floor(Math.random() * 100)}`,
-        category: this.category,
-        city: targetCity,
-        address: "Main Street, Sector 7",
-        phone: "+964 770 000 0000",
-        website: "https://example.com",
-        source_url: "https://example.com/source",
-        description: `A high-quality ${this.category.toLowerCase()} in ${targetCity}.`,
-        operating_hours: "08:00 AM - 10:00 PM",
-        source: "AI Crawler",
-        verification_status: "Pending",
-        date_collected: new Date()
-      }
-    ];
+    console.warn(
+      `${this.agentName}: No external data source configured for category ${this.category} in ${targetCity}. Returning no records.`,
+    );
+    return [];
   }
 }
 
@@ -35,7 +21,6 @@ const governors: Record<string, any> = {
   "QC Overseer": new QualityControlGovernor(),
 };
 
-// Register the rest of the 18 agents
 const agentConfigs = [
   { id: "Agent-02", name: "Basra", category: "cafes", rate: "Rate Level 1" },
   { id: "Agent-03", name: "Nineveh", category: "bakeries", rate: "Rate Level 1" },
@@ -56,7 +41,7 @@ const agentConfigs = [
   { id: "Agent-18", name: "Diyala", category: "cafes", rate: "Rate Level 5" },
 ];
 
-agentConfigs.forEach(config => {
+agentConfigs.forEach((config) => {
   if (!governors[config.id]) {
     governors[config.id] = new GenericWorkerGovernor(config.id, config.category, config.rate);
   }
@@ -67,7 +52,7 @@ export async function runGovernor(agentName: string) {
   if (!governor) {
     throw new Error(`Governor ${agentName} not found`);
   }
-  
+
   console.log(`Starting run for ${agentName}...`);
   await governor.run();
   console.log(`Finished run for ${agentName}`);

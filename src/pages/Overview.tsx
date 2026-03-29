@@ -6,7 +6,7 @@ export default function Overview() {
     <div className="p-8 space-y-8">
       <header>
         <h1 className="text-2xl font-bold text-gold uppercase tracking-widest">System Overview</h1>
-        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest">Nationwide Directory Status</p>
+        <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest">UI Placeholder (non-operational analytics view)</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
