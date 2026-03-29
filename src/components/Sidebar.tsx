@@ -6,11 +6,10 @@ import {
   Bot, 
   Download, 
   LogOut,
-  Compass,
+  Cpu,
   Terminal,
   Activity,
   AlertTriangle,
-  CheckCircle,
   FileText,
   Zap,
   ShieldCheck,
@@ -41,10 +40,10 @@ const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-navy/95 text-[#e2d9c8] flex flex-col h-screen sticky top-0 border-r border-gold/20 font-mono">
       <div className="p-6 flex items-center gap-3 border-b border-gold/20">
-        <Compass className="text-gold" size={32} />
+        <Cpu className="text-gold" size={32} />
         <div>
-          <h1 className="font-bold text-sm tracking-[0.2em] text-gold uppercase">IRAQ COMPASS</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Internal Dashboard</p>
+          <h1 className="font-bold text-sm tracking-[0.2em] text-gold uppercase">18 AGENTS</h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Agent Operations Console</p>
         </div>
       </div>
 
