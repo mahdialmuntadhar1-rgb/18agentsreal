@@ -1,36 +1,84 @@
-# Iraq Compass Data Verification Dashboard
-
-Internal tool to clean, verify, and approve 70,000+ Iraqi business records.
-
-## Setup Instructions for Replit
-
-1. **Create a new Replit** using the "React" template.
-2. **Upload all files** from this repository to your Replit.
-3. **Configure Environment Variables**:
-   - Go to the **Secrets** tab in Replit.
-   - Add `VITE_SUPABASE_URL` with your Supabase project URL.
-   - Add `VITE_SUPABASE_ANON_KEY` with your Supabase anon key.
-4. **Install Dependencies**:
-   - Replit should automatically detect `package.json` and install dependencies.
-   - If not, run `npm install` in the Shell.
-5. **Run the App**:
-   - Click the **Run** button at the top.
-   - The dashboard will be available in the Webview.
-
-## Supabase Schema
-
-Before running the app, ensure you have executed the SQL schema provided in the `Step 1` response in your Supabase SQL Editor.
+# Iraq Business Data Agents – 18 City Scrapers + Quality Control
 
 ## Features
+- 18 independent agents, one per Iraqi city
+- Real data from Google Places API + Gemini AI enrichment
+- Quality control manager scores each business (0-100)
+- Dashboard to run any agent individually or all 18 at once
+- Live WebSocket logs
 
-- **Overview**: Real-time metrics of raw vs verified data.
-- **Review Table**: Batch approve or reject businesses based on verification scores.
-- **Data Cleaner**: Repair encoding issues (mojibake) in Arabic/Kurdish text.
-- **Task Manager**: Launch automated agent tasks for data enrichment.
-- **Export**: Generate clean JSON files ready for the public directory.
+## Project Structure
 
-## Language Support
+```text
+18-AGENTS/
+├── server/
+│   ├── src/
+│   │   ├── index.ts
+│   │   ├── agents/
+│   │   │   ├── CityAgent.ts
+│   │   │   ├── QualityManager.ts
+│   │   │   └── index.ts
+│   │   ├── lib/
+│   │   │   ├── supabase.ts
+│   │   │   ├── gemini.ts
+│   │   │   └── googlePlaces.ts
+│   │   ├── types.ts
+│   │   └── queue.ts
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env.example
+├── dashboard/
+│   ├── src/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tailwind.config.js
+├── supabase/
+│   └── migrations/
+│       └── 001_agent_schema.sql
+├── docker-compose.yml
+└── README.md
+```
 
-- Full RTL support for Arabic and Kurdish.
-- Trilingual data fields (AR, KU, EN).
-- Dir="rtl" implemented on relevant UI components.
+## Quick Start
+
+### 1. Prerequisites
+- Node.js 18+
+- Redis (or Docker)
+- Supabase account
+- Google Places API key
+- Gemini API key
+
+### 2. Setup Backend
+```bash
+cd server
+cp .env.example .env
+npm install
+npm run dev
+```
+
+### 3. Setup Frontend
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+
+### 4. Database
+Run `supabase/migrations/001_agent_schema.sql` in Supabase SQL Editor.
+
+### 5. Run Redis (if needed)
+```bash
+docker-compose up -d redis
+```
+
+## API Endpoints
+- `GET /api/agents/status` – List agent jobs
+- `POST /api/agents/start` – Start one city agent
+- `POST /api/agents/start-all` – Start all 18 agents
+- `GET /api/agents/logs/:jobId` – Fetch job logs
+
+## WebSocket
+- Connect to `ws://localhost:3001/ws` for live logs.
+
+## License
+MIT
