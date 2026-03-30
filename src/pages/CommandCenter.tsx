@@ -201,24 +201,20 @@ export default function CommandCenter() {
     let createdTaskId: string | null = null;
 
     try {
-      try {
-        const response = await fetch('/api/discovery/run?mode=direct', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentName: 'Agent-01',
-            taskType: selectedTask,
-            instruction,
-            cities,
-          }),
-        });
+      const response = await fetch('/api/discovery/run?mode=direct', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentName: 'Agent-01',
+          taskType: selectedTask,
+          instruction,
+          cities,
+        }),
+      });
 
-        const discoveryResult = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(discoveryResult?.error || `Discovery run failed with status ${response.status}`);
-        }
-      } catch (backendError: any) {
-        await addLog('warn', `Discovery API unavailable: ${backendError.message}. Continuing in safe local mode.`);
+      const discoveryResult = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(discoveryResult?.error || `Discovery run failed with status ${response.status}`);
       }
 
       const payloadCandidates = [
@@ -259,60 +255,23 @@ export default function CommandCenter() {
       await addLog('info', `Cities: ${cities.map(id => CITIES.find(c => c.id === id)?.en).join(', ')}`);
       await addLog('agent', `${selectedTask.toUpperCase()} agent activated`);
 
-      const messages: Record<string, ((c: string) => string)[]> = {
-        social: [
-          (c) => `🔍 Searching Instagram for businesses in ${c}…`,
-          (c) => `📘 Scanning Facebook pages for ${c}…`,
-          (c) => `✅ Found ${Math.floor(Math.random() * 120 + 30)} social profiles in ${c}`,
-          (c) => `💾 Writing Instagram URLs to directory for ${c}`,
-          (c) => `💾 Writing Facebook URLs to directory for ${c}`,
-          (c) => `✔ ${c} — social enrichment complete`,
-        ],
-        text: [(c) => `Repairing Arabic text in ${c}…`, (c) => `Fixed encoding in ${c}`],
-        enrich: [(c) => `Filling phones/coords in ${c}…`, (c) => `Enrichment done for ${c}`],
-        qc: [(c) => `Running QC on ${c}…`, (c) => `QC complete for ${c}`],
-        export: [(c) => `Exporting ${c} to Supabase…`, (c) => `Export done for ${c}`],
-      };
-
-      const interval = setInterval(async () => {
-        const currentCities = [...selectedCities] as string[];
-        const cityId = currentCities[Math.floor(Math.random() * currentCities.length)];
-        const cityName = (CITIES.find(c => c.id === cityId)?.en || cityId) as string;
-        const msgsForTask = ((messages as any)[selectedTask] || messages.social) as any[];
-        const msgFn = msgsForTask[Math.floor(Math.random() * msgsForTask.length)] as (c: string) => string;
-
-        await addLog('ok', msgFn(cityName));
-
-        setCityProgress((prev: Record<string, number>) => {
-          const next = { ...prev } as any;
-          let allDone = true;
-          let completedCount = 0;
-
-          currentCities.forEach((id: string) => {
-            if (next[id] < 100) {
-              next[id] = Math.min(100, next[id] + Math.random() * 15 + 5);
-              if (next[id] < 100) allDone = false;
-              else {
-                addLog('ok', `✔ ${CITIES.find(c => c.id === id)?.en} — task complete`);
-              }
-            }
-            if (next[id] >= 100) completedCount++;
-          });
-
-          setDoneCount(completedCount);
-
-          if (allDone) {
-            clearInterval(interval);
-            setIsRunning(false);
-            runInFlightRef.current = false;
-            if (createdTaskId) {
-              supabase.from('agent_tasks').update({ status: 'completed', progress: 100 }).eq('id', createdTaskId);
-            }
-            addLog('info', `🏁 All tasks complete · ${currentCities.length} cities processed`);
-          }
-          return next;
+      setCityProgress(prev => {
+        const next = { ...prev };
+        cities.forEach((id) => {
+          next[id] = 100;
         });
-      }, 1500);
+        return next;
+      });
+      setDoneCount(cities.length);
+
+      if (createdTaskId) {
+        await supabase.from('agent_tasks').update({ status: 'completed', progress: 100 }).eq('id', createdTaskId);
+      }
+
+      await addLog('ok', `Discovery run ${discoveryResult?.runId || ''} completed successfully.`);
+      await addLog('info', `🏁 Run complete · ${cities.length} cities processed`);
+      setIsRunning(false);
+      runInFlightRef.current = false;
     } catch (error: any) {
       console.error('Error launching task:', error);
       await addLog('warn', `Task launch failed: ${error?.message || 'unknown error'}`);

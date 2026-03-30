@@ -53,6 +53,13 @@ async function startServer() {
   app.post("/api/discovery/run", async (req, res) => {
     const { agentName, city = "Baghdad", governorate, category = "restaurants", query, includeGoogleFallback = false } = req.body || {};
 
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        ok: false,
+        error: "Supabase is not configured on the server",
+      });
+    }
+
     if (activeDiscoveryRun) {
       return res.status(409).json({ ok: false, error: "A discovery run is already in progress", runId: activeDiscoveryRunId });
     }
