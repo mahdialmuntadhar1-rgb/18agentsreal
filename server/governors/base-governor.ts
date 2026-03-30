@@ -47,10 +47,6 @@ export abstract class BaseGovernor {
       return rpcResult.data[0];
     }
 
-    if (rpcResult.error) {
-      console.warn(`${this.agentName}: claim_next_task RPC unavailable, falling back to direct claim.`, rpcResult.error.message);
-    }
-
     const { data: candidates, error: selectError } = await this.supabase
       .from("agent_tasks")
       .select("*")
@@ -59,9 +55,6 @@ export abstract class BaseGovernor {
       .limit(1);
 
     if (selectError || !candidates || candidates.length === 0) {
-      if (selectError) {
-        console.error(`${this.agentName}: Failed to fetch pending tasks.`, selectError.message);
-      }
       return null;
     }
 
@@ -78,22 +71,7 @@ export abstract class BaseGovernor {
       return assignment.data[0];
     }
 
-    const statusOnlyAssignment = await this.supabase
-      .from("agent_tasks")
-      .update({ status: "processing" })
-      .eq("id", candidate.id)
-      .eq("status", "pending")
-      .select("*")
-      .limit(1);
-
-    if (statusOnlyAssignment.error || !statusOnlyAssignment.data || statusOnlyAssignment.data.length === 0) {
-      if (statusOnlyAssignment.error) {
-        console.error(`${this.agentName}: Failed to claim task ${candidate.id}.`, statusOnlyAssignment.error.message);
-      }
-      return null;
-    }
-
-    return statusOnlyAssignment.data[0];
+    return null;
   }
 
   private async completeTask(taskId: number | string) {
@@ -105,24 +83,42 @@ export abstract class BaseGovernor {
     let errors = 0;
 
     for (const item of items) {
-      const businessData = {
-        name: item.name,
-        category: item.category.toLowerCase(),
+      const nameEn = item.name || item.name_en || item.name?.en || "Unnamed";
+      const nameAr = item.local_name || item.name_ar || item.name?.ar || "";
+      const nameKu = item.name_ku || item.name?.ku || "";
+      const source = item.source || "unknown";
+      const confidence = item.confidence_score || 0;
+      const status = confidence >= 70 ? "approved" : confidence >= 45 ? "pending" : "flagged";
+
+      const businessData: any = {
+        name_en: nameEn,
+        name_ar: nameAr,
+        name_ku: nameKu,
+        name: { en: nameEn, ar: nameAr, ku: nameKu },
+        category: (item.category || this.category || "unknown").toLowerCase(),
         government_rate: govRate,
+        governorate: item.governorate || item.city,
         city: item.city,
         address: item.address,
         phone: item.phone,
         website: item.website,
-        description: item.description,
+        source,
         source_url: item.source_url,
+        facebook_url: item.facebook_url,
+        instagram_url: item.instagram_url,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        confidence_score: confidence,
+        extraction_notes: item.extraction_notes,
+        status,
         created_by_agent: this.agentName,
-        verification_status: "pending",
+        verification_status: status,
       };
 
-      const { error } = await this.supabase.from("businesses").upsert(businessData, { onConflict: "name,city" });
+      const { error } = await this.supabase.from("businesses").upsert(businessData, { onConflict: "name_en,city,phone" });
 
       if (error) {
-        console.error(`Error inserting ${item.name}:`, error.message);
+        console.error(`Error inserting ${nameEn}:`, error.message);
         errors++;
       } else {
         added++;
@@ -146,13 +142,26 @@ export abstract class BaseGovernor {
   async log(result: string, added: number, updated: number) {
     const { data: agent } = await this.supabase.from("agents").select("id").eq("agent_name", this.agentName).single();
 
-    if (agent) {
+    await this.supabase.from("agent_logs").insert({
+      agent_id: agent?.id || this.agentName,
+      action: "run",
+      result,
+      records_added: added,
+      records_updated: updated,
+      message: `${this.agentName} run ${result}. added=${added} errors=${updated}`,
+      type: result === "success" ? "success" : "error",
+    });
+  }
+
+  async logAdapterRuns(runs: Array<{ adapter: string; ok: boolean; count: number; error?: string }>) {
+    for (const run of runs) {
       await this.supabase.from("agent_logs").insert({
-        agent_id: agent.id,
-        action: "run",
-        result,
-        records_added: added,
-        records_updated: updated,
+        agent_id: this.agentName,
+        action: "adapter_run",
+        result: run.ok ? "success" : "failed",
+        records_added: run.count,
+        message: `${run.adapter}: ${run.ok ? "ok" : "failed"}${run.error ? ` (${run.error})` : ""}`,
+        type: run.ok ? "info" : "warning",
       });
     }
   }
@@ -160,6 +169,6 @@ export abstract class BaseGovernor {
   abstract gather(city?: string, category?: string): Promise<any[]>;
 
   async validate(items: any[]) {
-    return items.filter((i) => i.name && (i.address || i.city));
+    return items.filter((i) => i?.name && (i?.address || i?.city || i?.phone));
   }
 }

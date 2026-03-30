@@ -7,20 +7,21 @@ class GenericWorkerGovernor extends BaseGovernor {
     super();
   }
 
-  async gather(city?: string): Promise<any[]> {
+  async gather(city?: string, category?: string): Promise<any[]> {
     const targetCity = city || "Baghdad";
-    console.log(`Generic Agent ${this.agentName} gathering for ${this.category} in ${targetCity}...`);
+    const targetCategory = category || this.category;
+    console.log(`Generic Agent ${this.agentName} gathering for ${targetCategory} in ${targetCity}...`);
     // Simulate finding 1-3 businesses
     return [
       {
-        name: `${this.category} Hub ${Math.floor(Math.random() * 100)}`,
-        category: this.category,
+        name: `${targetCategory} Hub ${Math.floor(Math.random() * 100)}`,
+        category: targetCategory,
         city: targetCity,
         address: "Main Street, Sector 7",
         phone: "+964 770 000 0000",
         website: "https://example.com",
         source_url: "https://example.com/source",
-        description: `A high-quality ${this.category.toLowerCase()} in ${targetCity}.`,
+        description: `A high-quality ${String(targetCategory).toLowerCase()} in ${targetCity}.`,
         operating_hours: "08:00 AM - 10:00 PM",
         source: "AI Crawler",
         verification_status: "Pending",

@@ -27,23 +27,28 @@ import { handleSupabaseError, OperationType } from "../lib/supabaseUtils";
 
 interface Business {
   id: string;
-  name_en: string;
-  name_ar: string;
-  name_ku: string;
-  category: string;
-  city: string;
-  phone: string;
-  address: string;
+  name_en?: string;
+  name_ar?: string;
+  name_ku?: string;
+  name?: { en?: string; ar?: string; ku?: string };
+  category?: string;
+  city?: string;
+  phone?: string;
+  address?: string;
   website?: string;
-  score: number;
-  status: string;
-  last_updated: string;
+  confidence_score?: number;
+  source?: string;
+  status?: string;
+  source_url?: string;
+  facebook_url?: string;
+  instagram_url?: string;
   logo_url?: string;
   cover_image_url?: string;
   description_en?: string;
   description_ar?: string;
   description_ku?: string;
   highlights?: string[];
+  last_updated?: string;
 }
 
 const CATEGORIES = [
@@ -60,7 +65,7 @@ export default function Home() {
   const [selectedCat, setSelectedCat] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [agentStatuses, setAgentStatuses] = useState<Record<string, string>>({});
+  const [agentStatuses] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
@@ -218,6 +223,8 @@ export default function Home() {
                       <tr className="border-b border-white/5 bg-white/5">
                         <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Business Name</th>
                         <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Category</th>
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Source</th>
+                        <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Confidence</th>
                         <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40">Status</th>
                         <th className="px-8 py-5 text-xs font-bold uppercase tracking-widest text-white/40 text-right">Action</th>
                       </tr>
@@ -226,7 +233,7 @@ export default function Home() {
                       {loading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                           <tr key={i} className="animate-pulse">
-                            <td colSpan={4} className="px-8 py-10">
+                            <td colSpan={6} className="px-8 py-10">
                               <div className="h-4 bg-white/5 rounded w-full"></div>
                             </td>
                           </tr>
@@ -235,15 +242,19 @@ export default function Home() {
                         filteredBusinesses.map((b) => (
                           <tr key={b.id} className="hover:bg-white/5 transition-colors group cursor-pointer" onClick={() => setSelectedBusiness(b)}>
                             <td className="px-8 py-6">
-                              <div className="font-bold text-lg">{b.name_en || 'Unnamed'}</div>
+                              <div className="font-bold text-lg">{b.name_en || b.name?.en || b.name_ar || 'Unnamed'}</div>
                               <div className="text-xs text-white/40">{b.address}</div>
                             </td>
                             <td className="px-8 py-6">
                               <div className="flex items-center gap-2">
                                 <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-wider text-white/60">
-                                  {b.category}
+                                  {b.category || "unknown"}
                                 </span>
                               </div>
+                            </td>
+                            <td className="px-8 py-6 text-xs text-white/70">{(b.source || "unknown").replaceAll("_", " ")}</td>
+                            <td className="px-8 py-6">
+                              <span className="text-xs font-bold text-vibrant-purple">{Math.round(b.confidence_score || 0)}%</span>
                             </td>
                             <td className="px-8 py-6">
                               {(b.status === 'verified' || b.status === 'approved') ? (
@@ -259,15 +270,15 @@ export default function Home() {
                               )}
                             </td>
                             <td className="px-8 py-6 text-right">
-                              <button className="text-vibrant-purple text-xs font-bold uppercase tracking-widest hover:underline flex items-center gap-1 ml-auto">
-                                [View Postcard] <ExternalLink size={12} />
-                              </button>
+                              <a href={b.source_url || b.website || b.facebook_url || b.instagram_url || "#"} target="_blank" rel="noreferrer" className="text-vibrant-purple text-xs font-bold uppercase tracking-widest hover:underline flex items-center gap-1 ml-auto">
+                                [Open Source] <ExternalLink size={12} />
+                              </a>
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-8 py-20 text-center text-white/20">
+                          <td colSpan={6} className="px-8 py-20 text-center text-white/20">
                             <div className="flex flex-col items-center gap-4">
                               <Search size={40} />
                               <div className="font-bold uppercase tracking-widest">No businesses found in this sector</div>

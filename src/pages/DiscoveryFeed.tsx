@@ -112,7 +112,7 @@ export default function DiscoveryFeed() {
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img 
                   src={business.photos?.[0] || `https://picsum.photos/seed/${business.id}/800/600`} 
-                  alt={business.name_en || business.name_ar}
+                  alt={business.name_en || business.name?.en || business.name_ar || "Unnamed"}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
@@ -120,7 +120,7 @@ export default function DiscoveryFeed() {
                 
                 <div className="absolute top-4 left-4 flex gap-2">
                   <div className="px-3 py-1 bg-slate-950/80 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-black text-white uppercase tracking-widest">
-                    {business.category}
+                    {business.category || "unknown"}
                   </div>
                 </div>
 
@@ -135,7 +135,7 @@ export default function DiscoveryFeed() {
               <div className="p-6 space-y-4 flex-1 flex flex-col">
                 <div className="space-y-1">
                   <h3 className="text-lg font-black text-white leading-tight group-hover:text-emerald-400 transition-colors">
-                    {business.name_en || business.name_ar}
+                    {business.name_en || business.name?.en || business.name_ar || "Unnamed"}
                   </h3>
                   <div className="flex items-center gap-1 text-amber-400">
                     <Star size={12} fill="currentColor" />
@@ -143,7 +143,7 @@ export default function DiscoveryFeed() {
                     <Star size={12} fill="currentColor" />
                     <Star size={12} fill="currentColor" />
                     <Star size={12} className="opacity-30" />
-                    <span className="text-[10px] text-slate-500 font-bold ml-1">({business.confidence_score}%)</span>
+                    <span className="text-[10px] text-slate-500 font-bold ml-1">({Math.round(business.confidence_score || 0)}%)</span>
                   </div>
                 </div>
 
@@ -151,12 +151,16 @@ export default function DiscoveryFeed() {
                   <div className="flex items-start gap-2 text-slate-400">
                     <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" />
                     <p className="text-xs font-medium leading-relaxed line-clamp-2">
-                      {business.city}, Iraq
+                      {business.city || "Unknown city"}, Iraq
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-slate-400">
                     <Clock size={16} className="text-emerald-500 shrink-0" />
-                    <span className="text-xs font-medium">Verified Status: {business.status}</span>
+                    <span className="text-xs font-medium">Status: {business.status || "pending"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <Globe size={16} className="text-emerald-500 shrink-0" />
+                    <span className="text-xs font-medium">Source: {(business.source || "unknown").replaceAll("_", " ")}</span>
                   </div>
                 </div>
 
