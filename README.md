@@ -26,6 +26,16 @@ npm run lint
 npm run build
 ```
 
+## Repository Analyzer
+
+Run the Codex Analyzer to generate a health report for structure, env coverage, schema alignment, placeholders, and lint status:
+
+```bash
+npm run analyze:repo
+```
+
+The command writes `CODEX_REPORT.md` in the repo root.
+
 ## Runtime truthfulness
 
 - Runtime agent status, task queueing, and log history are read from/written to Supabase tables (`agents`, `agent_tasks`, `agent_logs`).
