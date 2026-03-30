@@ -37,7 +37,7 @@ const Logs: React.FC = () => {
       if (error) throw error;
       setLogs(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'agent_logs');
+      await handleSupabaseError(err, OperationType.GET, 'agent_logs');
     } finally {
       setLoading(false);
     }

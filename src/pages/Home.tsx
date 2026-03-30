@@ -81,7 +81,7 @@ export default function Home() {
       const { data, error } = await query;
 
       if (error) {
-        handleSupabaseError(error, OperationType.GET, 'businesses');
+        await handleSupabaseError(error, OperationType.GET, 'businesses');
         setLoading(false);
         return;
       }

@@ -23,7 +23,7 @@ export default function ApprovalHub() {
       if (error) throw error;
       setBusinesses(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'businesses');
+      await handleSupabaseError(err, OperationType.GET, 'businesses');
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export default function ApprovalHub() {
         setCurrentPage(prev => prev - 1);
       }
     } catch (err) {
-      handleSupabaseError(err, OperationType.UPDATE, `businesses/${id}`);
+      await handleSupabaseError(err, OperationType.UPDATE, `businesses/${id}`);
     }
   };
 

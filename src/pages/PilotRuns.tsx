@@ -27,7 +27,7 @@ export default function PilotRuns() {
       if (error) throw error;
       setRuns(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'agent_tasks');
+      await handleSupabaseError(err, OperationType.GET, 'agent_tasks');
     } finally {
       setLoading(false);
     }

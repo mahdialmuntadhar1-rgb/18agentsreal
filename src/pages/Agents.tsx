@@ -29,7 +29,7 @@ const Agents: React.FC = () => {
         if (error) throw error;
         setAgents(data || []);
       } catch (err) {
-        handleSupabaseError(err, OperationType.GET, 'agents');
+        await handleSupabaseError(err, OperationType.GET, 'agents');
       } finally {
         setLoading(false);
       }
@@ -66,7 +66,7 @@ const Agents: React.FC = () => {
       
       if (error) throw error;
     } catch (err) {
-      handleSupabaseError(err, OperationType.UPDATE, `agents/${agent.id}`);
+      await handleSupabaseError(err, OperationType.UPDATE, `agents/${agent.id}`);
     }
   };
 

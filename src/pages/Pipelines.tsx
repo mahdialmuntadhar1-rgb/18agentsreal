@@ -14,6 +14,8 @@ import { supabase } from '../lib/supabase';
 import { businessService } from '../services/dashboardService';
 import { AgentTask } from '../types';
 
+import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
+
 const Pipelines: React.FC = () => {
   const [stats, setStats] = useState({
     rawCount: 0,
@@ -33,7 +35,7 @@ const Pipelines: React.FC = () => {
       setStats(statsData);
       setActiveTasks(tasksData.data || []);
     } catch (err) {
-      console.error('Failed to fetch pipeline data:', err);
+      await handleSupabaseError(err, OperationType.GET, 'pipeline/data');
     } finally {
       setLoading(false);
     }

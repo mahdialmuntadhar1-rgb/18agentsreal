@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 
+import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
+
 export default function DiscoveryFeed() {
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +29,7 @@ export default function DiscoveryFeed() {
       if (error) throw error;
       setBusinesses(data || []);
     } catch (err) {
-      console.error('Failed to fetch nearby businesses:', err);
-      toast.error('Failed to fetch nearby businesses. Showing all businesses.');
+      await handleSupabaseError(err, OperationType.GET, 'businesses/nearby');
       // Fallback to all businesses if RPC fails
       const { data: allData } = await supabase.from('businesses').select('*').limit(20);
       setBusinesses(allData || []);

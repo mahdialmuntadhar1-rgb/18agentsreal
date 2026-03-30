@@ -15,6 +15,9 @@ import { AgentTask } from '../types';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
+import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
+import { toast } from 'sonner';
+
 const TaskManager: React.FC = () => {
   const [tasks, setTasks] = useState<AgentTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +49,7 @@ const TaskManager: React.FC = () => {
       const data = await taskService.getTasks();
       setTasks(data);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      await handleSupabaseError(error, OperationType.GET, 'agent_tasks');
     } finally {
       setLoading(false);
     }
@@ -61,9 +64,11 @@ const TaskManager: React.FC = () => {
         progress: 0
       });
       setShowNewTask(false);
+      toast.success('Task created successfully');
       fetchTasks();
     } catch (error) {
-      alert('Failed to create task');
+      await handleSupabaseError(error, OperationType.WRITE, 'agent_tasks');
+      toast.error('Failed to create task');
     }
   };
 

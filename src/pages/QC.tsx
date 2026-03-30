@@ -29,7 +29,7 @@ const QC: React.FC = () => {
       if (error) throw error;
       setRecords(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'businesses');
+      await handleSupabaseError(err, OperationType.GET, 'businesses');
     } finally {
       setLoading(false);
     }
@@ -63,7 +63,7 @@ const QC: React.FC = () => {
 
       if (error) throw error;
     } catch (err) {
-      handleSupabaseError(err, OperationType.UPDATE, 'businesses');
+      await handleSupabaseError(err, OperationType.UPDATE, 'businesses');
     }
   };
 

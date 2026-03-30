@@ -39,7 +39,7 @@ const AGENTS = [
   { id: 'validator', icon: <ShieldCheck size={20} />, name: 'Quality Validator', desc: 'Scores & flags entries', tasks: 721, success: 100 },
   { id: 'verifier', icon: <CheckCircle size={20} />, name: 'Human Verifier', desc: 'Queues for human review', tasks: 312, success: 100 },
   { id: 'social', icon: <Globe size={20} />, name: 'Social Finder', desc: 'Finds Instagram / Facebook', tasks: 0, success: 0 },
-  { id: 'exporter', icon: <Download size={20} />, name: 'Export Agent', desc: 'Exports to Firestore', tasks: 24, success: 100 },
+  { id: 'exporter', icon: <Download size={20} />, name: 'Export Agent', desc: 'Exports to Supabase', tasks: 24, success: 100 },
 ];
 
 interface LogEntry {
@@ -84,7 +84,7 @@ export default function CommandCenter() {
         .limit(50);
 
       if (error) {
-        handleSupabaseError(error, OperationType.GET, 'agent_logs');
+        await handleSupabaseError(error, OperationType.GET, 'agent_logs');
         return;
       }
 
@@ -152,7 +152,7 @@ export default function CommandCenter() {
         taskId: currentTaskId
       });
     } catch (error) {
-      handleSupabaseError(error, OperationType.WRITE, 'agent_logs');
+      await handleSupabaseError(error, OperationType.WRITE, 'agent_logs');
     }
   };
 
