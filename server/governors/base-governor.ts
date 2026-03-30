@@ -14,21 +14,27 @@ export abstract class BaseGovernor {
       if (!task) {
         console.log(`${this.agentName}: No pending tasks found. Entering idle mode.`);
         await this.setStatus("idle");
-        return;
+        return { status: "no_task" as const, added: 0, errors: 0 };
       }
 
       console.log(`${this.agentName}: Processing task ${task.id} - ${task.category} in ${task.city}`);
 
       const businesses = await this.gather(task.city, task.category);
 
+      let added = 0;
+      let errors = 0;
+
       if (businesses.length > 0) {
         const validated = await this.validate(businesses);
-        const { added, errors } = await this.store(validated, task.government_rate || this.governmentRate);
+        const storeResult = await this.store(validated, task.government_rate || this.governmentRate);
+        added = storeResult.added;
+        errors = storeResult.errors;
 
         await this.log("success", added, errors);
       }
 
       await this.completeTask(task.id);
+      return { status: "completed" as const, taskId: task.id, added, errors };
     } catch (err) {
       console.error(`Error in ${this.agentName}:`, err);
       await this.setStatus("error");

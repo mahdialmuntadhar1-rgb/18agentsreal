@@ -74,7 +74,7 @@ const Logs: React.FC = () => {
           <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">SYSTEM LOGS</h2>
           <p className="text-gray-500 font-medium">Comprehensive audit trail of all agent operations</p>
         </div>
-        <button className="bg-[#1B2B5E] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg hover:scale-105 transition-all">
+        <button disabled title="Log export is not implemented yet" className="bg-[#1B2B5E] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg opacity-60 cursor-not-allowed">
           <Download size={18} />
           Export Logs
         </button>

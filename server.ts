@@ -86,10 +86,9 @@ async function startServer() {
       activeDiscoveryRun = (async () => {
         try {
           if (agentName) {
-            await runGovernor(agentName);
-          } else {
-            await runGovernor("Agent-01");
+            return await runGovernor(agentName);
           }
+          return await runGovernor("Agent-01");
         } finally {
           activeDiscoveryRun = null;
           activeDiscoveryRunId = null;
@@ -97,8 +96,11 @@ async function startServer() {
       })();
 
       if ((req.query?.mode || "direct") === "direct") {
-        await activeDiscoveryRun;
-        return res.json({ ok: true, runId, mode: "direct", status: "completed" });
+        const runResult: any = await activeDiscoveryRun;
+        if (runResult?.status === "no_task") {
+          return res.status(409).json({ ok: false, runId, mode: "direct", status: "no_task", error: "No pending agent_tasks available" });
+        }
+        return res.json({ ok: true, runId, mode: "direct", status: runResult?.status || "completed", result: runResult });
       }
 
       return res.status(202).json({ ok: true, runId, mode: "async", status: "running" });

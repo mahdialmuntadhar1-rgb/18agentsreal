@@ -69,8 +69,9 @@ export async function runGovernor(agentName: string) {
   }
   
   console.log(`Starting run for ${agentName}...`);
-  await governor.run();
+  const result = await governor.run();
   console.log(`Finished run for ${agentName}`);
+  return result;
 }
 
 export async function runAllGovernors() {

@@ -100,7 +100,7 @@ export default function ApprovalHub() {
                 className="bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
               />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 transition-colors">
+            <button disabled title="Filter controls are not implemented yet" className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg opacity-60 cursor-not-allowed">
               <Filter size={16} /> Filter
             </button>
           </div>
