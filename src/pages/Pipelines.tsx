@@ -14,6 +14,8 @@ import { supabase } from '../lib/supabase';
 import { businessService } from '../services/dashboardService';
 import { AgentTask } from '../types';
 
+import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
+
 const Pipelines: React.FC = () => {
   const [stats, setStats] = useState({
     rawCount: 0,
@@ -33,7 +35,7 @@ const Pipelines: React.FC = () => {
       setStats(statsData);
       setActiveTasks(tasksData.data || []);
     } catch (err) {
-      console.error('Failed to fetch pipeline data:', err);
+      await handleSupabaseError(err, OperationType.GET, 'pipeline/data');
     } finally {
       setLoading(false);
     }
@@ -157,16 +159,15 @@ const Pipelines: React.FC = () => {
                 <div key={i} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="text-sm font-black text-[#1B2B5E]">{task.task_name}</p>
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">{task.task_type} • {task.status}</p>
+                      <p className="text-sm font-black text-[#1B2B5E] uppercase tracking-widest">{task.type}</p>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase">{task.instruction?.slice(0, 50)}...</p>
                     </div>
-                    <span className="text-xs font-black text-[#C9A84C]">Running</span>
+                    <span className="text-xs font-black text-[#C9A84C]">{task.status.toUpperCase()}</span>
                   </div>
                   <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      animate={{ width: `${task.progress}%` }}
                       className="h-full bg-[#C9A84C]"
                     />
                   </div>

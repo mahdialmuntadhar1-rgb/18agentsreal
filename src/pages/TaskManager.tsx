@@ -15,15 +15,18 @@ import { AgentTask } from '../types';
 import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
+import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
+import { toast } from 'sonner';
+
 const TaskManager: React.FC = () => {
   const [tasks, setTasks] = useState<AgentTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewTask, setShowNewTask] = useState(false);
   const [newTask, setNewTask] = useState({
-    task_name: '',
-    task_type: 'Verification',
-    assigned_to: 'Agent-Alpha',
-    city: 'All'
+    instruction: '',
+    type: 'Verification',
+    agent_id: 'Agent-Alpha',
+    cities: ['All']
   });
 
   useEffect(() => {
@@ -46,7 +49,7 @@ const TaskManager: React.FC = () => {
       const data = await taskService.getTasks();
       setTasks(data);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      await handleSupabaseError(error, OperationType.GET, 'agent_tasks');
     } finally {
       setLoading(false);
     }
@@ -57,12 +60,15 @@ const TaskManager: React.FC = () => {
     try {
       await taskService.createTask({
         ...newTask,
-        status: 'pending'
+        status: 'pending',
+        progress: 0
       });
       setShowNewTask(false);
+      toast.success('Task created successfully');
       fetchTasks();
     } catch (error) {
-      alert('Failed to create task');
+      await handleSupabaseError(error, OperationType.WRITE, 'agent_tasks');
+      toast.error('Failed to create task');
     }
   };
 
@@ -91,12 +97,12 @@ const TaskManager: React.FC = () => {
           <h3 className="text-xl font-black text-[#1B2B5E] mb-6 uppercase tracking-tight">Configure New Agent Task</h3>
           <form onSubmit={handleCreateTask} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Task Name</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Instruction</label>
               <input 
                 required
                 type="text" 
-                value={newTask.task_name}
-                onChange={e => setNewTask({...newTask, task_name: e.target.value})}
+                value={newTask.instruction}
+                onChange={e => setNewTask({...newTask, instruction: e.target.value})}
                 placeholder="e.g., Verify Basra Restaurants"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
               />
@@ -104,8 +110,8 @@ const TaskManager: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Task Type</label>
               <select 
-                value={newTask.task_type}
-                onChange={e => setNewTask({...newTask, task_type: e.target.value})}
+                value={newTask.type}
+                onChange={e => setNewTask({...newTask, type: e.target.value})}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
               >
                 <option>Verification</option>
@@ -117,20 +123,20 @@ const TaskManager: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Assigned Agent</label>
               <select 
-                value={newTask.assigned_to}
-                onChange={e => setNewTask({...newTask, assigned_to: e.target.value})}
+                value={newTask.agent_id}
+                onChange={e => setNewTask({...newTask, agent_id: e.target.value})}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
               >
-                <option>Agent-Alpha (Fast)</option>
-                <option>Agent-Beta (Deep Scan)</option>
-                <option>Agent-Gamma (Cleaning)</option>
+                <option>Agent-Alpha</option>
+                <option>Agent-Beta</option>
+                <option>Agent-Gamma</option>
               </select>
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Target City</label>
               <select 
-                value={newTask.city}
-                onChange={e => setNewTask({...newTask, city: e.target.value})}
+                value={newTask.cities[0]}
+                onChange={e => setNewTask({...newTask, cities: [e.target.value]})}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#C9A84C]"
               >
                 <option>All</option>
@@ -183,7 +189,7 @@ const TaskManager: React.FC = () => {
               
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <h4 className="font-black text-[#1B2B5E] uppercase tracking-tight">{task.task_name}</h4>
+                  <h4 className="font-black text-[#1B2B5E] uppercase tracking-tight">{task.type}</h4>
                   <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest ${
                     task.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
                     task.status === 'running' ? 'bg-blue-100 text-blue-700' :
@@ -194,8 +200,8 @@ const TaskManager: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  <span className="flex items-center gap-1"><Activity size={10} /> {task.task_type}</span>
-                  <span className="flex items-center gap-1"><Terminal size={10} /> {task.assigned_to}</span>
+                  <span className="flex items-center gap-1"><Activity size={10} /> {task.instruction}</span>
+                  <span className="flex items-center gap-1"><Terminal size={10} /> {task.agent_id}</span>
                   <span className="flex items-center gap-1"><Clock size={10} /> {new Date(task.created_at).toLocaleTimeString()}</span>
                 </div>
               </div>

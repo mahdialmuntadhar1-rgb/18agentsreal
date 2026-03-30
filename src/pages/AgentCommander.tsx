@@ -144,7 +144,7 @@ export default function AgentCommander() {
       if (error) throw error;
       setTaskHistory(data || []);
     } catch (error) {
-      handleSupabaseError(error, OperationType.GET, 'agent_tasks');
+      await handleSupabaseError(error, OperationType.GET, 'agent_tasks');
     }
   };
 
@@ -285,7 +285,7 @@ export default function AgentCommander() {
 
       setImportStatus(`✅ Imported ${cleaned.length} records to Supabase`);
     } catch (error: any) {
-      handleSupabaseError(error, OperationType.WRITE, 'businesses');
+      await handleSupabaseError(error, OperationType.WRITE, 'businesses');
       setImportStatus(`Error: ${error.message}`);
     }
   };
@@ -300,7 +300,7 @@ export default function AgentCommander() {
       if (error) throw error;
       fetchTasks();
     } catch (error) {
-      handleSupabaseError(error, OperationType.DELETE, 'agent_tasks');
+      await handleSupabaseError(error, OperationType.DELETE, 'agent_tasks');
     }
   };
 
@@ -538,7 +538,7 @@ export default function AgentCommander() {
                     onClick={importToSupabase}
                     className="w-full bg-[#1B2B5E] text-[#C9A84C] py-3 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all"
                   >
-                    Import to Firestore
+                    Import to Supabase
                   </button>
                   {importStatus && <p className="text-[10px] text-center font-bold text-[#1B2B5E]">{importStatus}</p>}
                 </div>

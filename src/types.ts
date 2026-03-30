@@ -37,20 +37,22 @@ export interface VerifiedBusiness {
 
 export interface AgentTask {
   id: string;
-  task_name: string;
-  task_type: string;
-  assigned_to?: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  type: string;
+  instruction?: string;
+  cities?: string[];
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped';
+  progress: number;
   result_summary?: string;
+  agent_id?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface AgentLog {
   id: string;
-  agent_name: string;
-  action: string;
-  record_id?: string;
-  details?: string;
-  created_at: string;
+  timestamp: string;
+  message: string;
+  type: 'info' | 'ok' | 'warn' | 'agent' | 'error' | 'success' | 'warning';
+  taskId?: string;
+  agent_id?: string;
 }

@@ -23,7 +23,14 @@ export interface SupabaseErrorInfo {
 }
 
 export async function handleSupabaseError(error: any, operationType: OperationType, path: string | null) {
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    // Try to get user info, but don't let it block if it fails (e.g. network error)
+    const { data } = await supabase.auth.getUser();
+    user = data?.user;
+  } catch (e) {
+    console.warn('Could not fetch user info for error reporting:', e);
+  }
   
   const errInfo: SupabaseErrorInfo = {
     error: error?.message || String(error),

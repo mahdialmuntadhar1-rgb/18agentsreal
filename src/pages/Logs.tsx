@@ -11,11 +11,11 @@ import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
 
 interface AgentLog {
   id: string;
-  created_at: string;
-  agent_id: string;
-  action: string;
-  details: string;
-  level: 'info' | 'success' | 'warning' | 'error';
+  timestamp: string;
+  message: string;
+  type: 'info' | 'ok' | 'warn' | 'agent' | 'error' | 'success' | 'warning';
+  taskId?: string;
+  agent_id?: string;
 }
 
 const Logs: React.FC = () => {
@@ -31,13 +31,13 @@ const Logs: React.FC = () => {
       const { data, error } = await supabase
         .from('agent_logs')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500); // Fetch more for local filtering/pagination
+        .order('timestamp', { ascending: false })
+        .limit(500); 
 
       if (error) throw error;
       setLogs(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'agent_logs');
+      await handleSupabaseError(err, OperationType.GET, 'agent_logs');
     } finally {
       setLoading(false);
     }
@@ -59,9 +59,9 @@ const Logs: React.FC = () => {
   }, []);
 
   const filteredLogs = logs.filter(log => 
-    log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.agent_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.action.toLowerCase().includes(searchTerm.toLowerCase())
+    log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.agent_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (log.taskId || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
@@ -132,22 +132,22 @@ const Logs: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-start gap-4 group"
               >
-                <span className="text-white/20 whitespace-nowrap">[{new Date(log.created_at).toLocaleTimeString()}]</span>
+                <span className="text-white/20 whitespace-nowrap">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
                 <span className={`font-bold whitespace-nowrap min-w-[120px] ${
                   log.agent_id === 'System' ? 'text-purple-400' : 'text-[#C9A84C]'
                 }`}>
-                  {log.agent_id}
+                  {log.agent_id || 'System'}
                 </span>
                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${
-                  log.level === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
-                  log.level === 'warning' ? 'bg-amber-500/10 text-amber-400' :
-                  log.level === 'error' ? 'bg-rose-500/10 text-rose-400' :
+                  log.type === 'success' || log.type === 'ok' ? 'bg-emerald-500/10 text-emerald-400' :
+                  log.type === 'warning' || log.type === 'warn' ? 'bg-amber-500/10 text-amber-400' :
+                  log.type === 'error' ? 'bg-rose-500/10 text-rose-400' :
                   'bg-blue-500/10 text-blue-400'
                 }`}>
-                  {log.action}
+                  {log.type}
                 </span>
                 <span className="text-white/60 group-hover:text-white transition-colors">
-                  {log.details}
+                  {log.message}
                 </span>
               </motion.div>
             ))

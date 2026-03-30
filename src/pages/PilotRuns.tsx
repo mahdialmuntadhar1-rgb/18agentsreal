@@ -27,7 +27,7 @@ export default function PilotRuns() {
       if (error) throw error;
       setRuns(data || []);
     } catch (err) {
-      handleSupabaseError(err, OperationType.GET, 'agent_tasks');
+      await handleSupabaseError(err, OperationType.GET, 'agent_tasks');
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,8 @@ export default function PilotRuns() {
   }, []);
 
   const filtered = runs.filter(run => 
-    run.task_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    run.task_type.toLowerCase().includes(searchTerm.toLowerCase())
+    (run.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (run.instruction || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -134,11 +134,11 @@ export default function PilotRuns() {
                         <div className={`p-2 rounded-lg ${run.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : run.status === 'failed' ? 'bg-rose-500/10 text-rose-400' : 'bg-blue-500/10 text-blue-400'}`}>
                           <Zap size={14} />
                         </div>
-                        <span className="text-xs font-black text-slate-100 uppercase tracking-wide">{run.task_name}</span>
+                        <span className="text-xs font-black text-slate-100 uppercase tracking-wide">{run.type}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-[10px] font-bold text-slate-500 font-mono tracking-widest uppercase">{run.task_type}</span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono tracking-widest uppercase truncate max-w-[150px] block">{run.instruction}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-400">

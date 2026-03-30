@@ -19,11 +19,11 @@ export const businessService = {
         supabase.from('agent_tasks').select('*', { count: 'exact', head: true })
       ]);
 
-      if (rawError) handleSupabaseError(rawError, OperationType.GET, 'raw_businesses');
-      if (verifiedError) handleSupabaseError(verifiedError, OperationType.GET, 'businesses');
-      if (pendingError) handleSupabaseError(pendingError, OperationType.GET, 'businesses/pending');
-      if (approvedError) handleSupabaseError(approvedError, OperationType.GET, 'businesses/approved');
-      if (taskError) handleSupabaseError(taskError, OperationType.GET, 'agent_tasks');
+      if (rawError) await handleSupabaseError(rawError, OperationType.GET, 'raw_businesses');
+      if (verifiedError) await handleSupabaseError(verifiedError, OperationType.GET, 'businesses');
+      if (pendingError) await handleSupabaseError(pendingError, OperationType.GET, 'businesses/pending');
+      if (approvedError) await handleSupabaseError(approvedError, OperationType.GET, 'businesses/approved');
+      if (taskError) await handleSupabaseError(taskError, OperationType.GET, 'agent_tasks');
 
       return {
         rawCount: rawCount || 0,
@@ -63,7 +63,7 @@ export const businessService = {
 
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) {
-        handleSupabaseError(error, OperationType.GET, 'businesses');
+        await handleSupabaseError(error, OperationType.GET, 'businesses');
         throw error;
       }
       return data as VerifiedBusiness[];
@@ -83,7 +83,7 @@ export const businessService = {
         })
         .eq('id', id);
       if (error) {
-        handleSupabaseError(error, OperationType.UPDATE, `businesses/${id}`);
+        await handleSupabaseError(error, OperationType.UPDATE, `businesses/${id}`);
         throw error;
       }
     } catch (error) {
@@ -102,7 +102,7 @@ export const businessService = {
         })
         .in('id', ids);
       if (error) {
-        handleSupabaseError(error, OperationType.UPDATE, 'businesses/batch');
+        await handleSupabaseError(error, OperationType.UPDATE, 'businesses/batch');
         throw error;
       }
     } catch (error) {
@@ -146,7 +146,7 @@ export const cleaningService = {
     try {
       const { error } = await supabase.from('raw_businesses').insert(records);
       if (error) {
-        handleSupabaseError(error, OperationType.WRITE, 'raw_businesses');
+        await handleSupabaseError(error, OperationType.WRITE, 'raw_businesses');
         throw error;
       }
     } catch (error) {
@@ -164,7 +164,7 @@ export const taskService = {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) {
-        handleSupabaseError(error, OperationType.GET, 'agent_tasks');
+        await handleSupabaseError(error, OperationType.GET, 'agent_tasks');
         throw error;
       }
       return data as AgentTask[];
@@ -181,7 +181,7 @@ export const taskService = {
         created_at: new Date().toISOString()
       });
       if (error) {
-        handleSupabaseError(error, OperationType.WRITE, 'agent_tasks');
+        await handleSupabaseError(error, OperationType.WRITE, 'agent_tasks');
         throw error;
       }
     } catch (error) {
@@ -198,7 +198,7 @@ export const taskService = {
         .eq('taskId', taskId)
         .order('timestamp', { ascending: false });
       if (error) {
-        handleSupabaseError(error, OperationType.GET, `agent_logs/${taskId}`);
+        await handleSupabaseError(error, OperationType.GET, `agent_logs/${taskId}`);
         throw error;
       }
       return data;

@@ -4,12 +4,14 @@ import { CheckCircle2, Filter, Globe, MapPin, Play, Search } from 'lucide-react'
 type SourceName = 'gemini' | 'osm' | 'web' | 'facebook' | 'instagram' | 'google_places';
 type ValidationStatus = 'draft' | 'single_source' | 'multi_source_verified' | 'needs_review' | 'approved';
 
-interface SourceInfo {
-  source: SourceName;
-  discovery: boolean;
-  enrichment: boolean;
-  notes?: string;
-}
+const AGENTS = [
+  { id: 'cleaner', icon: <Wand2 size={20} />, name: 'Text Cleaner', desc: 'Repairs Arabic/Kurdish text', tasks: 1842, success: 98 },
+  { id: 'enricher', icon: <Database size={20} />, name: 'Data Enrichment', desc: 'Fills phones, categories', tasks: 934, success: 94 },
+  { id: 'validator', icon: <ShieldCheck size={20} />, name: 'Quality Validator', desc: 'Scores & flags entries', tasks: 721, success: 100 },
+  { id: 'verifier', icon: <CheckCircle size={20} />, name: 'Human Verifier', desc: 'Queues for human review', tasks: 312, success: 100 },
+  { id: 'social', icon: <Globe size={20} />, name: 'Social Finder', desc: 'Finds Instagram / Facebook', tasks: 0, success: 0 },
+  { id: 'exporter', icon: <Download size={20} />, name: 'Export Agent', desc: 'Exports to Supabase', tasks: 24, success: 100 },
+];
 
 interface BusinessRecord {
   id?: string;
@@ -37,7 +39,64 @@ export default function CommandCenter() {
   const [city, setCity] = useState('Baghdad');
   const [category, setCategory] = useState('restaurants');
   const [isRunning, setIsRunning] = useState(false);
-  const [runLogs, setRunLogs] = useState<string[]>([]);
+  const [instruction, setInstruction] = useState('Search for Instagram and Facebook pages for each business in selected cities. Add found URLs to the directory list.');
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [cityProgress, setCityProgress] = useState<Record<string, number>>({});
+  const [doneCount, setDoneCount] = useState(0);
+  const [serverTime, setServerTime] = useState(new Date().toLocaleTimeString([], { hour12: false }));
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setServerTime(new Date().toLocaleTimeString([], { hour12: false }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Listen for logs from Supabase
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchInitialLogs = async () => {
+      const { data, error } = await supabase
+        .from('agent_logs')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        await handleSupabaseError(error, OperationType.GET, 'agent_logs');
+        return;
+      }
+
+      const formattedLogs = data.map(log => ({
+        id: log.id,
+        ...log,
+        time: new Date(log.timestamp).toLocaleTimeString([], { hour12: false })
+      })) as LogEntry[];
+      setLogs(formattedLogs.reverse());
+    };
+
+    fetchInitialLogs();
+
+    const channel = supabase
+      .channel('agent_logs_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'agent_logs' }, (payload) => {
+        const newLog = {
+          id: payload.new.id,
+          ...payload.new,
+          time: new Date(payload.new.timestamp).toLocaleTimeString([], { hour12: false })
+        } as LogEntry;
+        setLogs(prev => [...prev.slice(-49), newLog]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const [businesses, setBusinesses] = useState<BusinessRecord[]>([]);
   const [page, setPage] = useState(1);
@@ -48,8 +107,30 @@ export default function CommandCenter() {
   const enabledSourceArray = useMemo(() => SOURCE_ORDER.filter(s => selectedSources.has(s)), [selectedSources]);
 
   useEffect(() => {
-    fetch('/api/sources').then(r => r.json()).then(data => setSources(data.sources || [])).catch(() => setSources([]));
-  }, []);
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
+
+  const addLog = async (type: LogEntry['type'], message: string) => {
+    if (!user) return;
+    try {
+      await supabase.from('agent_logs').insert({
+        timestamp: new Date().toISOString(),
+        message,
+        type,
+        taskId: currentTaskId
+      });
+    } catch (error) {
+      await handleSupabaseError(error, OperationType.WRITE, 'agent_logs');
+    }
+  };
+
+  const toggleCity = (id: string) => {
+    if (isRunning) return;
+    const next = new Set(selectedCities);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedCities(next);
+  };
 
   const loadBusinesses = async (targetPage = page) => {
     const params = new URLSearchParams({ page: String(targetPage), pageSize: '8' });
