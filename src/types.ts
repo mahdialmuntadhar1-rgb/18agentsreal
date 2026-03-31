@@ -1,7 +1,5 @@
 export type Language = 'en' | 'ar' | 'ku';
 
-export type DiscoverySource = 'gemini' | 'facebook' | 'instagram' | 'osm' | 'web_directory' | 'google_places';
-
 export interface RawBusiness {
   id: string;
   name_raw: string;
@@ -12,32 +10,6 @@ export interface RawBusiness {
   phone?: string;
   source?: string;
   coordinates?: { lat: number; lng: number };
-  created_at: string;
-}
-
-export interface UnifiedBusiness {
-  id: string;
-  name_en?: string;
-  name_ar?: string;
-  name_ku?: string;
-  name?: { en?: string; ar?: string; ku?: string };
-  category?: string;
-  subcategory?: string;
-  governorate?: string;
-  city?: string;
-  address?: string;
-  phone?: string;
-  website?: string;
-  facebook_url?: string;
-  instagram_url?: string;
-  source?: DiscoverySource | string;
-  source_url?: string;
-  latitude?: number;
-  longitude?: number;
-  confidence_score?: number;
-  verification_score?: number;
-  status?: 'pending' | 'approved' | 'rejected' | 'flagged' | string;
-  verification_status?: string;
   created_at: string;
 }
 
@@ -68,7 +40,7 @@ export interface AgentTask {
   type: string;
   instruction?: string;
   cities?: string[];
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped' | 'processing';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'stopped';
   progress: number;
   result_summary?: string;
   agent_id?: string;

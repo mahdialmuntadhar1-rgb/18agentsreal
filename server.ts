@@ -1,19 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import { runGovernor } from "./server/governors/index.js";
-import { runDiscoveryOrchestrator } from "./server/discovery/orchestrator.js";
-import { supabaseAdmin } from "./server/supabase-admin.js";
-
-function isSupabaseConfigured() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) return false;
-  if (supabaseUrl.includes("placeholder")) return false;
-  if (supabaseServiceKey === "placeholder") return false;
-
-  return true;
-}
 
 async function startServer() {
   const app = express();
@@ -21,81 +8,54 @@ async function startServer() {
 
   app.use(express.json());
 
-  let activeDiscoveryRun: Promise<void> | null = null;
-  let activeDiscoveryRunId: string | null = null;
+  // Mock agent state
+  let agents: any[] = [
+    { name: "Agent-01", governorate: "Baghdad", category: "Restaurants", status: "active", governmentRate: "Rate Level 1", recordsInserted: 3247, lastActivity: "2m ago" },
+    { name: "Agent-02", governorate: "Basra", category: "Cafes", status: "active", governmentRate: "Rate Level 1", recordsInserted: 1892, lastActivity: "5m ago" },
+    { name: "Agent-03", governorate: "Nineveh", category: "Bakeries", status: "idle", governmentRate: "Rate Level 1", recordsInserted: 843, lastActivity: "1h ago" },
+    { name: "Agent-04", governorate: "Erbil", category: "Hotels", status: "active", governmentRate: "Rate Level 1", recordsInserted: 612, lastActivity: "8m ago" },
+    { name: "Agent-05", governorate: "Sulaymaniyah", category: "Gyms", status: "active", governmentRate: "Rate Level 2", recordsInserted: 438, lastActivity: "12m ago" },
+    { name: "Agent-06", governorate: "Kirkuk", category: "Beauty Salons", status: "active", governmentRate: "Rate Level 2", recordsInserted: 1124, lastActivity: "3m ago" },
+    { name: "Agent-07", governorate: "Duhok", category: "Barbershops", status: "idle", governmentRate: "Rate Level 2", recordsInserted: 967, lastActivity: "45m ago" },
+    { name: "Agent-08", governorate: "Anbar", category: "Pharmacies", status: "active", governmentRate: "Rate Level 2", recordsInserted: 756, lastActivity: "6m ago" },
+    { name: "Agent-09", governorate: "Babil", category: "Supermarkets", status: "active", governmentRate: "Rate Level 3", recordsInserted: 521, lastActivity: "9m ago" },
+    { name: "Agent-10", governorate: "Karbala", category: "Electronics", status: "error", governmentRate: "Rate Level 3", recordsInserted: 389, lastActivity: "2h ago" },
+    { name: "Agent-11", governorate: "Wasit", category: "Clothing Stores", status: "active", governmentRate: "Rate Level 3", recordsInserted: 1043, lastActivity: "4m ago" },
+    { name: "Agent-12", governorate: "Dhi Qar", category: "Car Services", status: "idle", governmentRate: "Rate Level 3", recordsInserted: 334, lastActivity: "3h ago" },
+    { name: "Agent-13", governorate: "Maysan", category: "Dentists", status: "active", governmentRate: "Rate Level 4", recordsInserted: 287, lastActivity: "15m ago" },
+    { name: "Agent-14", governorate: "Muthanna", category: "Clinics", status: "active", governmentRate: "Rate Level 4", recordsInserted: 412, lastActivity: "7m ago" },
+    { name: "Agent-15", governorate: "Najaf", category: "Schools", status: "active", governmentRate: "Rate Level 4", recordsInserted: 891, lastActivity: "11m ago" },
+    { name: "Agent-16", governorate: "Qadisiyyah", category: "Co-working Spaces", status: "idle", governmentRate: "Rate Level 5", recordsInserted: 156, lastActivity: "6h ago" },
+    { name: "Agent-17", governorate: "Saladin", category: "Entertainment", status: "active", governmentRate: "Rate Level 5", recordsInserted: 743, lastActivity: "18m ago" },
+    { name: "Agent-18", governorate: "Diyala", category: "Tourism", status: "active", governmentRate: "Rate Level 5", recordsInserted: 512, lastActivity: "22m ago" },
+    { name: "QC Overseer", governorate: "QC Overseer", category: "Quality Control", status: "active", governmentRate: "Supervisory", recordsInserted: 15420, lastActivity: "1m ago" },
+  ];
 
+  // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
 
-  app.get("/api/agents", async (_req, res) => {
-    const { data } = await supabaseAdmin.from("agents").select("*").order("agent_name");
-    res.json((data || []).map((a: any) => ({
-      name: a.agent_name,
-      governorate: a.agent_name,
-      category: a.category || "unknown",
-      status: a.status === "active" ? "running" : a.status || "idle",
-      governmentRate: a.government_rate || "N/A",
-      recordsInserted: a.records_collected || 0,
-      lastActivity: a.last_run ? new Date(a.last_run).toLocaleString() : "Never",
-    })));
+  app.get("/api/agents", (req, res) => {
+    res.json(agents);
   });
 
-  app.get("/api/discovery/status", (_req, res) => {
-    res.json({
-      ok: true,
-      running: Boolean(activeDiscoveryRun),
-      runId: activeDiscoveryRunId,
-    });
+  app.post("/api/orchestrator/start", (req, res) => {
+    agents = agents.map(a => ({ ...a, status: "running" }));
+    res.json({ status: "started", agents });
   });
 
-  app.get("/api/businesses", async (req, res) => {
-    const page = Math.max(1, Number(req.query.page || 1));
-    const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize || 20)));
-    const city = typeof req.query.city === "string" ? req.query.city : "";
-    const category = typeof req.query.category === "string" ? req.query.category : "";
-    const status = typeof req.query.status === "string" ? req.query.status : "";
-    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
-
-    let query = supabaseAdmin
-      .from("businesses")
-      .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
-      .range((page - 1) * pageSize, page * pageSize - 1);
-
-    if (city) query = query.eq("city", city);
-    if (category) query = query.eq("category", category);
-    if (status) query = query.eq("status", status);
-    if (search) query = query.or(`name_en.ilike.%${search}%,name_ar.ilike.%${search}%,phone.ilike.%${search}%`);
-
-    const { data, count, error } = await query;
-    if (error) {
-      return res.status(500).json({ ok: false, error: error.message });
-    }
-
-    return res.json({
-      ok: true,
-      page,
-      pageSize,
-      total: count || 0,
-      totalPages: Math.ceil((count || 0) / pageSize),
-      items: data || [],
-    });
+  app.post("/api/orchestrator/stop", (req, res) => {
+    agents = agents.map(a => ({ ...a, status: "idle" }));
+    res.json({ status: "stopped", agents });
   });
 
-  app.post("/api/orchestrator/start", async (_req, res) => {
-    await supabaseAdmin.from("agents").update({ status: "active" }).neq("agent_name", "");
-    res.json({ status: "started" });
-  });
-
-  app.post("/api/orchestrator/stop", async (_req, res) => {
-    await supabaseAdmin.from("agents").update({ status: "idle" }).neq("agent_name", "");
-    res.json({ status: "stopped" });
-  });
-
+  // Endpoint to manually trigger a governor
   app.post("/api/agents/:agentName/run", async (req, res) => {
     const { agentName } = req.params;
     try {
+      // In a real app, this would be triggered by a cron job or background worker
+      // We run it asynchronously so we don't block the response
       runGovernor(agentName).catch(console.error);
       res.json({ status: "started", agentName });
     } catch (error: any) {
@@ -103,109 +63,12 @@ async function startServer() {
     }
   });
 
-  app.post("/api/discovery/run", async (req, res) => {
-    const { agentName, city = "Baghdad", governorate, category = "restaurants", query, includeGoogleFallback = false } = req.body || {};
-
-    if (!isSupabaseConfigured()) {
-      return res.status(503).json({
-        ok: false,
-        error: "Supabase is not configured on the server",
-      });
-    }
-
-    if (activeDiscoveryRun) {
-      return res.status(409).json({ ok: false, error: "A discovery run is already in progress", runId: activeDiscoveryRunId });
-    }
-
-    const runId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    activeDiscoveryRunId = runId;
-
-    try {
-      activeDiscoveryRun = (async () => {
-        try {
-          if (agentName) {
-            await runGovernor(agentName);
-            return;
-          }
-
-          const result = await runDiscoveryOrchestrator({
-            query: query || `${category} in ${city}, Iraq`,
-            city,
-            governorate: governorate || city,
-            category,
-            includeGoogleFallback,
-            limit: 20,
-          });
-
-          if (result.records.length > 0) {
-            const upserts = result.records.map((r) => ({
-              name_en: r.name,
-              name_ar: r.local_name || "",
-              name_ku: "",
-              name: { en: r.name, ar: r.local_name || "", ku: "" },
-              category: r.category || category,
-              governorate: r.governorate,
-              city: r.city || city,
-              address: r.address,
-              phone: r.phone,
-              website: r.website,
-              source: r.source,
-              source_url: r.source_url,
-              facebook_url: r.facebook_url,
-              instagram_url: r.instagram_url,
-              latitude: r.latitude,
-              longitude: r.longitude,
-              confidence_score: r.confidence_score || 0,
-              extraction_notes: r.extraction_notes,
-              status: (r.confidence_score || 0) >= 70 ? "approved" : "pending",
-              verification_status: (r.confidence_score || 0) >= 70 ? "approved" : "pending",
-              created_by_agent: "orchestrator",
-            }));
-
-            await supabaseAdmin.from("businesses").upsert(upserts, { onConflict: "name_en,city,phone" });
-          }
-
-          for (const log of result.logs) {
-            await supabaseAdmin.from("agent_logs").insert({
-              agent_id: "orchestrator",
-              action: "discovery_run",
-              result: log.ok ? "success" : "failed",
-              type: log.ok ? "info" : "warning",
-              message: `${log.adapter} ${log.ok ? "ok" : "failed"} count=${log.count}${log.error ? ` error=${log.error}` : ""}`,
-            });
-          }
-        } finally {
-          activeDiscoveryRun = null;
-          activeDiscoveryRunId = null;
-        }
-      })();
-
-      if ((req.query?.mode || "direct") === "direct") {
-        await activeDiscoveryRun;
-        return res.json({ ok: true, runId, mode: "direct", status: "completed" });
-      }
-
-      return res.status(202).json({ ok: true, runId, mode: "async", status: "running" });
-    } catch (error: any) {
-      activeDiscoveryRun = null;
-      activeDiscoveryRunId = null;
-      console.error("Discovery run failed:", error);
-      return res.status(500).json({ ok: false, error: error?.message || "Discovery run failed", runId });
-    }
-  });
-
-  app.get("/api/discovery/search", async (req, res) => {
-    const city = String(req.query.city || "Baghdad");
-    const category = String(req.query.category || "restaurants");
-    const query = String(req.query.query || `${category} in ${city}`);
-    const includeGoogleFallback = String(req.query.includeGoogleFallback || "false") === "true";
-
-    const result = await runDiscoveryOrchestrator({ query, city, governorate: city, category, includeGoogleFallback, limit: 20 });
-    res.json(result);
-  });
-
+  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
     app.use(vite.middlewares);
   } else {
     app.use(express.static("dist"));

@@ -13,7 +13,6 @@ import { motion } from 'motion/react';
 
 const DataCleaner: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<any[]>([]);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPushed, setIsPushed] = useState(false);
@@ -22,14 +21,11 @@ const DataCleaner: React.FC = () => {
     const uploadedFile = e.target.files?.[0];
     if (uploadedFile) {
       setFile(uploadedFile);
-      setIsPushed(false);
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const json = JSON.parse(event.target?.result as string);
-          const normalized = Array.isArray(json) ? json : [json];
-          setParsedData(normalized);
-          setPreviewData(normalized.slice(0, 10));
+          setPreviewData(Array.isArray(json) ? json.slice(0, 10) : [json]);
         } catch (err) {
           alert('Invalid JSON file');
         }
@@ -38,45 +34,57 @@ const DataCleaner: React.FC = () => {
     }
   };
 
-  const runRepair = async () => {
-    if (parsedData.length === 0) return;
+  const runRepair = () => {
     setIsProcessing(true);
-    try {
-      const repaired = parsedData.map(item => ({
+    // Simulate processing
+    setTimeout(() => {
+      const repaired = previewData.map(item => ({
         ...item,
         name_raw: cleaningService.repairText(item.name_raw || item.name || ''),
         category_raw: cleaningService.repairText(item.category_raw || item.category || '')
       }));
-      setParsedData(repaired);
-      setPreviewData(repaired.slice(0, 10));
-    } finally {
+      setPreviewData(repaired);
       setIsProcessing(false);
-    }
+    }, 1500);
   };
 
   const pushToSupabase = async () => {
-    if (!file || parsedData.length === 0) return;
+    if (!file) return;
     setIsProcessing(true);
     try {
-      const records = parsedData.map(item => ({
-        name_raw: item.name_raw || item.name || 'Unknown',
-        category_raw: item.category_raw || item.category || 'Uncategorized',
-        city: item.city || 'Unknown',
-        address: item.address || '',
-        phone: item.phone || '',
-        source: 'JSON Upload',
-        coordinates: item.coordinates || { lat: 0, lng: 0 }
-      }));
-      
-      if (records.length === 0) {
-        throw new Error('No valid records found in JSON');
-      }
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const json = JSON.parse(event.target?.result as string);
+          const records = (Array.isArray(json) ? json : [json]).map(item => ({
+            name_raw: item.name || item.name_raw || 'Unknown',
+            category_raw: item.category || item.category_raw || 'Uncategorized',
+            city: item.city || 'Unknown',
+            address: item.address || '',
+            phone: item.phone || '',
+            source: 'JSON Upload',
+            coordinates: item.coordinates || { lat: 0, lng: 0 }
+          }));
+          
+          if (records.length === 0) {
+            throw new Error('No valid records found in JSON');
+          }
 
-      await cleaningService.pushToRaw(records);
-      setIsPushed(true);
+          await cleaningService.pushToRaw(records);
+          setIsPushed(true);
+        } catch (err: any) {
+          alert(`Push failed: ${err.message}`);
+        } finally {
+          setIsProcessing(false);
+        }
+      };
+      reader.onerror = () => {
+        alert('Failed to read file');
+        setIsProcessing(false);
+      };
+      reader.readAsText(file);
     } catch (error) {
-      alert(error instanceof Error ? `Push failed: ${error.message}` : 'An unexpected error occurred');
-    } finally {
+      alert('An unexpected error occurred');
       setIsProcessing(false);
     }
   };
@@ -112,15 +120,7 @@ const DataCleaner: React.FC = () => {
                 <p className="text-xs text-gray-400 uppercase font-bold">{(file.size / 1024).toFixed(2)} KB • JSON Format</p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                setFile(null);
-                setParsedData([]);
-                setPreviewData([]);
-                setIsPushed(false);
-              }}
-              className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all"
-            >
+            <button onClick={() => setFile(null)} className="text-rose-500 hover:bg-rose-50 p-2 rounded-lg transition-all">
               Remove
             </button>
           </div>

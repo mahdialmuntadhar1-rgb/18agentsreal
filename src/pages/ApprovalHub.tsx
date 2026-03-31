@@ -17,7 +17,7 @@ export default function ApprovalHub() {
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
-        .or('verification_status.eq.pending,status.eq.pending,needs_review.eq.true')
+        .or('status.eq.pending,needs_review.eq.true')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -49,7 +49,6 @@ export default function ApprovalHub() {
       const { error } = await supabase
         .from('businesses')
         .update({ 
-          verification_status: action === 'approve' ? 'approved' : 'rejected',
           status: action === 'approve' ? 'approved' : 'rejected',
           needs_review: false,
           approved_at: action === 'approve' ? new Date().toISOString() : null

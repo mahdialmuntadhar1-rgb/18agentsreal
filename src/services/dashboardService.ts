@@ -192,32 +192,16 @@ export const taskService = {
 
   async getLogs(taskId: string) {
     try {
-      const primary = await supabase
-        .from('agent_logs')
-        .select('*')
-        .eq('task_id', taskId)
-        .order('timestamp', { ascending: false });
-
-      if (primary.error) {
-        await handleSupabaseError(primary.error, OperationType.GET, `agent_logs/${taskId}`);
-      }
-
-      if (!primary.error && (primary.data?.length || 0) > 0) {
-        return primary.data;
-      }
-
-      const legacy = await supabase
+      const { data, error } = await supabase
         .from('agent_logs')
         .select('*')
         .eq('taskId', taskId)
         .order('timestamp', { ascending: false });
-
-      if (legacy.error) {
-        await handleSupabaseError(legacy.error, OperationType.GET, `agent_logs/${taskId}/legacy`);
-        throw legacy.error;
+      if (error) {
+        await handleSupabaseError(error, OperationType.GET, `agent_logs/${taskId}`);
+        throw error;
       }
-
-      return legacy.data;
+      return data;
     } catch (error) {
       console.error('Error in getLogs:', error);
       throw error;

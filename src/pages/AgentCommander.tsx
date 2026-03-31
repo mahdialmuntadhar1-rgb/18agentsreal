@@ -149,7 +149,7 @@ export default function AgentCommander() {
   };
 
   useEffect(() => {
-    fetchTasks();
+    fetchTasks().catch(() => {});
 
     const channel = supabase
       .channel('agent_tasks_changes')

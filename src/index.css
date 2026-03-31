@@ -68,17 +68,3 @@
 .glass-hover {
   @apply transition-all duration-300 hover:bg-slate-900/80 hover:border-emerald-500/30;
 }
-
-/* ── Recharts layout fix ────────────────────────────────────────────────────
-   ResponsiveContainer measures its *direct* parent.  Inside flex/grid the
-   parent collapses to 0 unless we give it real block dimensions.
-   Always wrap <ResponsiveContainer> with <ChartContainer> (see
-   src/components/ChartContainer.tsx), or ensure the parent has an explicit
-   `height` value set inline.  The rules below are a safety net. */
-.recharts-wrapper,
-.recharts-responsive-container {
-  min-width: 0 !important;   /* prevent flex children from overflowing */
-}
-.recharts-responsive-container > svg {
-  display: block;            /* remove inline-block gap that breaks height calc */
-}

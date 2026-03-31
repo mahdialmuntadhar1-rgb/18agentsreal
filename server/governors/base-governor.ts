@@ -1,5 +1,4 @@
 import { supabaseAdmin } from "../supabase-admin.js";
-export type { BusinessData } from "../sources/base-adapter.js";
 
 export abstract class BaseGovernor {
   protected supabase = supabaseAdmin;
@@ -10,8 +9,9 @@ export abstract class BaseGovernor {
   async run() {
     await this.setStatus("active");
     try {
+      // 1. Concurrency-safe task claim using RPC (FOR UPDATE SKIP LOCKED)
       const task = await this.claimTask();
-
+      
       if (!task) {
         console.log(`${this.agentName}: No pending tasks found. Entering idle mode.`);
         await this.setStatus("idle");
@@ -19,64 +19,68 @@ export abstract class BaseGovernor {
       }
 
       console.log(`${this.agentName}: Processing task ${task.id} - ${task.category} in ${task.city}`);
-
+      
+      // 2. Scrape/Gather data
       const businesses = await this.gather(task.city, task.category);
-
+      
       if (businesses.length > 0) {
+        // 3. Validate and 4. Insert (Supabase handles duplicate protection via unique index)
         const validated = await this.validate(businesses);
-        const { added, errors } = await this.store(validated, task.government_rate || this.governmentRate);
-
+        const { added, errors } = await this.store(validated, task.government_rate);
+        
         await this.log("success", added, errors);
       }
 
+      // 5. Mark task as complete
       await this.completeTask(task.id);
+      
     } catch (err) {
       console.error(`Error in ${this.agentName}:`, err);
       await this.setStatus("error");
-      throw err;
-    } finally {
-      await this.setStatus("idle");
     }
+    await this.setStatus("idle");
   }
 
+  /**
+   * Calls the Supabase RPC for concurrency-safe task claiming
+   */
   private async claimTask() {
-    const rpcResult = await this.supabase.rpc("claim_next_task", {
-      agent_name: this.agentName,
+    // This RPC must be created in Supabase SQL editor:
+    // CREATE OR REPLACE FUNCTION claim_next_task(agent_name TEXT)
+    // RETURNS SETOF agent_tasks AS $$
+    // DECLARE
+    //   target_id BIGINT;
+    // BEGIN
+    //   SELECT id INTO target_id
+    //   FROM agent_tasks
+    //   WHERE status = 'pending'
+    //   ORDER BY created_at
+    //   LIMIT 1
+    //   FOR UPDATE SKIP LOCKED;
+    //
+    //   IF target_id IS NOT NULL THEN
+    //     RETURN QUERY
+    //     UPDATE agent_tasks
+    //     SET status = 'processing', assigned_agent = agent_name
+    //     WHERE id = target_id
+    //     RETURNING *;
+    //   END IF;
+    // END;
+    // $$ LANGUAGE plpgsql;
+
+    const { data, error } = await this.supabase.rpc("claim_next_task", {
+      agent_name: this.agentName
     });
 
-    if (!rpcResult.error && rpcResult.data && rpcResult.data.length > 0) {
-      return rpcResult.data[0];
-    }
-
-    const { data: candidates, error: selectError } = await this.supabase
-      .from("agent_tasks")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(1);
-
-    if (selectError || !candidates || candidates.length === 0) {
-      return null;
-    }
-
-    const candidate = candidates[0];
-    const assignment = await this.supabase
-      .from("agent_tasks")
-      .update({ status: "processing", assigned_agent: this.agentName })
-      .eq("id", candidate.id)
-      .eq("status", "pending")
-      .select("*")
-      .limit(1);
-
-    if (!assignment.error && assignment.data && assignment.data.length > 0) {
-      return assignment.data[0];
-    }
-
-    return null;
+    if (error || !data || data.length === 0) return null;
+    return data[0];
   }
 
-  private async completeTask(taskId: number | string) {
-    await this.supabase.from("agent_tasks").update({ status: "completed" }).eq("id", taskId);
+  private async completeTask(taskId: number) {
+    await this.supabase
+      .from("agent_tasks")
+      .update({ status: "completed" })
+      .eq("id", taskId);
   }
 
   async store(items: any[], govRate: string) {
@@ -84,42 +88,27 @@ export abstract class BaseGovernor {
     let errors = 0;
 
     for (const item of items) {
-      const nameEn = item.name || item.name_en || item.name?.en || "Unnamed";
-      const nameAr = item.local_name || item.name_ar || item.name?.ar || "";
-      const nameKu = item.name_ku || item.name?.ku || "";
-      const source = item.source || "unknown";
-      const confidence = item.confidence_score || 0;
-      const status = confidence >= 70 ? "approved" : confidence >= 45 ? "pending" : "flagged";
-
-      const businessData: any = {
-        name_en: nameEn,
-        name_ar: nameAr,
-        name_ku: nameKu,
-        name: { en: nameEn, ar: nameAr, ku: nameKu },
-        category: (item.category || this.category || "unknown").toLowerCase(),
+      const businessData = {
+        name: item.name,
+        category: item.category.toLowerCase(),
         government_rate: govRate,
-        governorate: item.governorate || item.city,
         city: item.city,
         address: item.address,
         phone: item.phone,
         website: item.website,
-        source,
+        description: item.description,
         source_url: item.source_url,
-        facebook_url: item.facebook_url,
-        instagram_url: item.instagram_url,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        confidence_score: confidence,
-        extraction_notes: item.extraction_notes,
-        status,
         created_by_agent: this.agentName,
-        verification_status: status,
+        verification_status: "pending"
       };
 
-      const { error } = await this.supabase.from("businesses").upsert(businessData, { onConflict: "name_en,city,phone" });
+      // Use upsert with onConflict to handle the unique index (name, city)
+      const { error } = await this.supabase
+        .from("businesses")
+        .upsert(businessData, { onConflict: "name,city" });
 
       if (error) {
-        console.error(`Error inserting ${nameEn}:`, error.message);
+        console.error(`Error inserting ${item.name}:`, error.message);
         errors++;
       } else {
         added++;
@@ -131,38 +120,29 @@ export abstract class BaseGovernor {
   async setStatus(status: string) {
     await this.supabase
       .from("agents")
-      .update({
-        status,
+      .update({ 
+        status, 
         last_run: new Date(),
         category: this.category,
-        government_rate: this.governmentRate,
+        government_rate: this.governmentRate
       })
       .eq("agent_name", this.agentName);
   }
 
   async log(result: string, added: number, updated: number) {
-    const { data: agent } = await this.supabase.from("agents").select("id").eq("agent_name", this.agentName).single();
-
-    await this.supabase.from("agent_logs").insert({
-      agent_id: agent?.id || this.agentName,
-      action: "run",
-      result,
-      records_added: added,
-      records_updated: updated,
-      message: `${this.agentName} run ${result}. added=${added} errors=${updated}`,
-      type: result === "success" ? "success" : "error",
-    });
-  }
-
-  async logAdapterRuns(runs: Array<{ adapter: string; ok: boolean; count: number; error?: string }>) {
-    for (const run of runs) {
+    const { data: agent } = await this.supabase
+      .from("agents")
+      .select("id")
+      .eq("agent_name", this.agentName)
+      .single();
+      
+    if (agent) {
       await this.supabase.from("agent_logs").insert({
-        agent_id: this.agentName,
-        action: "adapter_run",
-        result: run.ok ? "success" : "failed",
-        records_added: run.count,
-        message: `${run.adapter}: ${run.ok ? "ok" : "failed"}${run.error ? ` (${run.error})` : ""}`,
-        type: run.ok ? "info" : "warning",
+        agent_id: agent.id,
+        action: "run",
+        result,
+        records_added: added,
+        records_updated: updated,
       });
     }
   }
@@ -170,6 +150,6 @@ export abstract class BaseGovernor {
   abstract gather(city?: string, category?: string): Promise<any[]>;
 
   async validate(items: any[]) {
-    return items.filter((i) => i?.name && (i?.address || i?.city || i?.phone));
+    return items.filter((i) => i.name && (i.address || i.city));
   }
 }

@@ -42,7 +42,7 @@ const Pipelines: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData().catch(() => {});
     const channel = supabase
       .channel('pipeline_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_tasks' }, () => fetchData())

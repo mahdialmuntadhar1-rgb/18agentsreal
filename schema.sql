@@ -51,27 +51,3 @@ $$ LANGUAGE plpgsql;
 -- Real-time Replication (Enable for businesses and agent_logs)
 ALTER PUBLICATION supabase_realtime ADD TABLE businesses;
 ALTER PUBLICATION supabase_realtime ADD TABLE agent_logs;
-
--- Agent Tasks Table (pipeline + governor compatibility)
-CREATE TABLE IF NOT EXISTS agent_tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type TEXT,
-  instruction TEXT,
-  cities TEXT[],
-  status TEXT DEFAULT 'pending',
-  progress INTEGER DEFAULT 0,
-  result_summary TEXT,
-  task_type TEXT,
-  prompt TEXT,
-  category TEXT,
-  city TEXT,
-  government_rate TEXT,
-  assigned_agent TEXT,
-  agent_name TEXT,
-  agent_id TEXT,
-  result TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER PUBLICATION supabase_realtime ADD TABLE agent_tasks;

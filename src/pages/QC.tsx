@@ -4,76 +4,30 @@ import {
   ShieldAlert, 
   Search, 
   XCircle,
+  Info,
+  Wand2,
   CheckCircle2
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
 import { VerifiedBusiness } from '../types';
 
-type QCIssueType = 'missing_phone' | 'low_confidence' | 'possible_duplicate';
-type QCRecord = VerifiedBusiness & { issueTypes: QCIssueType[] };
-
 const QC: React.FC = () => {
-  const [records, setRecords] = useState<QCRecord[]>([]);
+  const [records, setRecords] = useState<VerifiedBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [issueCounts, setIssueCounts] = useState({
-    missingPhone: 0,
-    lowConfidence: 0,
-    possibleDuplicates: 0,
-  });
-
-  const getIssueTypes = (
-    business: VerifiedBusiness,
-    duplicateIds: Set<string>,
-  ): QCIssueType[] => {
-    const issues: QCIssueType[] = [];
-    if (!business.phone?.trim()) issues.push('missing_phone');
-    if ((business.confidence_score ?? 0) < 70) issues.push('low_confidence');
-    if (duplicateIds.has(business.id)) issues.push('possible_duplicate');
-    return issues;
-  };
 
   const fetchQCRecords = async () => {
     try {
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
-        .or('needs_review.eq.true,verification_status.eq.pending,status.eq.pending')
+        .eq('needs_review', true)
         .order('confidence_score', { ascending: true });
 
       if (error) throw error;
-      const incoming = (data || []) as VerifiedBusiness[];
-      const duplicateMap = new Map<string, number>();
-
-      for (const business of incoming) {
-        const key = `${(business.name_en || business.name_ar || business.name_ku || '').trim().toLowerCase()}|${(business.city || '').trim().toLowerCase()}`;
-        if (!key || key === '|') continue;
-        duplicateMap.set(key, (duplicateMap.get(key) || 0) + 1);
-      }
-
-      const duplicateIds = new Set(
-        incoming
-          .filter((business) => {
-            const key = `${(business.name_en || business.name_ar || business.name_ku || '').trim().toLowerCase()}|${(business.city || '').trim().toLowerCase()}`;
-            return (duplicateMap.get(key) || 0) > 1;
-          })
-          .map((business) => business.id)
-      );
-
-      const enhancedRecords = incoming
-        .map((business) => ({
-          ...business,
-          issueTypes: getIssueTypes(business, duplicateIds),
-        }))
-        .filter((business) => business.issueTypes.length > 0);
-
-      setIssueCounts({
-        missingPhone: enhancedRecords.filter((r) => r.issueTypes.includes('missing_phone')).length,
-        lowConfidence: enhancedRecords.filter((r) => r.issueTypes.includes('low_confidence')).length,
-        possibleDuplicates: enhancedRecords.filter((r) => r.issueTypes.includes('possible_duplicate')).length,
-      });
-      setRecords(enhancedRecords);
+      setRecords(data || []);
     } catch (err) {
       await handleSupabaseError(err, OperationType.GET, 'businesses');
     } finally {
@@ -102,7 +56,6 @@ const QC: React.FC = () => {
         .from('businesses')
         .update({ 
           needs_review: false,
-          verification_status: action === 'approve' ? 'approved' : 'rejected',
           status: action === 'approve' ? 'approved' : 'rejected',
           approved_at: action === 'approve' ? new Date().toISOString() : null
         })
@@ -120,19 +73,6 @@ const QC: React.FC = () => {
     r.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getIssueLabel = (issue: QCIssueType) => {
-    switch (issue) {
-      case 'missing_phone':
-        return 'Missing Phone';
-      case 'low_confidence':
-        return 'Low Confidence';
-      case 'possible_duplicate':
-        return 'Possible Duplicate';
-      default:
-        return 'Needs Review';
-    }
-  };
-
   return (
     <div className="space-y-8">
       <header className="flex items-center justify-between">
@@ -145,21 +85,6 @@ const QC: React.FC = () => {
           {records.length} Records Flagged
         </div>
       </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Missing Phones</p>
-          <p className="text-2xl font-black text-[#1B2B5E] mt-2">{issueCounts.missingPhone}</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Low Confidence</p>
-          <p className="text-2xl font-black text-[#1B2B5E] mt-2">{issueCounts.lowConfidence}</p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Possible Duplicates</p>
-          <p className="text-2xl font-black text-[#1B2B5E] mt-2">{issueCounts.possibleDuplicates}</p>
-        </div>
-      </div>
 
       {/* QC Table */}
       <div className="bg-white rounded-[32px] shadow-sm border border-gray-200 overflow-hidden">
@@ -208,9 +133,7 @@ const QC: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <AlertTriangle size={14} className="text-rose-500" />
-                        <span className="text-xs font-bold text-rose-700">
-                          {record.issueTypes.map(getIssueLabel).join(' • ')}
-                        </span>
+                        <span className="text-xs font-bold text-rose-700">Flagged for Review</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">

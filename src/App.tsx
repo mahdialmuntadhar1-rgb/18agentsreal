@@ -19,8 +19,6 @@ import ReviewTable from "./pages/ReviewTable";
 import DataCleaner from "./pages/DataCleaner";
 import Logs from "./pages/Logs";
 import Export from "./pages/Export";
-import Admin from "./pages/Admin";
-import Supervisor from "./pages/Supervisor";
 
 import { AuthProvider } from "./AuthContext";
 import { SupabaseSetupGuard } from "./components/SupabaseSetupGuard";
@@ -46,8 +44,6 @@ export default function App() {
               <Route path="/cleaner" element={<DataCleaner />} />
               <Route path="/logs" element={<Logs />} />
               <Route path="/export" element={<Export />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/supervisor" element={<Supervisor />} />
             </Routes>
           </Layout>
         </Router>
