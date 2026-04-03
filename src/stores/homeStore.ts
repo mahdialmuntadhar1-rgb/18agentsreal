@@ -3,14 +3,12 @@ import { persist } from "zustand/middleware";
 
 interface HomeState {
   selectedGovernorate: string;
-  selectedCity: string;
   selectedCategory: string | null;
   searchQuery: string;
   sortBy: "trending" | "recent" | "rating";
 
   // Actions
   setGovernorate: (governorate: string) => void;
-  setCity: (city: string) => void;
   setCategory: (category: string | null) => void;
   setSearchQuery: (query: string) => void;
   setSortBy: (sort: "trending" | "recent" | "rating") => void;
@@ -18,22 +16,17 @@ interface HomeState {
 }
 
 const DEFAULT_GOVERNORATE = "Baghdad";
-const DEFAULT_CITY = "Central";
 
 export const useHomeStore = create<HomeState>()(
   persist(
     (set) => ({
       selectedGovernorate: DEFAULT_GOVERNORATE,
-      selectedCity: DEFAULT_CITY,
       selectedCategory: null,
       searchQuery: "",
       sortBy: "trending",
 
       setGovernorate: (governorate) =>
         set({ selectedGovernorate: governorate }),
-
-      setCity: (city) =>
-        set({ selectedCity: city }),
 
       setCategory: (category) =>
         set({ selectedCategory: category }),
@@ -47,7 +40,6 @@ export const useHomeStore = create<HomeState>()(
       reset: () =>
         set({
           selectedGovernorate: DEFAULT_GOVERNORATE,
-          selectedCity: DEFAULT_CITY,
           selectedCategory: null,
           searchQuery: "",
           sortBy: "trending",

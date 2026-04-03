@@ -11,7 +11,7 @@ import type { Business } from "@/lib/supabase";
 export default function HomePage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedGovernorate, selectedCity } = useHomeStore();
+  const { selectedGovernorate } = useHomeStore();
 
   useEffect(() => {
     // Simulate loading businesses from Supabase
@@ -28,7 +28,7 @@ export default function HomePage() {
     };
 
     loadBusinesses();
-  }, [selectedGovernorate, selectedCity]);
+  }, [selectedGovernorate]);
 
   return (
     <div className="min-h-screen bg-[#F5F7F9]">

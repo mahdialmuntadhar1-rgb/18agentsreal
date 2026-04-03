@@ -44,15 +44,10 @@ const CITIES_BY_GOVERNORATE: Record<string, string[]> = {
 };
 
 export default function LocationFilter() {
-  const { selectedGovernorate, setGovernorate, selectedCity, setCity } = useHomeStore();
+  const { selectedGovernorate, setGovernorate } = useHomeStore();
 
   const handleGovernorateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newGov = e.target.value;
-    setGovernorate(newGov);
-    // Reset city to the first one in the new governorate
-    if (CITIES_BY_GOVERNORATE[newGov]) {
-      setCity(CITIES_BY_GOVERNORATE[newGov][0]);
-    }
+    setGovernorate(e.target.value);
   };
 
   return (
@@ -83,29 +78,6 @@ export default function LocationFilter() {
             <p className="text-xs font-bold text-[#8B1A1A]/60 mt-3 uppercase tracking-widest">
               And beneath that, the governorates.
             </p>
-          </div>
-
-          {/* City Dropdown */}
-          <div className="w-full md:w-1/2">
-            <p className="text-sm font-bold text-[#2B2F33] mb-3 poppins-semibold">
-              Choose the city
-            </p>
-            <div className="relative group">
-              <select
-                value={selectedCity}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full appearance-none bg-white border-2 border-[#f5dada] focus:border-[#8B1A1A] rounded-2xl px-6 py-4 text-[#2B2F33] font-bold text-lg shadow-sm focus:outline-none transition-all cursor-pointer"
-              >
-                {CITIES_BY_GOVERNORATE[selectedGovernorate]?.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#8B1A1A]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
           </div>
         </div>
       </div>
