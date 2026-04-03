@@ -24,47 +24,32 @@ export default function CategoryGrid() {
   const { selectedCategory, setCategory } = useHomeStore();
 
   return (
-    <div className="py-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-[#2B2F33] poppins-bold mb-1">
-            Explore Categories
-          </h2>
-          <p className="text-sm text-[#64748b]">
-            Find the best local businesses across Iraq
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-5 gap-2 sm:gap-5">
-        {CATEGORIES.map((cat) => (
-          <motion.button
-            key={cat.id}
-            whileHover={{ y: -6, scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setCategory(selectedCategory === cat.id ? null : cat.id)}
-            className={`category-card flex flex-col items-center p-2 sm:p-6 transition-all border-2 ${
-              selectedCategory === cat.id 
-                ? 'border-[#8B1A1A] bg-[#FDECEC]/30 shadow-lg scale-105 z-10' 
-                : 'border-transparent bg-white hover:border-[#8B1A1A]/20'
-            }`}
-          >
-            {/* Soft Gradient Background for Icon */}
-            <div className={`w-10 h-10 sm:w-16 sm:h-16 ${cat.color} rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-3xl mb-2 sm:mb-4 shadow-inner relative overflow-hidden group border border-black/5`}>
-              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {cat.icon}
-            </div>
-            
-            <span className={`text-[8px] sm:text-[10px] md:text-xs font-bold text-center leading-tight uppercase tracking-[0.05em] sm:tracking-widest poppins-bold ${
-              selectedCategory === cat.id ? 'text-[#8B1A1A]' : 'text-[#2B2F33]'
-            }`}>
-              {cat.name}
-            </span>
-
-            {/* Subtle 3D Edge Reflection */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/60" />
-          </motion.button>
-        ))}
+    <div className="w-full mb-12">
+      <div className="grid grid-cols-4 gap-[10px] p-3">
+        {CATEGORIES.map((cat) => {
+          const isActive = selectedCategory === cat.id;
+          return (
+            <motion.button
+              key={cat.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCategory(isActive ? null : cat.id)}
+              className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-[16px] transition-all duration-300 aspect-square shadow-[0_2px_8px_rgba(0,0,0,0.05)] border-2 ${
+                isActive
+                  ? "bg-gradient-to-br from-[#2CA6A4] to-[#1e7a78] text-white border-[#2CA6A4] shadow-lg scale-105"
+                  : "bg-white text-[#2B2F33] border-[#E5E7EB] hover:border-[#2CA6A4]/30"
+              }`}
+            >
+              <div className={`text-xl ${isActive ? 'text-white' : 'text-[#2CA6A4]'}`}>
+                {cat.icon}
+              </div>
+              <span className={`text-[8px] font-bold text-center leading-tight uppercase tracking-tight ${
+                isActive ? 'text-white' : 'text-[#6B7280]'
+              }`}>
+                {cat.name}
+              </span>
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

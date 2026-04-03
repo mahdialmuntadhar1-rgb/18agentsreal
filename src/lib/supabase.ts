@@ -1,14 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder';
-
-if (supabaseUrl === 'https://placeholder.supabase.co' || !supabaseUrl.startsWith('https://')) {
-  console.warn('Supabase URL is not configured or invalid. Please check your environment variables.');
+export interface Business {
+  id: string;
+  name: string;
+  nameAr?: string;
+  nameKu?: string;
+  category: string;
+  governorate: string;
+  city: string;
+  address: string;
+  phone: string;
+  rating?: number;
+  reviewCount?: number;
+  isFeatured?: boolean;
+  image?: string;
+  website?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
-
-if (supabaseAnonKey === 'placeholder') {
-  console.warn('Supabase Anon Key is not configured. Please check your environment variables.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);

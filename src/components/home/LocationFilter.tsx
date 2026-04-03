@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { useHomeStore } from "@/stores/homeStore";
 
 const GOVERNORATES = [
@@ -44,41 +45,57 @@ const CITIES_BY_GOVERNORATE: Record<string, string[]> = {
 };
 
 export default function LocationFilter() {
-  const { selectedGovernorate, setGovernorate } = useHomeStore();
+  const { selectedGovernorate, setGovernorate, selectedCity, setCity } = useHomeStore();
 
-  const handleGovernorateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setGovernorate(e.target.value);
-  };
+  const cities = CITIES_BY_GOVERNORATE[selectedGovernorate] || [];
 
   return (
-    <div className="bg-transparent mb-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-8 items-start md:items-end">
-          {/* Governorate Dropdown */}
-          <div className="w-full md:w-1/2">
-            <p className="text-sm font-bold text-[#8B1A1A] mb-3 poppins-semibold">
-              Please first choose your governorate.
-            </p>
-            <div className="relative group">
-              <select
-                value={selectedGovernorate}
-                onChange={handleGovernorateChange}
-                className="w-full appearance-none bg-white border-2 border-[#f5dada] focus:border-[#8B1A1A] rounded-2xl px-6 py-4 text-[#2B2F33] font-bold text-lg shadow-sm focus:outline-none transition-all cursor-pointer"
-              >
-                {GOVERNORATES.map((gov) => (
-                  <option key={gov.name} value={gov.name}>
-                    {gov.name} - {gov.nameAr}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#8B1A1A]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
-            <p className="text-xs font-bold text-[#8B1A1A]/60 mt-3 uppercase tracking-widest">
-              And beneath that, the governorates.
-            </p>
-          </div>
+    <div className="space-y-4 mb-6">
+      {/* Governorate Filter (Horizontal Scroll) */}
+      <div className="w-full overflow-hidden">
+        <div className="flex gap-2 overflow-x-auto px-4 no-scrollbar pb-2">
+          {GOVERNORATES.map((gov) => (
+            <button
+              key={gov.name}
+              onClick={() => setGovernorate(gov.name)}
+              className={`flex-shrink-0 px-5 py-2 rounded-full text-sm font-bold transition-all border-2 ${
+                selectedGovernorate === gov.name
+                  ? "bg-[#2CA6A4] text-white border-[#2CA6A4] shadow-md"
+                  : "bg-white text-[#2B2F33] border-[#E5E7EB] hover:border-[#2CA6A4]/30"
+              }`}
+            >
+              {gov.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* City Filter (Chips) */}
+      <div className="w-full overflow-hidden">
+        <div className="flex gap-2 overflow-x-auto px-4 no-scrollbar pb-2">
+          <button
+            onClick={() => setCity(null)}
+            className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+              selectedCity === null
+                ? "bg-[#E87A41] text-white border-[#E87A41]"
+                : "bg-white text-[#6B7280] border-[#E5E7EB]"
+            }`}
+          >
+            All Cities
+          </button>
+          {cities.map((city) => (
+            <button
+              key={city}
+              onClick={() => setCity(city)}
+              className={`flex-shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                selectedCity === city
+                  ? "bg-[#E87A41] text-white border-[#E87A41]"
+                  : "bg-white text-[#6B7280] border-[#E5E7EB]"
+              }`}
+            >
+              {city}
+            </button>
+          ))}
         </div>
       </div>
     </div>

@@ -1,107 +1,109 @@
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { Search, User, PlusCircle } from "lucide-react";
 import HeroSection from "@/components/home/HeroSection";
 import LocationFilter from "@/components/home/LocationFilter";
+import StoryRow from "@/components/home/StoryRow";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import TrendingSection from "@/components/home/TrendingSection";
-import FeedComponent from "@/components/home/FeedComponent";
+import BusinessGrid from "@/components/home/BusinessGrid";
 import { useHomeStore } from "@/stores/homeStore";
 import type { Business } from "@/lib/supabase";
 
 export default function HomePage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
-  const { selectedGovernorate } = useHomeStore();
+  const { selectedGovernorate, selectedCategory, selectedCity } = useHomeStore();
 
   useEffect(() => {
-    // Simulate loading businesses from Supabase
-    // This will be replaced with actual Supabase query
     const loadBusinesses = async () => {
       setLoading(true);
       try {
-        // TODO: Replace with actual Supabase fetch
         const mockData = generateMockBusinesses();
-        setBusinesses(mockData);
+        
+        // Filter logic
+        let filtered = mockData;
+        if (selectedGovernorate) {
+          filtered = filtered.filter(b => b.governorate === selectedGovernorate);
+        }
+        if (selectedCity) {
+          filtered = filtered.filter(b => b.city === selectedCity);
+        }
+        if (selectedCategory) {
+          filtered = filtered.filter(b => b.category === selectedCategory);
+        }
+        
+        setBusinesses(filtered);
       } finally {
         setLoading(false);
       }
     };
 
     loadBusinesses();
-  }, [selectedGovernorate]);
+  }, [selectedGovernorate, selectedCategory, selectedCity]);
 
   return (
     <div className="min-h-screen bg-[#F5F7F9]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#f5dada] shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3 group cursor-pointer">
-            <div className="w-11 h-11 bg-gradient-to-br from-[#8B1A1A] to-[#6b1414] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#E5E7EB] shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2 group cursor-pointer">
+            <div className="w-10 h-10 bg-[#2CA6A4] rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
               <span className="text-white font-bold text-xl poppins-bold">H</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-[#2B2F33] poppins-bold tracking-tight">HUMUS</h1>
-              <p className="text-[9px] text-[#8B1A1A] font-bold uppercase tracking-[0.2em] -mt-1">Iraqi Directory</p>
+              <h1 className="text-lg font-bold text-[#2B2F33] poppins-bold tracking-tight">HUMUS</h1>
+              <p className="text-[8px] text-[#2CA6A4] font-bold uppercase tracking-[0.2em] -mt-1">Iraqi Directory</p>
             </div>
           </div>
 
-          {/* Search Bar - Premium */}
-          <div className="flex-1 mx-8 max-w-md hidden md:block relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B1A1A]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          {/* Search Bar */}
+          <div className="flex-1 mx-4 max-w-md relative">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]">
+              <Search className="w-4 h-4" />
             </div>
             <input
               type="text"
-              placeholder="Search businesses, services, or places..."
-              className="w-full pl-12 pr-4 py-3 bg-[#FFF5F5] border-2 border-transparent focus:border-[#8B1A1A] rounded-2xl focus:outline-none transition-all duration-300 text-sm font-medium shadow-inner"
+              placeholder="Search..."
+              className="w-full pl-10 pr-4 py-2 bg-[#F5F7F9] border border-[#E5E7EB] focus:border-[#2CA6A4] rounded-full focus:outline-none transition-all duration-300 text-sm"
             />
           </div>
 
-          {/* Account Actions */}
-          <div className="flex items-center gap-4">
-            <button className="hidden sm:flex items-center gap-2 text-sm font-bold text-[#8B1A1A] hover:text-[#6b1414] transition-colors">
-              List Your Business
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <button className="hidden md:flex items-center gap-1.5 text-xs font-bold text-[#2CA6A4] hover:text-[#1e7a78] transition-colors">
+              <PlusCircle className="w-4 h-4" />
+              List Business
             </button>
-            <button className="w-11 h-11 rounded-xl bg-[#FFF5F5] hover:bg-[#fce8e8] border border-[#f5dada] flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-sm">
-              <span className="text-xl">👤</span>
+            <button className="w-9 h-9 rounded-full bg-[#F5F7F9] border border-[#E5E7EB] flex items-center justify-center transition-all hover:scale-105">
+              <User className="w-4 h-4 text-[#6B7280]" />
             </button>
           </div>
         </div>
       </header>
 
-      <main>
-        {/* Hero Section with Carousel */}
+      <main className="pb-20">
+        {/* HERO / FEATURED CAROUSEL */}
         <HeroSection businesses={businesses} />
 
-        {/* Location Filter Bar */}
+        {/* Governorate & City Filters */}
         <LocationFilter />
 
-        <div className="max-w-6xl mx-auto px-4">
-          {/* Category Chips Grid */}
+        {/* STORY ROW */}
+        <StoryRow />
+
+        <div className="max-w-6xl mx-auto">
+          {/* CATEGORY GRID */}
           <CategoryGrid />
 
-          {/* Trending Section */}
-          {businesses.length > 0 && (
-            <div className="my-12 rounded-[32px] overflow-hidden shadow-premium">
-              <TrendingSection businesses={businesses.filter(b => b.isFeatured).slice(0, 5)} />
-            </div>
-          )}
+          {/* FEATURED BUSINESSES (Vertical Cards) */}
+          <TrendingSection businesses={businesses} loading={loading} />
 
-          {/* Main Feed Header */}
-          <div className="flex items-center justify-between mt-16 mb-2">
-            <div>
-              <h2 className="text-2xl font-bold text-[#2B2F33] poppins-bold">Local Feed</h2>
-              <p className="text-sm text-[#8B1A1A]/60">Discover what's happening around you</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="p-2.5 bg-white border border-[#f5dada] rounded-xl text-[#8B1A1A] hover:bg-[#8B1A1A] hover:text-white transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
-              </button>
-            </div>
+          {/* MAIN BUSINESS GRID (Compact Cards) */}
+          <div className="px-4 mb-4 mt-12">
+            <h2 className="text-xl font-bold text-[#2B2F33] poppins-bold">Explore Businesses</h2>
+            <p className="text-sm text-[#6B7280]">Discover top-rated places in your area</p>
           </div>
-
-          {/* Main Feed */}
-          <FeedComponent businesses={businesses} loading={loading} />
+          <BusinessGrid businesses={businesses} loading={loading} />
         </div>
       </main>
 
@@ -186,92 +188,41 @@ export default function HomePage() {
 
 // Mock data generator
 function generateMockBusinesses(): Business[] {
-  return [
-    {
-      id: "1",
-      name: "Abu Ali Restaurant",
-      nameAr: "مطعم أبو علي",
-      nameKu: "Restoran Abu Ali",
-      category: "dining_cuisine",
-      governorate: "Baghdad",
-      city: "Kadhimiya",
-      address: "Baghdad, Kadhimiya",
-      phone: "+9647701234567",
-      rating: 4.8,
-      reviewCount: 120,
-      isFeatured: true,
-      image: "https://images.unsplash.com/photo-1504674900759-b58551b1efc8?w=400&h=300&fit=crop",
-      website: "https://abuali.com",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "2",
-      name: "Coffee House",
-      nameAr: "كافية",
-      nameKu: "Kava House",
-      category: "cafe_coffee",
-      governorate: "Baghdad",
-      city: "Adhamiyah",
-      address: "Baghdad, Adhamiyah",
-      phone: "+9647702234567",
-      rating: 4.5,
-      reviewCount: 85,
-      isFeatured: false,
-      image: "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&h=300&fit=crop",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "3",
-      name: "Clinic Dr. Fatima",
-      nameAr: "عيادة د. فاطمة",
-      nameKu: "Klinika Dr. Fatima",
-      category: "clinics",
-      governorate: "Baghdad",
-      city: "Adhamiyah",
-      address: "Baghdad, Adhamiyah",
-      phone: "+9647703234567",
-      rating: 4.9,
-      reviewCount: 89,
-      isFeatured: true,
-      image: "https://images.unsplash.com/photo-1576091160550-112173f31c74?w=400&h=300&fit=crop",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "4",
-      name: "Fashion Store Erbil",
-      nameAr: "متجر الموضة",
-      nameKu: "Fashion Store",
-      category: "shopping_retail",
-      governorate: "Erbil",
-      city: "Erbil Center",
-      address: "Erbil, City Center",
-      phone: "+9647704234567",
-      rating: 4.3,
-      reviewCount: 45,
-      isFeatured: false,
-      image: "https://images.unsplash.com/photo-1555529669-e69e7fa0ba9b?w=400&h=300&fit=crop",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: "5",
-      name: "Basra Tech Services",
-      nameAr: "خدمات تقنية البصرة",
-      nameKu: "Basra Tech Services",
-      category: "business_services",
-      governorate: "Basra",
-      city: "Basra City",
-      address: "Basra, City Center",
-      phone: "+9647705234567",
-      rating: 4.6,
-      reviewCount: 120,
-      isFeatured: true,
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
+  const categories = [
+    'dining_cuisine', 'cafe_coffee', 'shopping_retail', 
+    'entertainment_events', 'accommodation_stays', 'culture_heritage',
+    'business_services', 'health_wellness', 'doctors', 'hospitals',
+    'clinics', 'transport_mobility', 'public_essential', 'lawyers', 'education'
   ];
+  
+  const governorates = ["Baghdad", "Erbil", "Basra", "Mosul", "Sulaymaniyah"];
+  const cities: Record<string, string[]> = {
+    Baghdad: ["Central", "Kadhimiya", "Adhamiyah"],
+    Erbil: ["Erbil Center", "Ankawa", "Shaqlawa"],
+    Basra: ["Basra City", "Zubair"],
+    Mosul: ["Mosul Center", "Hamdaniya"],
+    Sulaymaniyah: ["Suli Center", "Halabja"]
+  };
+
+  return Array.from({ length: 24 }, (_, i) => {
+    const gov = governorates[i % governorates.length];
+    const cityList = cities[gov];
+    const city = cityList[i % cityList.length];
+    
+    return {
+      id: `biz-${i}`,
+      name: `${['Al-Mansour', 'Babylon', 'Tigris', 'Euphrates', 'Mesopotamia'][i % 5]} ${['Plaza', 'Garden', 'Center', 'Hub', 'Lounge'][i % 5]}`,
+      category: categories[i % categories.length],
+      rating: 4 + (i % 10) / 10,
+      reviewCount: 10 + i * 5,
+      governorate: gov,
+      city: city,
+      address: `${city}, Iraq`,
+      image: `https://picsum.photos/seed/biz${i}/600/400`,
+      isFeatured: i < 8,
+      phone: "+964 770 123 4567",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  });
 }
