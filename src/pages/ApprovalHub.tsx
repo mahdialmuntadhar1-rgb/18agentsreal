@@ -1,347 +1,298 @@
-<<<<<<< Updated upstream
-import React, { useEffect, useState } from 'react';
-import { CheckCircle2, XCircle, Edit2, RotateCw, Search, Filter, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
-import { VerifiedBusiness } from '../types';
-
-export default function ApprovalHub() {
-  const [businesses, setBusinesses] = useState<VerifiedBusiness[]>([]);
-  const [loading, setLoading] = useState(true);
-=======
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Search, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Eye,
+  Loader2,
+  Filter,
+  Search,
+  Building2,
+  MapPin,
+  Phone,
+  Globe
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-interface Business {
+interface PendingBusiness {
   id: string;
   business_name: string;
-  city: string;
   category: string;
+  city: string;
+  address?: string;
+  phone?: string;
+  website?: string;
   description?: string;
-  verification_status: string;
-  source_name?: string;
-  created_at: string;
+  created_by_agent?: string;
+  scraped_at?: string;
 }
 
-export default function ApprovalHub() {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
->>>>>>> Stashed changes
-  const [searchTerm, setSearchTerm] = useState('');
+const ApprovalHub: React.FC = () => {
+  const [businesses, setBusinesses] = useState<PendingBusiness[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-<<<<<<< Updated upstream
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const fetchPendingBusinesses = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .or('status.eq.pending,needs_review.eq.true')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setBusinesses(data || []);
-    } catch (err) {
-      await handleSupabaseError(err, OperationType.GET, 'businesses');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('All');
 
   useEffect(() => {
     fetchPendingBusinesses();
-
-    const channel = supabase
-      .channel('approval_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, () => {
-        fetchPendingBusinesses();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    try {
-      const { error } = await supabase
-        .from('businesses')
-        .update({ 
-          status: action === 'approve' ? 'approved' : 'rejected',
-          needs_review: false,
-          approved_at: action === 'approve' ? new Date().toISOString() : null
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      if (paginated.length === 1 && currentPage > 1) {
-        setCurrentPage(prev => prev - 1);
-      }
-    } catch (err) {
-      await handleSupabaseError(err, OperationType.UPDATE, `businesses/${id}`);
-    }
-  };
-
-  const filtered = businesses.filter(b => 
-    (b.name_en?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (b.name_ar?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (b.name_ku?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-=======
-  const fetchPending = async () => {
+  const fetchPendingBusinesses = async () => {
     setIsLoading(true);
-    setError(null);
-    const { data, error: err } = await supabase
+    
+    const { data, error } = await supabase
       .from('businesses')
-      .select('id, business_name, city, category, description, verification_status, source_name, created_at')
-      .in('verification_status', ['pending', 'flagged'])
-      .order('created_at', { ascending: false })
+      .select('*')
+      .eq('verification_status', 'pending')
+      .order('scraped_at', { ascending: false })
       .limit(50);
-    if (err) setError(err.message);
-    else setBusinesses((data ?? []) as Business[]);
+
+    if (!error && data) {
+      setBusinesses(data);
+    }
+    
     setIsLoading(false);
   };
 
-  useEffect(() => { fetchPending(); }, []);
-
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    setActionLoading(id + action);
-    const newStatus = action === 'approve' ? 'approved' : 'rejected';
-    const { error: err } = await supabase
+  const handleApprove = async (id: string) => {
+    const { error } = await supabase
       .from('businesses')
-      .update({ verification_status: newStatus, updated_at: new Date().toISOString() })
+      .update({ verification_status: 'approved' })
       .eq('id', id);
-    if (err) {
-      setError(err.message);
-    } else {
+
+    if (!error) {
       setBusinesses(prev => prev.filter(b => b.id !== id));
     }
-    setActionLoading(null);
   };
 
-  const filtered = businesses.filter(b =>
-    b.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
->>>>>>> Stashed changes
+  const handleReject = async (id: string) => {
+    const { error } = await supabase
+      .from('businesses')
+      .update({ verification_status: 'rejected' })
+      .eq('id', id);
+
+    if (!error) {
+      setBusinesses(prev => prev.filter(b => b.id !== id));
+    }
+  };
+
+  const filtered = businesses.filter(b => {
+    const matchesSearch = b.business_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         b.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'All' || b.category === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const selected = businesses.find(b => b.id === selectedId);
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-300 font-sans p-4 md:p-6 lg:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-6">
-        
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#111827] p-6 rounded-2xl border border-slate-800 shadow-2xl">
-          <div>
-            <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-              <ShieldCheck className="text-emerald-400" size={32} />
-              APPROVAL HUB
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm">Review and approve AI-generated business listings</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search pending businesses..." 
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-emerald-500 outline-none"
-              />
-            </div>
-          </div>
-        </header>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">APPROVAL HUB</h2>
+          <p className="text-gray-500 font-medium">Review and approve pending business records</p>
+        </div>
+        <div className="bg-amber-100 text-amber-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest">
+          {isLoading ? '...' : `${businesses.length} Pending`}
+        </div>
+      </div>
 
-<<<<<<< Updated upstream
-        <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900/50 border-b border-slate-800">
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Business Name</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">City</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Category</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Status</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                        <span>Loading queue...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : paginated.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                      <div className="flex flex-col items-center gap-2">
-                        <CheckCircle2 size={48} className="text-slate-700 mb-2" />
-                        <p className="font-bold text-white">Queue Empty</p>
-                        <p className="text-sm">All businesses have been reviewed</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginated.map(b => (
-                    <tr key={b.id} className="hover:bg-slate-800/20 transition-colors">
-                      <td className="px-6 py-4 font-bold text-white">
-                        {b.name_en || b.name_ar || b.name_ku || 'Unnamed'}
-                      </td>
-                      <td className="px-6 py-4 text-slate-400">{b.city}</td>
-                      <td className="px-6 py-4 text-sm text-slate-300">{b.category}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
-                          b.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                          b.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                          'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleAction(b.id, 'approve')} className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors" title="Approve">
-                            <CheckCircle2 size={16} />
-                          </button>
-                          <button className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors" title="Edit">
-                            <Edit2 size={16} />
-                          </button>
-                          <button className="p-2 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 rounded-lg transition-colors" title="Regenerate">
-                            <RotateCw size={16} />
-                          </button>
-                          <button onClick={() => handleAction(b.id, 'reject')} className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 rounded-lg transition-colors" title="Reject">
-                            <XCircle size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      {/* Filters */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder="Search businesses..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter size={16} className="text-gray-400" />
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#C9A84C]"
+          >
+            <option value="All">All Categories</option>
+            <option value="restaurants">Restaurants</option>
+            <option value="cafes">Cafes</option>
+            <option value="hotels">Hotels</option>
+            <option value="pharmacies">Pharmacies</option>
+            <option value="supermarkets">Supermarkets</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* List */}
+        <div className="lg:col-span-2 bg-white rounded-[32px] border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Pending Records</h3>
           </div>
           
-          {totalPages > 1 && (
-            <div className="px-6 py-4 bg-slate-900/50 border-t border-slate-800 flex items-center justify-between">
-              <div className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} pending reviews
+          <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={24} className="animate-spin text-gray-400" />
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="p-1.5 bg-slate-800 rounded-lg text-slate-400 disabled:opacity-30 transition-all"
+            ) : filtered.length === 0 ? (
+              <div className="p-8 text-center text-gray-400">
+                <CheckCircle2 size={48} className="mx-auto mb-4 text-emerald-400" />
+                <p className="text-sm">No pending records to approve!</p>
+              </div>
+            ) : (
+              filtered.map((business) => (
+                <div
+                  key={business.id}
+                  onClick={() => setSelectedId(business.id)}
+                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedId === business.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                  }`}
                 >
-                  <ChevronLeft size={16} />
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-bold text-gray-900 mb-1">{business.business_name}</h4>
+                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Building2 size={12} />
+                          {business.category}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin size={12} />
+                          {business.city}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2 line-clamp-1">
+                        {business.description || 'No description'}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 ml-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprove(business.id);
+                        }}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                        title="Approve"
+                      >
+                        <CheckCircle2 size={18} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReject(business.id);
+                        }}
+                        className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                        title="Reject"
+                      >
+                        <XCircle size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Detail Panel */}
+        <div className="bg-white rounded-[32px] border border-gray-200 shadow-sm p-6">
+          {selected ? (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-black text-[#1B2B5E] mb-2">{selected.business_name}</h3>
+                <span className="inline-block px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg uppercase">
+                  {selected.category}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {selected.address && (
+                  <div className="flex items-start gap-3">
+                    <MapPin size={16} className="text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase">Address</p>
+                      <p className="text-sm text-gray-900">{selected.address}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {selected.phone && (
+                  <div className="flex items-start gap-3">
+                    <Phone size={16} className="text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase">Phone</p>
+                      <p className="text-sm text-gray-900">{selected.phone}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {selected.website && (
+                  <div className="flex items-start gap-3">
+                    <Globe size={16} className="text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-gray-500 uppercase">Website</p>
+                      <a 
+                        href={selected.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline break-all"
+                      >
+                        {selected.website}
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {selected.description && (
+                <div className="pt-4 border-t border-gray-100">
+                  <p className="text-xs font-bold text-gray-500 uppercase mb-2">Description</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{selected.description}</p>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-xs font-bold text-gray-500 uppercase mb-2">Metadata</p>
+                <div className="space-y-1 text-xs text-gray-400">
+                  <p>Source: {selected.created_by_agent || 'Unknown'}</p>
+                  <p>Scraped: {selected.scraped_at ? new Date(selected.scraped_at).toLocaleString() : 'Unknown'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-4">
+                <button
+                  onClick={() => handleApprove(selected.id)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all"
+                >
+                  <CheckCircle2 size={16} />
+                  Approve
                 </button>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 bg-slate-800 rounded-lg text-slate-400 disabled:opacity-30 transition-all"
+                <button
+                  onClick={() => handleReject(selected.id)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition-all"
                 >
-                  <ChevronRight size={16} />
+                  <XCircle size={16} />
+                  Reject
                 </button>
               </div>
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12">
+              <Eye size={48} className="mb-4" />
+              <p className="text-sm">Select a record to view details</p>
             </div>
           )}
         </div>
-=======
-        {isLoading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-emerald-400" />
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400">
-            <AlertCircle size={18} />
-            <span className="text-sm">{error}</span>
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <div className="bg-[#111827] rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-            {filtered.length === 0 ? (
-              <div className="py-20 text-center text-slate-500">
-                <ShieldCheck size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-bold text-sm uppercase tracking-widest">No pending approvals</p>
-                <p className="text-xs mt-1">All businesses have been reviewed, or none have been collected yet.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-900/50 border-b border-slate-800">
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Business Name</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">City</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Category</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Source</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">Status</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-400 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/50">
-                    {filtered.map(b => (
-                      <tr key={b.id} className="hover:bg-slate-800/20 transition-colors">
-                        <td className="px-6 py-4 font-bold text-white">{b.business_name}</td>
-                        <td className="px-6 py-4 text-slate-400">{b.city}</td>
-                        <td className="px-6 py-4 text-slate-400 capitalize">{b.category}</td>
-                        <td className="px-6 py-4 text-xs text-slate-500">{b.source_name ?? '—'}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
-                            b.verification_status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            b.verification_status === 'flagged' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                            'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                          }`}>
-                            {b.verification_status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleAction(b.id, 'approve')}
-                              disabled={actionLoading === b.id + 'approve'}
-                              className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 rounded-lg transition-colors"
-                              title="Approve"
-                            >
-                              {actionLoading === b.id + 'approve' ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                            </button>
-                            <button
-                              onClick={() => handleAction(b.id, 'reject')}
-                              disabled={actionLoading === b.id + 'reject'}
-                              className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 disabled:opacity-50 rounded-lg transition-colors"
-                              title="Reject"
-                            >
-                              {actionLoading === b.id + 'reject' ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
->>>>>>> Stashed changes
-
       </div>
     </div>
   );
-}
+};
+
+export default ApprovalHub;

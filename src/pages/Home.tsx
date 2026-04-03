@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { CityGrid } from "../components/CityGrid";
 import { supabase } from "../lib/supabase";
 import { handleSupabaseError, OperationType } from "../lib/supabaseUtils";
 
@@ -150,7 +149,18 @@ export default function Home() {
                 </p>
               </div>
 
-              <CityGrid onSelect={setSelectedCity} agentStatuses={agentStatuses} />
+              {/* City Selection Placeholder */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                {['Baghdad', 'Basra', 'Erbil', 'Sulaymaniyah'].map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => setSelectedCity(city)}
+                    className="p-6 glass rounded-2xl hover:bg-vibrant-purple/20 transition-all text-center"
+                  >
+                    <span className="text-white font-bold">{city}</span>
+                  </button>
+                ))}
+              </div>
             </motion.div>
           ) : (
             <motion.div

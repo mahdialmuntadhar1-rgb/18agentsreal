@@ -18,9 +18,9 @@ import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
 
 const Pipelines: React.FC = () => {
   const [stats, setStats] = useState({
-    rawCount: 0,
     verifiedCount: 0,
     pendingCount: 0,
+    approvedCount: 0,
     taskCount: 0
   });
   const [activeTasks, setActiveTasks] = useState<AgentTask[]>([]);
@@ -59,7 +59,7 @@ const Pipelines: React.FC = () => {
       id: 'raw', 
       name: 'Raw Ingestion', 
       icon: <Database size={24} />, 
-      count: stats.rawCount, 
+      count: stats.approvedCount, 
       status: 'Active', 
       color: 'blue',
       description: 'Incoming data from scrapers and JSON uploads'

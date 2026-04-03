@@ -11,9 +11,9 @@ import { supabase } from '../lib/supabase';
 
 export default function FinalReport() {
   const [stats, setStats] = useState({
-    rawCount: 0,
     verifiedCount: 0,
     pendingCount: 0,
+    approvedCount: 0,
     taskCount: 0
   });
   const [regionalStats, setRegionalStats] = useState<{ governorate: string; count: number }[]>([]);
@@ -50,7 +50,7 @@ export default function FinalReport() {
   }, []);
 
   const metrics = [
-    { label: 'Total Records Loaded', value: stats.rawCount.toLocaleString(), icon: <Database size={24} />, color: 'text-blue-400' },
+    { label: 'Total Records Loaded', value: stats.verifiedCount.toLocaleString(), icon: <Database size={24} />, color: 'text-blue-400' },
     { label: 'Verified Businesses', value: stats.verifiedCount.toLocaleString(), icon: <FileCheck size={24} />, color: 'text-emerald-400' },
     { label: 'Pending Review', value: stats.pendingCount.toLocaleString(), icon: <FileText size={24} />, color: 'text-rose-400' },
     { label: 'Tasks Executed', value: stats.taskCount.toLocaleString(), icon: <Activity size={24} />, color: 'text-purple-400' },

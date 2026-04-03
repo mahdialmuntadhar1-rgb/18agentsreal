@@ -1,78 +1,3 @@
-<<<<<<< Updated upstream
-import React, { useEffect, useState } from 'react';
-import { 
-  AlertTriangle, 
-  ShieldAlert, 
-  Search, 
-  XCircle,
-  Info,
-  Wand2,
-  CheckCircle2
-} from 'lucide-react';
-import { motion } from 'motion/react';
-import { supabase } from '../lib/supabase';
-import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
-import { VerifiedBusiness } from '../types';
-
-const QC: React.FC = () => {
-  const [records, setRecords] = useState<VerifiedBusiness[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const fetchQCRecords = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('needs_review', true)
-        .order('confidence_score', { ascending: true });
-
-      if (error) throw error;
-      setRecords(data || []);
-    } catch (err) {
-      await handleSupabaseError(err, OperationType.GET, 'businesses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQCRecords();
-
-    const channel = supabase
-      .channel('qc_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' }, () => {
-        fetchQCRecords();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const handleAction = async (id: string, action: 'approve' | 'discard') => {
-    try {
-      const { error } = await supabase
-        .from('businesses')
-        .update({ 
-          needs_review: false,
-          status: action === 'approve' ? 'approved' : 'rejected',
-          approved_at: action === 'approve' ? new Date().toISOString() : null
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      await handleSupabaseError(err, OperationType.UPDATE, 'businesses');
-    }
-  };
-
-  const filtered = records.filter(r => 
-    r.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.city?.toLowerCase().includes(searchTerm.toLowerCase())
-=======
 import React, { useState, useEffect } from 'react';
 import { 
   AlertTriangle, 
@@ -150,7 +75,6 @@ const QC: React.FC = () => {
 
   const filtered = records.filter(r =>
     r.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
->>>>>>> Stashed changes
   );
 
   return (
@@ -162,13 +86,7 @@ const QC: React.FC = () => {
         </div>
         <div className="bg-rose-100 text-rose-700 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
           <ShieldAlert size={14} />
-<<<<<<< Updated upstream
-          {records.length} Records Flagged
-        </div>
-      </header>
-
-=======
-          {isLoading ? '…' : `${counts.total} Records Flagged`}
+          {isLoading ? '...' : `${counts.total} Records Flagged`}
         </div>
       </header>
 
@@ -182,13 +100,12 @@ const QC: React.FC = () => {
           <div key={i} className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
             <p className={`text-2xl font-black ${stat.color}`}>
-              {isLoading ? <span className="text-gray-300">…</span> : stat.count}
+              {isLoading ? <span className="text-gray-300">...</span> : stat.count}
             </p>
           </div>
         ))}
       </div>
 
->>>>>>> Stashed changes
       {/* QC Table */}
       <div className="bg-white rounded-[32px] shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
@@ -199,11 +116,7 @@ const QC: React.FC = () => {
                 type="text" 
                 placeholder="Search flagged records..."
                 value={searchTerm}
-<<<<<<< Updated upstream
-                onChange={(e) => setSearchTerm(e.target.value)}
-=======
                 onChange={e => setSearchTerm(e.target.value)}
->>>>>>> Stashed changes
                 className="bg-white border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-[#C9A84C] w-64"
               />
             </div>
@@ -223,11 +136,6 @@ const QC: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-<<<<<<< Updated upstream
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Loading QC records...</td>
-=======
               {filtered.length === 0 && !isLoading && (
                 <tr>
                   <td colSpan={5} className="px-6 py-16 text-center text-gray-400 text-sm">
@@ -259,7 +167,7 @@ const QC: React.FC = () => {
                         <span className="text-[10px] font-black text-gray-500">{Math.round(record.confidence_score * 100)}%</span>
                       </div>
                     ) : (
-                      <span className="text-[10px] text-gray-400">—</span>
+                      <span className="text-[10px] text-gray-400">-</span>
                     )}
                   </td>
                   <td className="px-6 py-4">
@@ -276,66 +184,12 @@ const QC: React.FC = () => {
                       </button>
                     </div>
                   </td>
->>>>>>> Stashed changes
                 </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">No records flagged for review</td>
-                </tr>
-              ) : (
-                filtered.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-[#1B2B5E]">{record.name_ar || record.name_en}</div>
-                      <div className="text-[10px] text-gray-400 font-bold uppercase">{record.category}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle size={14} className="text-rose-500" />
-                        <span className="text-xs font-bold text-rose-700">Flagged for Review</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full ${record.confidence_score > 70 ? 'bg-emerald-500' : record.confidence_score > 50 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                            style={{ width: `${record.confidence_score}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-black text-gray-500">{record.confidence_score}%</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-[10px] font-black text-gray-400 uppercase">{record.city}</span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => handleAction(record.id, 'approve')}
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all" 
-                          title="Approve"
-                        >
-                          <CheckCircle2 size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleAction(record.id, 'discard')}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" 
-                          title="Discard"
-                        >
-                          <XCircle size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       </div>
-<<<<<<< Updated upstream
-=======
 
       {/* QC Rules Config */}
       <div className="bg-[#1B2B5E] p-8 rounded-[32px] text-white">
@@ -359,7 +213,6 @@ const QC: React.FC = () => {
           ))}
         </div>
       </div>
->>>>>>> Stashed changes
     </div>
   );
 };

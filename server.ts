@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import { runGovernor } from "./server/governors/index.js";
+import { runGovernor, getGovernorDefaults } from "./server/governors/index.js";
+import { supabaseAdmin } from "./server/supabase-admin.js";
 
 async function startServer() {
   const app = express();
@@ -40,11 +41,6 @@ async function startServer() {
     res.json(agents);
   });
 
-<<<<<<< Updated upstream
-  app.post("/api/orchestrator/start", (req, res) => {
-    agents = agents.map(a => ({ ...a, status: "running" }));
-    res.json({ status: "started", agents });
-=======
   app.post('/api/orchestrator/start', async (_req, res) => {
     const { data: agents, error: fetchError } = await supabaseAdmin
       .from('agents')
@@ -120,7 +116,6 @@ async function startServer() {
       agents: updatedAgents ?? [],
       taskWarning: taskError ? 'Task queue unavailable, but agents set to running' : null,
     });
->>>>>>> Stashed changes
   });
 
   app.post("/api/orchestrator/stop", (req, res) => {
@@ -131,16 +126,6 @@ async function startServer() {
   // Endpoint to manually trigger a governor
   app.post("/api/agents/:agentName/run", async (req, res) => {
     const { agentName } = req.params;
-<<<<<<< Updated upstream
-    try {
-      // In a real app, this would be triggered by a cron job or background worker
-      // We run it asynchronously so we don't block the response
-      runGovernor(agentName).catch(console.error);
-      res.json({ status: "started", agentName });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-=======
     const defaults = getGovernorDefaults(agentName);
 
     // Try to create a task record, but don't block execution if it fails
@@ -420,7 +405,6 @@ async function startServer() {
     if (!data) return res.status(404).json({ error: 'Business not found' });
 
     res.json(data);
->>>>>>> Stashed changes
   });
 
   // Vite middleware for development

@@ -1,49 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { RawBusiness, VerifiedBusiness, AgentTask } from '../types';
-import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
 
 export const businessService = {
   async getStats() {
-<<<<<<< Updated upstream
-    try {
-      const [
-        { count: rawCount, error: rawError },
-        { count: verifiedCount, error: verifiedError },
-        { count: pendingCount, error: pendingError },
-        { count: approvedCount, error: approvedError },
-        { count: taskCount, error: taskError }
-      ] = await Promise.all([
-        supabase.from('raw_businesses').select('*', { count: 'exact', head: true }),
-        supabase.from('businesses').select('*', { count: 'exact', head: true }),
-        supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-        supabase.from('agent_tasks').select('*', { count: 'exact', head: true })
-      ]);
-
-      if (rawError) await handleSupabaseError(rawError, OperationType.GET, 'raw_businesses');
-      if (verifiedError) await handleSupabaseError(verifiedError, OperationType.GET, 'businesses');
-      if (pendingError) await handleSupabaseError(pendingError, OperationType.GET, 'businesses/pending');
-      if (approvedError) await handleSupabaseError(approvedError, OperationType.GET, 'businesses/approved');
-      if (taskError) await handleSupabaseError(taskError, OperationType.GET, 'agent_tasks');
-
-      return {
-        rawCount: rawCount || 0,
-        verifiedCount: verifiedCount || 0,
-        pendingCount: pendingCount || 0,
-        approvedCount: approvedCount || 0,
-        taskCount: taskCount || 0
-      };
-    } catch (error) {
-      console.error('Error in getStats:', error);
-      return {
-        rawCount: 0,
-        verifiedCount: 0,
-        pendingCount: 0,
-        approvedCount: 0,
-        taskCount: 0
-      };
-    }
-=======
     const [
       verifiedCountResult,
       pendingCountResult,
@@ -62,7 +21,6 @@ export const businessService = {
       approvedCount: approvedCountResult.count ?? 0,
       taskCount: taskCountResult.count ?? 0,
     };
->>>>>>> Stashed changes
   },
 
   async getVerifiedBusinesses(filters: any) {
@@ -70,7 +28,7 @@ export const businessService = {
       let query = supabase.from('businesses').select('*');
       
       if (filters.status && filters.status !== 'All') {
-        query = query.eq('status', filters.status.toLowerCase());
+        query = query.eq('verification_status', filters.status.toLowerCase());
       }
       if (filters.city && filters.city !== 'All') {
         query = query.eq('city', filters.city);
@@ -82,12 +40,8 @@ export const businessService = {
         query = query.gte('confidence_score', filters.minScore);
       }
 
-<<<<<<< Updated upstream
       const { data, error } = await query.order('created_at', { ascending: false });
-      if (error) {
-        await handleSupabaseError(error, OperationType.GET, 'businesses');
-        throw error;
-      }
+      if (error) throw error;
       return data as VerifiedBusiness[];
     } catch (error) {
       console.error('Error in getVerifiedBusinesses:', error);
@@ -96,59 +50,10 @@ export const businessService = {
   },
 
   async updateStatus(id: string, status: string) {
-    try {
-      const { error } = await supabase
-        .from('businesses')
-        .update({ 
-          status, 
-          approved_at: status === 'approved' ? new Date().toISOString() : null 
-        })
-        .eq('id', id);
-      if (error) {
-        await handleSupabaseError(error, OperationType.UPDATE, `businesses/${id}`);
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error in updateStatus:', error);
-      throw error;
-    }
-  },
-
-  async batchApprove(ids: string[]) {
-    try {
-      const { error } = await supabase
-        .from('businesses')
-        .update({ 
-          status: 'approved', 
-          approved_at: new Date().toISOString() 
-        })
-        .in('id', ids);
-      if (error) {
-        await handleSupabaseError(error, OperationType.UPDATE, 'businesses/batch');
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error in batchApprove:', error);
-      throw error;
-    }
-  }
-=======
-    if (filters.status && filters.status !== 'All') query = query.eq('verification_status', filters.status.toLowerCase());
-    if (filters.city && filters.city !== 'All') query = query.eq('city', filters.city);
-    if (filters.category && filters.category !== 'All') query = query.eq('category', filters.category);
-    if (filters.minScore) query = query.gte('confidence_score', filters.minScore);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data ?? []) as any[];
-  },
-
-  async updateStatus(id: string, status: string) {
     const { error } = await supabase
       .from('businesses')
-      .update({ verification_status: status, updated_at: new Date().toISOString() })
+      .update({ verification_status: status })
       .eq('id', id);
-
     if (error) throw error;
   },
 
@@ -156,12 +61,11 @@ export const businessService = {
     if (ids.length === 0) return;
     const { error } = await supabase
       .from('businesses')
-      .update({ verification_status: 'approved', updated_at: new Date().toISOString() })
+      .update({ verification_status: 'approved' })
       .in('id', ids);
 
     if (error) throw error;
-  },
->>>>>>> Stashed changes
+  }
 };
 
 export const cleaningService = {
@@ -179,13 +83,8 @@ export const cleaningService = {
     let vScore = 0;
     let cScore = 0;
 
-<<<<<<< Updated upstream
-    const hasName = !!(business.name_ar || business.name_ku || business.name_en);
-    const hasLocation = !!(business.city);
-=======
     const hasName = !!business.business_name;
     const hasLocation = !!business.city;
->>>>>>> Stashed changes
     const hasPhone = !!business.phone;
 
     if (hasName) vScore = 1;
@@ -200,23 +99,9 @@ export const cleaningService = {
   },
 
   async pushToRaw(records: any[]) {
-<<<<<<< Updated upstream
-    try {
-      const { error } = await supabase.from('raw_businesses').insert(records);
-      if (error) {
-        await handleSupabaseError(error, OperationType.WRITE, 'raw_businesses');
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error in pushToRaw:', error);
-      throw error;
-    }
-  }
-=======
     const { error } = await supabase.from('businesses').insert(records);
     if (error) throw error;
-  },
->>>>>>> Stashed changes
+  }
 };
 
 export const taskService = {
@@ -226,10 +111,7 @@ export const taskService = {
         .from('agent_tasks')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) {
-        await handleSupabaseError(error, OperationType.GET, 'agent_tasks');
-        throw error;
-      }
+      if (error) throw error;
       return data as AgentTask[];
     } catch (error) {
       console.error('Error in getTasks:', error);
@@ -238,19 +120,8 @@ export const taskService = {
   },
 
   async createTask(task: Partial<AgentTask>) {
-    try {
-      const { error } = await supabase.from('agent_tasks').insert({
-        ...task,
-        created_at: new Date().toISOString()
-      });
-      if (error) {
-        await handleSupabaseError(error, OperationType.WRITE, 'agent_tasks');
-        throw error;
-      }
-    } catch (error) {
-      console.error('Error in createTask:', error);
-      throw error;
-    }
+    const { error } = await supabase.from('agent_tasks').insert(task);
+    if (error) throw error;
   },
 
   async getLogs(taskId: string) {
@@ -260,10 +131,7 @@ export const taskService = {
         .select('*')
         .eq('taskId', taskId)
         .order('timestamp', { ascending: false });
-      if (error) {
-        await handleSupabaseError(error, OperationType.GET, `agent_logs/${taskId}`);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     } catch (error) {
       console.error('Error in getLogs:', error);

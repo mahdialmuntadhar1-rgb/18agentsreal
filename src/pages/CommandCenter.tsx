@@ -1,626 +1,242 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Terminal, Play, Square, CheckCircle2, AlertCircle, 
-  Activity, Database, ShieldCheck, FileText, 
-  Search, Filter, Zap, Bot, Info, CheckCircle,
-  Wand2, Compass, Globe, Trash2, RefreshCw,
-  LayoutDashboard, Terminal as TerminalIcon,
-  CheckSquare, AlertTriangle, Download, MapPin
+  Play, 
+  Square, 
+  RotateCcw, 
+  Terminal,
+  Activity,
+  Cpu,
+  Globe,
+  CheckCircle2,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
-import { GoogleGenAI } from "@google/genai";
 
-const CITIES = [
-  { id: 'sulaymaniyah', en: 'Sulaymaniyah City', ar: 'مدينة السليمانية', count: 5000 },
-  { id: 'baghdad', en: 'Baghdad City', ar: 'مدينة بغداد', count: 16200 },
-  { id: 'karbala', en: 'Karbala City', ar: 'مدينة كربلاء', count: 3900 },
-  { id: 'erbil', en: 'Erbil City', ar: 'مدينة أربيل', count: 3300 },
-  { id: 'basra', en: 'Basra City', ar: 'مدينة البصرة', count: 7000 },
-  { id: 'najaf', en: 'Najaf City', ar: 'مدينة النجف', count: 2900 },
-  { id: 'mosul', en: 'Mosul City', ar: 'مدينة الموصل', count: 4400 },
-  { id: 'kirkuk', en: 'Kirkuk City', ar: 'مدينة كركوك', count: 1800 },
-  { id: 'diyala', en: 'Diyala City', ar: 'مدينة ديالى', count: 3000 },
-  { id: 'anbar', en: 'Anbar City', ar: 'مدينة الأنبار', count: 1800 },
-  { id: 'dohuk', en: 'Dohuk City', ar: 'مدينة دهوك', count: 1600 },
-  { id: 'wasit', en: 'Wasit City', ar: 'مدينة واسط', count: 1500 },
-  { id: 'muthanna', en: 'Muthanna City', ar: 'مدينة المثنى', count: 1000 },
-  { id: 'qadisiyah', en: 'Qadisiyah City', ar: 'مدينة القادسية', count: 1500 },
-  { id: 'maysan', en: 'Maysan City', ar: 'مدينة ميسان', count: 1400 },
-  { id: 'thi_qar', en: 'Thi-Qar City', ar: 'مدينة ذي قار', count: 3200 },
-  { id: 'babil', en: 'Babil City', ar: 'مدينة بابل', count: 1600 },
-  { id: 'saladin', en: 'Saladin City', ar: 'مدينة صلاح الدين', count: 1750 },
-];
-
-const AGENTS = [
-  { id: 'cleaner', icon: <Wand2 size={20} />, name: 'Text Cleaner', desc: 'Repairs Arabic/Kurdish text', tasks: 1842, success: 98 },
-  { id: 'enricher', icon: <Database size={20} />, name: 'Data Enrichment', desc: 'Fills phones, categories', tasks: 934, success: 94 },
-  { id: 'validator', icon: <ShieldCheck size={20} />, name: 'Quality Validator', desc: 'Scores & flags entries', tasks: 721, success: 100 },
-  { id: 'verifier', icon: <CheckCircle size={20} />, name: 'Human Verifier', desc: 'Queues for human review', tasks: 312, success: 100 },
-  { id: 'social', icon: <Globe size={20} />, name: 'Social Finder', desc: 'Finds Instagram / Facebook', tasks: 0, success: 0 },
-  { id: 'exporter', icon: <Download size={20} />, name: 'Export Agent', desc: 'Exports to Supabase', tasks: 24, success: 100 },
-];
-
-interface LogEntry {
-  id: string;
-  time: string;
-  message: string;
-  type: 'info' | 'ok' | 'warn' | 'agent';
+interface Agent {
+  agent_name: string;
+  category: string;
+  city: string;
+  status: 'idle' | 'running' | 'error' | 'active';
+  government_rate: string;
+  last_run?: string;
 }
 
-import { useAuth } from '../AuthContext';
-
-export default function CommandCenter() {
-  const { user } = useAuth();
-  const [selectedCities, setSelectedCities] = useState<Set<string>>(new Set(['sulaymaniyah']));
-  const [selectedTask, setSelectedTask] = useState('social');
-  const [isRunning, setIsRunning] = useState(false);
-  const [instruction, setInstruction] = useState('Search for Instagram and Facebook pages for each business in selected cities. Add found URLs to the directory list.');
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [cityProgress, setCityProgress] = useState<Record<string, number>>({});
-  const [doneCount, setDoneCount] = useState(0);
-  const [serverTime, setServerTime] = useState(new Date().toLocaleTimeString([], { hour12: false }));
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
-  
-  const logEndRef = useRef<HTMLDivElement>(null);
+const CommandCenter: React.FC = () => {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [runningAgents, setRunningAgents] = useState<Set<string>>(new Set());
+  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setServerTime(new Date().toLocaleTimeString([], { hour12: false }));
-    }, 1000);
-    return () => clearInterval(timer);
+    fetchAgents();
+    const interval = setInterval(fetchAgents, 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Listen for logs from Supabase
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchInitialLogs = async () => {
-      const { data, error } = await supabase
-        .from('agent_logs')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(50);
-
-      if (error) {
-        await handleSupabaseError(error, OperationType.GET, 'agent_logs');
-        return;
-      }
-
-      const formattedLogs = data.map(log => ({
-        id: log.id,
-        ...log,
-        time: new Date(log.timestamp).toLocaleTimeString([], { hour12: false })
-      })) as LogEntry[];
-      setLogs(formattedLogs.reverse());
-    };
-
-    fetchInitialLogs();
-
-    const channel = supabase
-      .channel('agent_logs_changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'agent_logs' }, (payload) => {
-        const newLog = {
-          id: payload.new.id,
-          ...payload.new,
-          time: new Date(payload.new.timestamp).toLocaleTimeString([], { hour12: false })
-        } as LogEntry;
-        setLogs(prev => [...prev.slice(-49), newLog]);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-
-  // Listen for task progress
-  useEffect(() => {
-    if (!currentTaskId || !user) return;
-
-    const channel = supabase
-      .channel(`agent_task_${currentTaskId}`)
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'agent_tasks',
-        filter: `id=eq.${currentTaskId}`
-      }, (payload) => {
-        if (payload.new.status === 'completed' || payload.new.status === 'stopped') {
-          setIsRunning(false);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentTaskId, user]);
-
-  useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
-
-  const addLog = async (type: LogEntry['type'], message: string) => {
-    if (!user) return;
+  const fetchAgents = async () => {
     try {
-      await supabase.from('agent_logs').insert({
-        timestamp: new Date().toISOString(),
-        message,
-        type,
-        taskId: currentTaskId
-      });
+      const response = await fetch('/api/agents');
+      const data = await response.json();
+      setAgents(data);
     } catch (error) {
-      await handleSupabaseError(error, OperationType.WRITE, 'agent_logs');
+      console.error('Failed to fetch agents:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-<<<<<<< Updated upstream
-  const toggleCity = (id: string) => {
-    if (isRunning) return;
-    const next = new Set(selectedCities);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedCities(next);
+  const runAgent = async (agentName: string) => {
+    setRunningAgents(prev => new Set(prev).add(agentName));
+    addLog(`Starting ${agentName}...`);
+    
+    try {
+      const response = await fetch(`/api/agents/${agentName}/run`, { method: 'POST' });
+      const data = await response.json();
+      
+      if (data.status === 'running') {
+        addLog(`${agentName} started successfully (task: ${data.taskId})`);
+      } else {
+        addLog(`${agentName} failed to start`);
+      }
+    } catch (error) {
+      addLog(`Error starting ${agentName}: ${error}`);
+    } finally {
+      setRunningAgents(prev => {
+        const next = new Set(prev);
+        next.delete(agentName);
+        return next;
+      });
+    }
   };
 
-  const selectAll = () => {
-    if (isRunning) return;
-    setSelectedCities(new Set(CITIES.map(c => c.id)));
-=======
-  const startOrchestrator = async () => {
-    setLoading(true);
-    setMessage(null);
+  const runAllAgents = async () => {
+    addLog('Starting all agents...');
+    
     try {
       const response = await fetch('/api/orchestrator/start', { method: 'POST' });
-      const result = await response.json();
-      await refreshRuntimeState();
-      if (response.ok) {
-        setMessage(`Orchestrator started: ${result.queuedAgents} agents triggered.`);
-      } else {
-        setMessage(`Failed to start orchestrator: ${result.error}`);
+      const data = await response.json();
+      
+      if (data.status === 'queued') {
+        addLog(`Orchestrator queued ${data.queuedAgents} agents`);
+        if (data.taskWarning) {
+          addLog(`Warning: ${data.taskWarning}`);
+        }
       }
-    } catch (err: any) {
-      setMessage(`Error starting orchestrator: ${err.message}`);
+    } catch (error) {
+      addLog(`Error starting orchestrator: ${error}`);
     }
-    setLoading(false);
   };
 
-  const stopOrchestrator = async () => {
-    setLoading(true);
-    setMessage(null);
+  const stopAllAgents = async () => {
+    addLog('Stopping all agents...');
+    
     try {
       const response = await fetch('/api/orchestrator/stop', { method: 'POST' });
-      await refreshRuntimeState();
-      if (response.ok) {
-        setMessage('Orchestrator status reset to IDLE. Active background tasks marked as failed.');
-      } else {
-        setMessage('Failed to reset orchestrator status.');
+      const data = await response.json();
+      
+      if (data.status === 'stopped') {
+        addLog('All agents stopped');
       }
-    } catch (err: any) {
-      setMessage(`Error stopping orchestrator: ${err.message}`);
-    }
-    setLoading(false);
->>>>>>> Stashed changes
-  };
-
-  const clearAll = () => {
-    if (isRunning) return;
-    setSelectedCities(new Set());
-  };
-
-  const launchTasks = async () => {
-    if (selectedCities.size === 0) {
-      addLog('warn', 'No cities selected. Tick at least one city.');
-      return;
-    }
-    if (!selectedTask) {
-      addLog('warn', 'No task selected.');
-      return;
-    }
-
-    setIsRunning(true);
-    setDoneCount(0);
-    
-    const cities = Array.from(selectedCities) as string[];
-    const initialProgress: Record<string, number> = {};
-    cities.forEach((id: string) => (initialProgress as any)[id] = 0);
-    setCityProgress(initialProgress);
-
-    try {
-      const { data: taskData, error: taskError } = await supabase.from('agent_tasks').insert({
-        type: selectedTask,
-        instruction,
-        cities,
-        status: 'running',
-        progress: 0,
-        created_at: new Date().toISOString()
-      }).select().single();
-
-      if (taskError) throw taskError;
-      setCurrentTaskId(taskData.id);
-
-      await addLog('info', `▶ Task launched: "${instruction}"`);
-      await addLog('info', `Cities: ${cities.map(id => CITIES.find(c => c.id === id)?.en).join(', ')}`);
-      await addLog('agent', `${selectedTask.toUpperCase()} agent activated`);
-
-      // Simulation logic (in a real app, a backend function would handle this)
-      const messages: Record<string, ((c: string) => string)[]> = {
-        social: [
-          (c) => `🔍 Searching Instagram for businesses in ${c}…`,
-          (c) => `📘 Scanning Facebook pages for ${c}…`,
-          (c) => `✅ Found ${Math.floor(Math.random() * 120 + 30)} social profiles in ${c}`,
-          (c) => `💾 Writing Instagram URLs to directory for ${c}`,
-          (c) => `💾 Writing Facebook URLs to directory for ${c}`,
-          (c) => `✔ ${c} — social enrichment complete`,
-        ],
-        text: [(c) => `Repairing Arabic text in ${c}…`, (c) => `Fixed encoding in ${c}`],
-        enrich: [(c) => `Filling phones/coords in ${c}…`, (c) => `Enrichment done for ${c}`],
-        qc: [(c) => `Running QC on ${c}…`, (c) => `QC complete for ${c}`],
-        export: [(c) => `Exporting ${c} to Supabase…`, (c) => `Export done for ${c}`],
-      };
-
-      let interval = setInterval(async () => {
-        const currentCities = [...selectedCities] as string[];
-        const cityId = currentCities[Math.floor(Math.random() * currentCities.length)];
-        const cityName = (CITIES.find(c => c.id === cityId)?.en || cityId) as string;
-        const msgsForTask = ((messages as any)[selectedTask] || messages.social) as any[];
-        const msgFn = msgsForTask[Math.floor(Math.random() * msgsForTask.length)] as (c: string) => string;
-        
-        await addLog('ok', msgFn(cityName));
-
-        setCityProgress((prev: Record<string, number>) => {
-          const next = { ...prev } as any;
-          let allDone = true;
-          let completedCount = 0;
-
-          currentCities.forEach((id: string) => {
-            if (next[id] < 100) {
-              next[id] = Math.min(100, next[id] + Math.random() * 15 + 5);
-              if (next[id] < 100) allDone = false;
-              else {
-                addLog('ok', `✔ ${CITIES.find(c => c.id === id)?.en} — task complete`);
-              }
-            }
-            if (next[id] >= 100) completedCount++;
-          });
-
-          setDoneCount(completedCount);
-
-          if (allDone) {
-            clearInterval(interval);
-            setIsRunning(false);
-            supabase.from('agent_tasks').update({ status: 'completed', progress: 100 }).eq('id', taskData.id);
-            addLog('info', `🏁 All tasks complete · ${currentCities.length} cities processed`);
-          }
-          return next;
-        });
-      }, 1500);
-
     } catch (error) {
-      console.error("Error launching task:", error);
-      setIsRunning(false);
+      addLog(`Error stopping agents: ${error}`);
     }
   };
 
-  const stopAll = async () => {
-    if (currentTaskId) {
-      await supabase.from('agent_tasks').update({ status: 'stopped' }).eq('id', currentTaskId);
+  const addLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setLogs(prev => [`[${timestamp}] ${message}`, ...prev].slice(0, 50));
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'running':
+      case 'active':
+        return <Activity size={16} className="text-emerald-500 animate-pulse" />;
+      case 'error':
+        return <AlertCircle size={16} className="text-rose-500" />;
+      case 'idle':
+      default:
+        return <CheckCircle2 size={16} className="text-gray-400" />;
     }
-    setIsRunning(false);
-    addLog('warn', '■ All agents stopped by user');
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'running':
+      case 'active':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'error':
+        return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'idle':
+      default:
+        return 'bg-gray-50 text-gray-600 border-gray-200';
+    }
   };
 
   return (
-<<<<<<< Updated upstream
-    <div className="min-h-screen text-[#e2d9c8] font-mono p-4 md:p-8">
-      <div className="max-w-[1600px] mx-auto space-y-8">
-        
-        {/* Header */}
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-gold/20">
-          <div>
-            <h1 className="text-2xl font-bold text-gold tracking-wider flex items-center gap-3">
-              <Zap className="text-gold animate-pulse" size={28} />
-              AGENT COMMAND CENTER
-            </h1>
-            <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest">
-              AI Operations Cockpit · 18 Cities · <span className="text-gold">74,049</span> records
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-[10px] text-slate-500 font-mono">
-              Server · {serverTime}
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full text-[10px] text-green-400 font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              Live
-=======
-    <div className="p-6 md:p-8 space-y-8">
-      <header className="space-y-3">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#C9A84C]">18 AGENTS</p>
-        <h1 className="text-3xl font-black text-[#1B2B5E] tracking-tight">Agent Operations Console</h1>
-        <p className="text-sm text-gray-600 max-w-3xl">
-          Control, monitor, and orchestrate AI agents across Iraqi governorates.
-          This console is dedicated to runtime operations and is separate from the customer-facing directory product.
-        </p>
-      </header>
-
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {summaryCards.map((card) => (
-          <article key={card.title} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-black uppercase tracking-wider text-gray-500">{card.title}</span>
-              <span className="text-[#1B2B5E]">{card.icon}</span>
-            </div>
-            <div className="text-2xl font-black text-[#1B2B5E]">
-              {card.value === null ? <span className="text-sm text-gray-400">Unavailable</span> : card.value}
-            </div>
-          </article>
-        ))}
-      </section>
-
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-white border border-gray-200 rounded-2xl p-5 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-lg font-black text-[#1B2B5E] uppercase tracking-wider">Quick Actions</h2>
-            <button 
-              type="button"
-              className={`${actionButton} border border-gray-300 text-gray-300`} 
-              onClick={refreshRuntimeState} 
-              disabled={loading}
-            >
-              <RefreshCw size={14} /> Refresh Runtime State
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button 
-              type="button"
-              disabled={loading} 
-              onClick={startOrchestrator} 
-              className={`${actionButton} bg-emerald-600 text-white`}
-            >
-              <Play size={14} /> Start Orchestrator
-            </button>
-            <button 
-              type="button"
-              disabled={loading} 
-              onClick={stopOrchestrator} 
-              className={`${actionButton} border border-rose-300 text-rose-700 bg-rose-50`}
-            >
-              <Square size={14} /> Stop Orchestrator
-            </button>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Record Manual Command / Instruction (Log Only)</label>
-            <div className="flex gap-3 flex-col md:flex-row">
-              <input
-                value={instruction}
-                onChange={(e) => setInstruction(e.target.value)}
-                placeholder="Enter an instruction for the audit log..."
-                className="border border-gray-300 rounded-xl px-3 py-2 flex-1 text-sm"
-              />
-              <button
-                type="button"
-                disabled={loading || !instruction.trim()}
-                onClick={queueInstruction}
-                className={`${actionButton} bg-[#1B2B5E] text-white justify-center`}
-              >
-                <Terminal size={14} /> Log Instruction
-              </button>
->>>>>>> Stashed changes
-            </div>
-            <p className="text-[10px] text-gray-400 italic">Manual instructions are recorded in the task audit log but are not automatically processed by the backend.</p>
-          </div>
-        </header>
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Running', value: isRunning ? ([...selectedCities] as string[]).filter((id: string) => ((cityProgress as any)[id] || 0) < 100).length : 0, color: 'text-gold' },
-            { label: 'Queued', value: isRunning ? ([...selectedCities] as string[]).filter((id: string) => ((cityProgress as any)[id] || 0) === 0).length : 0, color: 'text-gold' },
-            { label: 'Done', value: doneCount, color: 'text-gold', delta: doneCount > 0 ? `+${doneCount} completed` : '' },
-            { label: 'Cities', value: 18, color: 'text-gold' }
-          ].map((stat, i) => (
-            <div key={i} className="bg-white/5 border border-gold/10 rounded-xl p-4 shadow-xl">
-              <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{stat.label}</div>
-              {stat.delta && <div className="text-[10px] text-green-500 mt-1">{stat.delta}</div>}
-            </div>
-          ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-black text-[#1B2B5E] tracking-tight">COMMAND CENTER</h2>
+          <p className="text-gray-500 font-medium">Control and monitor all agent operations</p>
         </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={runAllAgents}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all"
+          >
+            <Play size={16} />
+            Run All
+          </button>
+          <button
+            onClick={stopAllAgents}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition-all"
+          >
+            <Square size={16} />
+            Stop All
+          </button>
+        </div>
+      </div>
 
-        {/* Agent Status Row */}
-        <div className="space-y-4">
-          <div className="text-[10px] text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
-            Agent Status
-            <div className="h-px flex-1 bg-gold/10" />
+      {/* Agents Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {isLoading ? (
+          <div className="col-span-full flex items-center justify-center py-12">
+            <Loader2 size={24} className="animate-spin text-gray-400" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {AGENTS.map(agent => {
-              const isActive = isRunning && (
-                (selectedTask === 'text' && agent.id === 'cleaner') ||
-                (selectedTask === 'enrich' && agent.id === 'enricher') ||
-                (selectedTask === 'social' && agent.id === 'social') ||
-                (selectedTask === 'qc' && agent.id === 'validator') ||
-                (selectedTask === 'export' && agent.id === 'exporter')
-              );
-              return (
-                <div key={agent.id} className="bg-white/5 border border-gold/10 rounded-xl p-3 flex items-center gap-4">
-                  <div className="text-gold/60">{agent.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-bold text-slate-200">{agent.name}</div>
-                    <div className="text-[9px] text-slate-500 truncate">{agent.desc}</div>
-                  </div>
-                  <div className={`text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-widest ${
-                    isActive ? 'bg-green-500/20 text-green-400 animate-pulse' : 'bg-white/5 text-slate-500'
-                  }`}>
-                    {isActive ? 'Running' : 'Idle'}
-                  </div>
+        ) : agents.map((agent) => (
+          <div 
+            key={agent.agent_name}
+            className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#1B2B5E] rounded-xl flex items-center justify-center">
+                  <Cpu size={20} className="text-white" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Command Box */}
-        <div className="bg-navy/80 border border-gold rounded-2xl p-6 shadow-[0_0_40px_rgba(201,168,76,0.08)] space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="text-2xl">🎯</div>
-            <div>
-              <h2 className="text-sm font-bold text-gold uppercase tracking-widest">Task Commander</h2>
-              <p className="text-[10px] text-slate-500 mt-0.5">Select cities + task type → write instruction → launch</p>
+                <div>
+                  <h3 className="font-bold text-[#1B2B5E]">{agent.agent_name}</h3>
+                  <p className="text-xs text-gray-400 font-medium">{agent.category}</p>
+                </div>
+              </div>
+              <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase border ${getStatusColor(agent.status)}`}>
+                {agent.status}
+              </div>
             </div>
-          </div>
 
-          {/* Task Type Chips */}
-          <div className="space-y-3">
-            <div className="text-[9px] text-slate-500 uppercase tracking-widest">Task Type</div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: 'text', label: '🔤 Text Repair', color: 'bg-blue-500' },
-                { id: 'enrich', label: '📍 Enrich Data', color: 'bg-purple-500' },
-                { id: 'social', label: '📱 Collect Socials', color: 'bg-green-500' },
-                { id: 'qc', label: '✅ Quality Check', color: 'bg-orange-500' },
-                { id: 'export', label: '📤 Export Data', color: 'bg-gold' }
-              ].map(task => (
-                <button
-                  key={task.id}
-                  onClick={() => !isRunning && setSelectedTask(task.id)}
-                  className={`px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border ${
-                    selectedTask === task.id 
-                      ? `${task.color} text-navy border-transparent` 
-                      : 'bg-white/5 text-slate-400 border-transparent hover:border-white/20'
-                  }`}
-                >
-                  {task.label}
-                </button>
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Globe size={12} />
+                <span>{agent.city}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <Activity size={12} />
+                <span>{agent.government_rate}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => runAgent(agent.agent_name)}
+              disabled={runningAgents.has(agent.agent_name) || agent.status === 'running'}
+              className="w-full flex items-center justify-center gap-2 py-2 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 text-gray-700 rounded-xl font-bold text-xs transition-all"
+            >
+              {runningAgents.has(agent.agent_name) ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <RotateCcw size={14} />
+                  Run Agent
+                </>
+              )}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* System Logs */}
+      <div className="bg-[#1B2B5E] rounded-[32px] overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center gap-3">
+          <Terminal size={18} className="text-[#C9A84C]" />
+          <h3 className="text-sm font-black text-white uppercase tracking-widest">System Logs</h3>
+        </div>
+        <div className="p-4 h-64 overflow-y-auto font-mono text-xs">
+          {logs.length === 0 ? (
+            <p className="text-white/40">No activity yet...</p>
+          ) : (
+            <div className="space-y-1">
+              {logs.map((log, i) => (
+                <p key={i} className="text-white/80">{log}</p>
               ))}
             </div>
-          </div>
-
-          {/* City Grid */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="text-[9px] text-slate-500 uppercase tracking-widest">Select Cities</div>
-              <div className="flex gap-4">
-                <button onClick={selectAll} className="text-[9px] text-gold underline underline-offset-2 hover:text-gold-bright">Select All</button>
-                <button onClick={clearAll} className="text-[9px] text-gold underline underline-offset-2 hover:text-gold-bright">Clear All</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {CITIES.map(city => {
-                const isSelected = selectedCities.has(city.id);
-                const progress = cityProgress[city.id] || 0;
-                const isCityRunning = isRunning && isSelected && progress < 100;
-                return (
-                  <div
-                    key={city.id}
-                    onClick={() => toggleCity(city.id)}
-                    className={`relative p-3 rounded-xl border transition-all cursor-pointer group ${
-                      isCityRunning ? 'border-green-500/50 bg-green-500/5 animate-running-pulse' :
-                      isSelected ? 'border-gold bg-gold/10' : 'border-gold/10 bg-white/5 hover:border-gold/30'
-                    }`}
-                  >
-                    <div className={`absolute top-2 right-2 w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                      isSelected ? 'bg-gold border-gold text-navy' : 'border-gold/20'
-                    }`}>
-                      {isSelected && <CheckCircle2 size={10} />}
-                    </div>
-                    <div className="text-[11px] font-bold text-slate-200">{city.en}</div>
-                    <div className="text-[10px] text-slate-500 font-ar mt-0.5">{city.ar}</div>
-                    <div className="text-[9px] text-slate-600 mt-2">{city.count.toLocaleString()} records</div>
-                    
-                    <div className="mt-3 space-y-1">
-                      <div className="flex justify-between items-center text-[8px] uppercase tracking-tighter">
-                        <span className={isCityRunning ? 'text-green-400' : 'text-slate-500'}>
-                          {progress >= 100 ? 'Done' : isCityRunning ? 'Running' : 'Idle'}
-                        </span>
-                        {isRunning && isSelected && <span className="text-slate-400">{Math.floor(progress)}%</span>}
-                      </div>
-                      <div className="h-0.5 bg-white/5 rounded-full overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          className={`h-full ${progress >= 100 ? 'bg-blue-400' : 'bg-green-500'}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Instruction + Launch */}
-          <div className="space-y-3">
-            <div className="text-[9px] text-slate-500 uppercase tracking-widest">Custom Instruction</div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <textarea
-                value={instruction}
-                onChange={(e) => setInstruction(e.target.value)}
-                className="flex-1 bg-white/5 border border-gold/20 rounded-xl p-4 text-xs text-slate-200 outline-none focus:border-gold transition-all min-h-[120px]"
-                placeholder="Instructions should be specific and actionable for the selected agent."
-              />
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={launchTasks}
-                  disabled={isRunning}
-                  className="px-8 py-3 bg-gold hover:bg-gold-bright text-navy font-bold text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_rgba(201,168,76,0.2)]"
-                >
-                  ▶ Launch
-                </button>
-                {isRunning && (
-                  <button
-                    onClick={stopAll}
-                    className="px-8 py-3 bg-transparent border border-rose-500 text-rose-500 hover:bg-rose-500/10 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
-                  >
-                    ■ Stop
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="text-[10px] text-slate-500 italic">
-              {selectedCities.size > 0 
-                ? <span className="text-gold">{selectedCities.size} cities selected</span> 
-                : 'No cities selected'} · Task: <span className="text-gold">{selectedTask.toUpperCase()}</span>
-            </div>
-          </div>
+          )}
         </div>
-
-        {/* Activity Log */}
-        <div className="space-y-4">
-          <div className="text-[10px] text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
-            Live Activity Log
-            <div className="h-px flex-1 bg-gold/10" />
-          </div>
-          <div className="bg-black/30 border border-gold/10 rounded-xl p-4 h-[250px] overflow-y-auto custom-scrollbar font-mono text-[10px] space-y-2">
-            {logs.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-2">
-                <div className="text-2xl">📡</div>
-                <div className="uppercase tracking-widest">Awaiting system activity...</div>
-              </div>
-            ) : (
-              logs.map(log => (
-                <div key={log.id} className="flex gap-4 items-start">
-                  <span className="text-slate-600 shrink-0">{log.time}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest shrink-0 ${
-                    log.type === 'info' ? 'bg-blue-500/20 text-blue-400' :
-                    log.type === 'ok' ? 'bg-green-500/20 text-green-400' :
-                    log.type === 'warn' ? 'bg-orange-500/20 text-orange-400' :
-                    'bg-gold/20 text-gold'
-                  }`}>
-                    {log.type}
-                  </span>
-                  <span className="text-slate-300 leading-relaxed">{log.message}</span>
-                </div>
-              ))
-            )}
-            <div ref={logEndRef} />
-          </div>
-        </div>
-
       </div>
     </div>
   );
-}
+};
+
+export default CommandCenter;

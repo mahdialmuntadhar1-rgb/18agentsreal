@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  MapPin, Phone, ExternalLink, ShieldCheck, 
-  MessageCircle, Search, Filter, Navigation,
-  ChevronRight, Star, Clock, Globe, ChevronLeft,
-  AlertCircle
+  Search, MapPin, Filter, Globe, AlertCircle, Star, 
+  ShieldCheck, Clock, MessageCircle, Phone, ExternalLink,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { toast } from 'sonner';
-
 import { handleSupabaseError, OperationType } from '../lib/supabaseUtils';
 
 interface Business {
@@ -68,22 +65,6 @@ export default function DiscoveryFeed() {
 
   const fetchBusinesses = async (pageNum: number = 1) => {
     setIsLoading(true);
-<<<<<<< Updated upstream
-    try {
-      const { data, error } = await supabase.rpc('get_nearby_businesses', {
-        lat,
-        lng,
-        radius_km: radius
-      });
-
-      if (error) throw error;
-      setBusinesses(data || []);
-    } catch (err) {
-      await handleSupabaseError(err, OperationType.GET, 'businesses/nearby');
-      // Fallback to all businesses if RPC fails
-      const { data: allData } = await supabase.from('businesses').select('*').limit(20);
-      setBusinesses(allData || []);
-=======
     setError(null);
     
     try {
@@ -142,35 +123,12 @@ export default function DiscoveryFeed() {
         });
         setError(null);
       }
->>>>>>> Stashed changes
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserLocation(loc);
-          fetchNearby(loc.lat, loc.lng);
-        },
-        () => {
-          toast.error('Location access denied. Showing all businesses.');
-          fetchNearby(33.3152, 44.3661); // Default to Baghdad
-        }
-      );
-    }
-  }, [radius]);
-
-  const filteredBusinesses = businesses.filter(b => 
-    (b.name_en || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (b.name_ar || '').includes(searchQuery) ||
-    (b.category || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
-=======
     fetchBusinesses(1);
   }, [selectedCity, selectedCategory, selectedSource]);
 
@@ -207,7 +165,6 @@ export default function DiscoveryFeed() {
       </div>
     );
   };
->>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
@@ -291,13 +248,8 @@ export default function DiscoveryFeed() {
               {/* Image Header */}
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img 
-<<<<<<< Updated upstream
-                  src={business.photos?.[0] || `https://picsum.photos/seed/${business.id}/800/600`} 
-                  alt={business.name_en || business.name_ar}
-=======
                   src={business.images?.[0] || business.scraped_photo_url || '/placeholder.svg'} 
                   alt={business.business_name}
->>>>>>> Stashed changes
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
@@ -314,7 +266,7 @@ export default function DiscoveryFeed() {
                   )}
                 </div>
 
-                {business.status === 'approved' && (
+                {business.verification_status === 'approved' && (
                   <div className="absolute top-4 right-4 p-1.5 bg-emerald-500 text-slate-950 rounded-full shadow-lg">
                     <ShieldCheck size={16} />
                   </div>
@@ -324,32 +276,6 @@ export default function DiscoveryFeed() {
               {/* Content */}
               <div className="p-6 space-y-4 flex-1 flex flex-col">
                 <div className="space-y-1">
-<<<<<<< Updated upstream
-                  <h3 className="text-lg font-black text-white leading-tight group-hover:text-emerald-400 transition-colors">
-                    {business.name_en || business.name_ar}
-                  </h3>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} className="opacity-30" />
-                    <span className="text-[10px] text-slate-500 font-bold ml-1">({business.confidence_score}%)</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 flex-1">
-                  <div className="flex items-start gap-2 text-slate-400">
-                    <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                    <p className="text-xs font-medium leading-relaxed line-clamp-2">
-                      {business.city}, Iraq
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Clock size={16} className="text-emerald-500 shrink-0" />
-                    <span className="text-xs font-medium">Verified Status: {business.status}</span>
-                  </div>
-=======
                   <h3 className="text-lg font-black text-white leading-tight group-hover:text-emerald-400 transition-colors line-clamp-2">
                     {business.business_name}
                   </h3>
@@ -377,18 +303,10 @@ export default function DiscoveryFeed() {
                       <span className="text-[10px] uppercase tracking-wider">Source: {business.source_name}</span>
                     </div>
                   )}
->>>>>>> Stashed changes
                 </div>
 
                 {/* Actions */}
                 <div className="pt-4 flex items-center gap-2">
-<<<<<<< Updated upstream
-                  <a 
-                    href={`https://wa.me/${business.phone}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-=======
                   {business.whatsapp ? (
                     <a 
                       href={`https://wa.me/${formatPhoneForWhatsApp(business.whatsapp)}`}
@@ -414,7 +332,6 @@ export default function DiscoveryFeed() {
                     onClick={() => business.website && window.open(business.website, '_blank')}
                     disabled={!business.website}
                     className="p-3 bg-slate-800 hover:bg-slate-700 disabled:hover:bg-slate-800 disabled:opacity-50 text-slate-300 rounded-xl transition-all border border-slate-700"
->>>>>>> Stashed changes
                   >
                     <ExternalLink size={16} />
                   </button>

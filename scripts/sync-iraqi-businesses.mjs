@@ -40,6 +40,7 @@ const prodDB = createClient(PROD_URL, PROD_KEY);
 function transformRecord(record) {
   const hasPhone = hasValidPhone(record);
   const isReal = isRealBusiness(record);
+  const normalizedPhone = getNormalizedPhone(record);
   
   // Only return fields that exist in production 'businesses' table
   return {
@@ -48,7 +49,7 @@ function transformRecord(record) {
     category: normalizeCategory(record.category || record.type || 'other'),
     city: record.city || record.governorate || record.location || 'Unknown',
     address: record.address || record.street || record.location_details || null,
-    phone: cleanPhone(record.phone || record.telephone || record.mobile || record.contact),
+    phone: normalizedPhone,  // Guaranteed to be exactly 11 digits or null
     
     // Optional fields
     email: record.email || null,
@@ -58,12 +59,13 @@ function transformRecord(record) {
     latitude: parseFloat(record.latitude || record.lat || record.y) || null,
     longitude: parseFloat(record.longitude || record.lon || record.x) || null,
     
-    // Status
+    // Status - only publish if phone is valid 11 digits
     verification_status: mapStatus(record.status || record.verification_status || 'pending', hasPhone),
-    is_published: isReal,
+    is_published: isReal && !!normalizedPhone,  // Must have valid 11-digit phone to publish
     
     // Metadata
     _is_real: isReal,  // Internal tracking only, removed before insert
+    _phone_digits: normalizedPhone ? normalizedPhone.length : 0,  // Track phone digit count for debugging
   };
 }
 
@@ -195,16 +197,73 @@ function normalizeCategory(raw) {
 
 function cleanPhone(phone) {
   if (!phone) return null;
-  const cleaned = phone.toString().replace(/[^\d+]/g, '');
-  // Validate: must be at least 10 digits (Iraq phone numbers)
-  const digitsOnly = cleaned.replace(/\D/g, '');
-  if (digitsOnly.length < 10) return null;
-  return cleaned || null;
+  
+  // Normalize: strip all non-digit characters (spaces, dashes, +, parentheses, etc.)
+  const digitsOnly = phone.toString().replace(/\D/g, '');
+  
+  // CRITICAL: Must be EXACTLY 11 digits for Iraqi mobile numbers
+  // Examples:
+  //   "07701234567" -> "07701234567" (valid)
+  //   "0770 123 4567" -> "07701234567" (valid after normalization)
+  //   "+9647701234567" -> INVALID (13 digits, not 11)
+  //   "770123456" -> INVALID (9 digits)
+  if (digitsOnly.length !== 11) return null;
+  
+  return digitsOnly;
+}
+
+/**
+ * Normalize Iraqi phone with country code to local 11-digit format
+ * +9647701234567 -> 07701234567
+ * Returns null if cannot normalize to exactly 11 digits
+ */
+function normalizeIraqiPhone(phone) {
+  if (!phone) return null;
+  
+  const digitsOnly = phone.toString().replace(/\D/g, '');
+  
+  // If already 11 digits, return as-is (already in local format)
+  if (digitsOnly.length === 11) {
+    return digitsOnly;
+  }
+  
+  // Handle +964 international format (e.g., +9647701234567 = 13 digits)
+  // Convert to local 0xx format by removing +964 and adding 0
+  if (digitsOnly.length === 13 && digitsOnly.startsWith('964')) {
+    return '0' + digitsOnly.substring(3); // 9647701234567 -> 07701234567
+  }
+  
+  // Handle 10-digit numbers missing leading 0 (e.g., 7701234567 -> 07701234567)
+  if (digitsOnly.length === 10 && digitsOnly.startsWith('7')) {
+    return '0' + digitsOnly;
+  }
+  
+  return null;
 }
 
 function hasValidPhone(record) {
+  // Try direct cleaning first
   const phone = record.phone || record.telephone || record.mobile || record.contact;
-  return cleanPhone(phone) !== null;
+  if (cleanPhone(phone)) return true;
+  
+  // Try normalization for international formats
+  if (normalizeIraqiPhone(phone)) return true;
+  
+  return false;
+}
+
+function getNormalizedPhone(record) {
+  const phone = record.phone || record.telephone || record.mobile || record.contact;
+  
+  // Try direct cleaning
+  const cleaned = cleanPhone(phone);
+  if (cleaned) return cleaned;
+  
+  // Try normalization
+  const normalized = normalizeIraqiPhone(phone);
+  if (normalized) return normalized;
+  
+  return null;
 }
 
 function isRealBusiness(record) {
@@ -293,7 +352,7 @@ async function syncToProduction(records, options = {}) {
   
   // Remove internal tracking fields before inserting
   const cleanRecords = realBusinesses.map(r => {
-    const { _is_real, ...clean } = r;
+    const { _is_real, _phone_digits, ...clean } = r;
     return clean;
   });
   
@@ -321,6 +380,7 @@ async function syncToProduction(records, options = {}) {
 async function runSync(options = {}) {
   const { 
     dryRun = false, 
+    reset = false,
     batchSize = 500,
     maxRecords = null 
   } = options;
@@ -330,13 +390,24 @@ async function runSync(options = {}) {
   console.log(`🎯 Production DB: ${PROD_URL}`);
   console.log('');
   
+  // Reset production if requested
+  if (reset && !dryRun) {
+    const confirmed = await truncateProduction();
+    if (!confirmed) {
+      console.error('❌ Reset failed, aborting sync');
+      return;
+    }
+  } else if (reset && dryRun) {
+    console.log('🏃 DRY RUN: Would truncate production table');
+  }
+  
   // Get counts
   console.log('📊 Getting record counts...');
   const scraperCount = await getScraperCount();
   const prodCount = await getProductionCount();
   
   console.log(`   Scraper (iraqi_businesses): ${scraperCount} records`);
-  console.log(`   Production (business): ${prodCount} records`);
+  console.log(`   Production (businesses): ${prodCount} records`);
   console.log(`   To sync: ${scraperCount - prodCount} records`);
   console.log('');
   
@@ -347,8 +418,8 @@ async function runSync(options = {}) {
     
     // Show validation breakdown
     console.log('📋 VALIDATION PREVIEW:');
-    console.log('   ✓ Real businesses (with phone + name) → Will be synced to production');
-    console.log('   ✗ Invalid (no phone or name) → Kept in scraper only, marked as invalid');
+    console.log('   ✓ Real businesses (11-digit phone + name) → Will be synced');
+    console.log('   ✗ Invalid (no valid 11-digit phone/name) → Kept in scraper only');
     console.log('');
   }
   
@@ -372,7 +443,7 @@ async function runSync(options = {}) {
     if (batch.length === 0) break;
     
     try {
-      const result = await syncToProduction(batch, { dryRun, markValidated: true });
+      const result = await syncToProduction(batch, { dryRun });
       totalReal += result.real;
       totalFake += result.fake;
       totalSynced += result.synced;
@@ -389,8 +460,8 @@ async function runSync(options = {}) {
   }
   
   console.log('\n📈 PROCESSING COMPLETE');
-  console.log(`   ✓ Real businesses (with phone): ${totalReal}`);
-  console.log(`   ✗ Invalid (no phone/name): ${totalFake}`);
+  console.log(`   ✓ Real businesses (11-digit phone): ${totalReal}`);
+  console.log(`   ✗ Invalid (no valid 11-digit phone/name): ${totalFake}`);
   if (!dryRun) {
     console.log(`   ✅ Synced to production: ${totalSynced}`);
   }
@@ -406,11 +477,34 @@ async function runSync(options = {}) {
   }
 }
 
+// ── RESET FUNCTION ───────────────────────────────────────────────────────────
+
+async function truncateProduction() {
+  console.log('⚠️  TRUNCATING production businesses table...');
+  const { error } = await prodDB
+    .from('businesses')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+  
+  if (error) {
+    console.error('❌ Error truncating production:', error.message);
+    return false;
+  }
+  
+  const { count } = await prodDB
+    .from('businesses')
+    .select('*', { count: 'exact', head: true });
+  
+  console.log(`✅ Production table cleared. Current count: ${count || 0}`);
+  return true;
+}
+
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
 const args = process.argv.slice(2);
 const options = {
   dryRun: !args.includes('--sync'),
+  reset: args.includes('--reset'),
   batchSize: parseInt(args.find(a => a.startsWith('--batch='))?.split('=')[1]) || 500,
   maxRecords: parseInt(args.find(a => a.startsWith('--limit='))?.split('=')[1]) || null,
 };
@@ -428,12 +522,20 @@ Options:
   --sync          Actually sync records (default: dry run)
   --batch=N       Batch size (default: 500)
   --limit=N       Max records to sync (default: all)
+  --reset         Truncate production table before sync (DANGER: deletes all)
   --help          Show this help
 
 Validation Rules (for a business to be "real"):
-  ✓ Must have valid phone number (10+ digits)
-  ✓ Must have business name (2+ characters)
+  ✓ Must have valid phone number (EXACTLY 11 digits after normalization)
+  ✓ Must have business name (2+ characters, not 'unknown')
   ✗ Records without phone/name stay in scraper only
+
+Phone Normalization:
+  - Strips spaces, dashes, +, parentheses, and all non-digits
+  - "0770 123 4567" -> "07701234567" (valid)
+  - "+9647701234567" -> "07701234567" (normalized from international)
+  - "7701234567" -> "07701234567" (added leading 0)
+  - Must result in exactly 11 digits to pass
 
 Examples:
   # Dry run (preview which records are real vs invalid)
@@ -444,6 +546,9 @@ Examples:
 
   # Sync first 1000 records only
   node sync-iraqi-businesses.mjs --sync --limit=1000
+
+  # Reset production and full sync
+  node sync-iraqi-businesses.mjs --reset --sync
 `);
   process.exit(0);
 }
