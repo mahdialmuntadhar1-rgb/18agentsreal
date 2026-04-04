@@ -68,7 +68,9 @@ export const Dashboard: React.FC = () => {
         throw new Error(`Failed to fetch agents: ${response.statusText}`);
       }
       const data = await response.json();
-      setAgents(data);
+      // Handle both {agents: []} and direct array responses
+      const agentsData = Array.isArray(data) ? data : data.agents || [];
+      setAgents(agentsData);
       setError(null);
     } catch (err) {
       console.error('Error fetching agents:', err);
@@ -85,12 +87,13 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   const stats = useMemo<DashboardStats>(() => {
+    const agentsArray = Array.isArray(agents) ? agents : [];
     return {
-      totalRecords: agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0),
-      activeAgents: agents.filter(a => a.status === 'RUNNING').length,
-      staged: Math.floor(agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.15), // Derived for demo
-      readyToPush: Math.floor(agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.05), // Derived for demo
-      failedJobs: agents.filter(a => a.status === 'FAILED').length,
+      totalRecords: agentsArray.reduce((sum, a) => sum + (a.recordsFound || 0), 0),
+      activeAgents: agentsArray.filter(a => a.status === 'RUNNING').length,
+      staged: Math.floor(agentsArray.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.15),
+      readyToPush: Math.floor(agentsArray.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.05),
+      failedJobs: agentsArray.filter(a => a.status === 'FAILED').length,
     };
   }, [agents]);
 
