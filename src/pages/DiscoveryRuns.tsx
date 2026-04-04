@@ -6,41 +6,11 @@ import { DiscoveryRun } from '../types';
 import { Play, Search, MapPin, Tag } from 'lucide-react';
 import { useDiscoveryRuns } from '../hooks/useSupabase';
 
-const MOCK_DISCOVERY_RUNS: DiscoveryRun[] = [
-  {
-    id: 'DR-001',
-    governorate: 'Baghdad',
-    category: 'Restaurants',
-    status: 'COMPLETED',
-    sourceCount: 45,
-    recordsFound: 1240,
-    startedAt: '2024-03-20 10:00',
-    completedAt: '2024-03-20 11:30'
-  },
-  {
-    id: 'DR-002',
-    governorate: 'Basra',
-    category: 'Industrial',
-    status: 'FAILED',
-    sourceCount: 12,
-    recordsFound: 0,
-    startedAt: '2024-03-20 14:00',
-    completedAt: '2024-03-20 14:15'
-  },
-  {
-    id: 'DR-003',
-    governorate: 'Erbil',
-    category: 'Hotels',
-    status: 'RUNNING',
-    sourceCount: 30,
-    recordsFound: 156,
-    startedAt: '2024-03-21 09:00'
-  }
-];
-
 export const DiscoveryRuns: React.FC = () => {
   const { runs, loading } = useDiscoveryRuns();
-  const displayRuns = runs.length > 0 ? runs : MOCK_DISCOVERY_RUNS;
+  const displayRuns = runs;
+  const coveredGovernorates = new Set(runs.map((r: any) => r.governorate)).size;
+  const activeCategories = new Set(runs.map((r: any) => r.category)).size;
 
   const columns: Column<DiscoveryRun>[] = [
     { header: 'ID', accessor: 'id' as const, className: 'font-mono text-xs' },
@@ -74,22 +44,22 @@ export const DiscoveryRuns: React.FC = () => {
             <Search className="w-4 h-4 mr-2" />
             <span className="text-xs font-bold uppercase tracking-wider">Total Runs</span>
           </div>
-          <div className="text-2xl font-bold text-slate-900">128</div>
+          <div className="text-2xl font-bold text-slate-900">{runs.length}</div>
         </div>
         <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
           <div className="flex items-center text-slate-500 mb-2">
             <MapPin className="w-4 h-4 mr-2" />
             <span className="text-xs font-bold uppercase tracking-wider">Governorates Covered</span>
-          18/18
+          {coveredGovernorates}/18
           </div>
-          <div className="text-2xl font-bold text-slate-900">100%</div>
+          <div className="text-2xl font-bold text-slate-900">{Math.round((coveredGovernorates / 18) * 100) || 0}%</div>
         </div>
         <div className="bg-white p-4 border border-slate-200 rounded shadow-sm">
           <div className="flex items-center text-slate-500 mb-2">
             <Tag className="w-4 h-4 mr-2" />
             <span className="text-xs font-bold uppercase tracking-wider">Active Categories</span>
           </div>
-          <div className="text-2xl font-bold text-slate-900">24</div>
+          <div className="text-2xl font-bold text-slate-900">{activeCategories}</div>
         </div>
       </div>
 

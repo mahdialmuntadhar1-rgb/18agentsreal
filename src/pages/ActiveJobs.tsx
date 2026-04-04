@@ -11,22 +11,21 @@ import { RefreshCw } from 'lucide-react';
 import { AgentJob } from '../types';
 import { useActiveJobs } from '../hooks/useSupabase';
 
-const MOCK_JOBS: AgentJob[] = [
-  { id: '1', agentName: 'Agent-Alpha', governorate: 'Baghdad', city: 'Karkh', category: 'Restaurants', status: 'RUNNING', progress: 65, recordsFound: 420, lastUpdated: '2 mins ago', errorCount: 0 },
-  { id: '2', agentName: 'Agent-Beta', governorate: 'Erbil', city: 'Ankawa', category: 'Hotels', status: 'RUNNING', progress: 88, recordsFound: 156, lastUpdated: 'Just now', errorCount: 1 },
-  { id: '3', agentName: 'Agent-Gamma', governorate: 'Basra', city: 'Zubair', category: 'Pharmacies', status: 'WAITING', progress: 0, recordsFound: 0, lastUpdated: '15 mins ago', errorCount: 0 },
-  { id: '4', agentName: 'Agent-Delta', governorate: 'Nineveh', city: 'Mosul', category: 'Retail', status: 'COMPLETED', progress: 100, recordsFound: 1240, lastUpdated: '1h ago', errorCount: 4 },
-  { id: '5', agentName: 'Agent-Epsilon', governorate: 'Dohuk', city: 'Zakho', category: 'Tourism', status: 'FAILED', progress: 42, recordsFound: 120, lastUpdated: '3h ago', errorCount: 12 },
-  { id: '6', agentName: 'Agent-Zeta', governorate: 'Najaf', city: 'Kufa', category: 'Medical', status: 'COMPLETED', progress: 100, recordsFound: 890, lastUpdated: '8h ago', errorCount: 0 },
-];
-
 export const ActiveJobs: React.FC = () => {
   const { jobs, loading } = useActiveJobs();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'recordsFound', direction: 'desc' });
 
-  const displayJobs = jobs.length > 0 ? jobs : MOCK_JOBS;
+  const displayJobs = jobs.map((job: any) => ({
+    ...job,
+    agentName: job.assigned_agent_id || 'unassigned',
+    status: String(job.status || 'queued').toUpperCase(),
+    progress: job.status === 'completed' ? 100 : job.status === 'running' ? 50 : 0,
+    recordsFound: job.records_found ?? 0,
+    lastUpdated: job.last_heartbeat_at ?? job.started_at ?? '-',
+    errorCount: job.failure_reason ? 1 : 0,
+  }));
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {

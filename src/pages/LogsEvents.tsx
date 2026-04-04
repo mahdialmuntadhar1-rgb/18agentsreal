@@ -5,40 +5,15 @@ import { LogEvent } from '../types';
 import { Terminal, AlertCircle, Info, ShieldAlert } from 'lucide-react';
 import { useLogs } from '../hooks/useSupabase';
 
-const MOCK_LOGS: LogEvent[] = [
-  {
-    id: 'L-001',
-    timestamp: '2024-03-21 10:45:22',
-    level: 'INFO',
-    source: 'Agent-Alpha',
-    message: 'Started collection run for Baghdad/Restaurants'
-  },
-  {
-    id: 'L-002',
-    timestamp: '2024-03-21 10:46:05',
-    level: 'WARN',
-    source: 'Data-Cleaner',
-    message: 'High duplicate rate detected in source batch S-442'
-  },
-  {
-    id: 'L-003',
-    timestamp: '2024-03-21 10:47:12',
-    level: 'ERROR',
-    source: 'Supabase-Sync',
-    message: 'Failed to push 12 records to production: Quota exceeded'
-  },
-  {
-    id: 'L-004',
-    timestamp: '2024-03-21 10:48:00',
-    level: 'CRITICAL',
-    source: 'System-Monitor',
-    message: 'Memory usage above 90% on worker node 4'
-  }
-];
-
 export const LogsEvents: React.FC = () => {
   const { logs, loading } = useLogs();
-  const displayLogs = logs.length > 0 ? logs : MOCK_LOGS;
+  const displayLogs = logs.map((log: any) => ({
+    ...log,
+    timestamp: log.created_at,
+    level: (log.level || log.event_type || 'INFO').toUpperCase(),
+    source: log.agent_id || log.source || 'runtime',
+    message: log.message || log.event_type || '',
+  }));
 
   const getLevelIcon = (level: string) => {
     switch (level) {

@@ -21,19 +21,19 @@ export const PushControl: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const PUSH_STATS = {
-    totalRecords: records.length > 0 ? records.length : 3105,
-    governorates: records.length > 0 ? new Set(records.map(r => r.governorate)).size : 12,
-    categories: records.length > 0 ? new Set(records.map(r => r.category)).size : 8,
+    totalRecords: records.length,
+    governorates: new Set(records.map(r => r.governorate)).size,
+    categories: new Set(records.map(r => r.category)).size,
     avgCompleteness: records.length > 0 
       ? Math.round(records.reduce((acc, r) => acc + r.completenessScore, 0) / records.length) 
-      : 94.2
+      : 0
   };
 
   const CHECKLIST = [
-    { label: 'Incomplete fields < 5%', status: 'PASS', value: '3.1%' },
-    { label: 'Duplicate risk assessment', status: 'PASS', value: 'Low' },
-    { label: 'All records approved by operator', status: 'PASS', value: '100%' },
-    { label: 'Geocoding validation', status: 'WARNING', value: '92% verified' },
+    { label: 'Approved records available', status: records.length > 0 ? 'PASS' : 'WARNING', value: records.length.toString() },
+    { label: 'Duplicate risk assessment', status: 'PASS', value: 'runtime-enforced' },
+    { label: 'All records approved by operator', status: 'PASS', value: 'DB truth' },
+    { label: 'Geocoding validation', status: 'WARNING', value: 'check records.latitude/longitude' },
   ];
 
   return (
@@ -126,13 +126,13 @@ export const PushControl: React.FC = () => {
             <div className="p-4 bg-orange-50 border border-orange-100 rounded flex items-start">
               <Info className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
               <p className="text-xs text-orange-800 leading-relaxed">
-                <strong>Geocoding Incomplete:</strong> 8% of records in Nineveh governorate are missing precise coordinates. These will be pushed with city-level centroids.
+                <strong>Geocoding Check:</strong> Review approved records missing precise coordinates before push.
               </p>
             </div>
             <div className="p-4 bg-blue-50 border border-blue-100 rounded flex items-start">
               <Info className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
               <p className="text-xs text-blue-800 leading-relaxed">
-                <strong>Batch Size:</strong> This push contains 3,105 records. Estimated propagation time to public API is 4 minutes.
+                <strong>Batch Size:</strong> This push contains {PUSH_STATS.totalRecords.toLocaleString()} approved records.
               </p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export const PushControl: React.FC = () => {
             </div>
             <div className="p-8 space-y-6">
               <p className="text-slate-600 text-sm leading-relaxed">
-                You are about to push <strong>3,105 records</strong> to the live production database. This action will update public-facing business directories and cannot be easily undone.
+                You are about to push <strong>{PUSH_STATS.totalRecords.toLocaleString()} records</strong> to the live production database.
               </p>
               
               <div className="p-4 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-500">
@@ -166,7 +166,7 @@ export const PushControl: React.FC = () => {
                 <button 
                   className="w-full py-4 bg-rose-600 text-white font-bold rounded hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
                   onClick={() => {
-                    alert('Production push initiated successfully.');
+                    console.log('Production push initiated');
                     setIsModalOpen(false);
                   }}
                 >

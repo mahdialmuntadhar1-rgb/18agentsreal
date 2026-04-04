@@ -15,28 +15,21 @@ import {
   Trash2,
   ArrowRightLeft
 } from 'lucide-react';
-import { BusinessRecord } from '../types';
 import { useRecords } from '../hooks/useSupabase';
-
-const MOCK_ISSUES = [
-  { id: 'REC-002', name: 'Babylon Hotel', issue: 'Missing WhatsApp', type: 'MISSING_DATA' },
-  { id: 'REC-005', name: 'Fast Transport Co', issue: 'Possible duplicate of REC-089', type: 'DUPLICATE' },
-  { id: 'REC-012', name: 'Al-Mansour Clinic', issue: 'Malformed Arabic Name', type: 'DATA_QUALITY' },
-  { id: 'REC-015', name: 'Unknown Business', issue: 'Missing Category', type: 'MISSING_DATA' },
-];
 
 export const CleaningWorkspace: React.FC = () => {
   const { records, loading } = useRecords('NEEDS_CLEANING');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'duplicates' | 'missing'>('all');
 
-  const displayRecords = records.length > 0 ? records : [];
-  const currentId = selectedId || (displayRecords.length > 0 ? displayRecords[0].id : (MOCK_ISSUES.length > 0 ? MOCK_ISSUES[0].id : null));
+  const displayRecords = records;
+  const currentId = selectedId || (displayRecords.length > 0 ? displayRecords[0].id : null);
   const selectedRecord = displayRecords.find(r => r.id === currentId) || null;
 
-  const issueList = displayRecords.length > 0 
-    ? displayRecords.map(r => ({ id: r.id, name: r.nameEn, issue: r.issues?.[0] || 'Unknown Issue', type: 'DATA_QUALITY' }))
-    : MOCK_ISSUES;
+  const issueList = displayRecords.map(r => ({ id: r.id, name: r.nameEn, issue: r.issues?.[0] || 'Unknown Issue', type: 'DATA_QUALITY' }));
+  const missingCount = issueList.filter((item) => item.issue.toLowerCase().includes('missing')).length;
+  const duplicateCount = issueList.filter((item) => item.issue.toLowerCase().includes('duplicate')).length;
+  const malformedCount = Math.max(issueList.length - missingCount - duplicateCount, 0);
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -60,7 +53,7 @@ export const CleaningWorkspace: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Missing Data</p>
-            <p className="text-xl font-bold text-slate-900">142 <span className="text-xs font-normal text-slate-400">records</span></p>
+            <p className="text-xl font-bold text-slate-900">{missingCount} <span className="text-xs font-normal text-slate-400">records</span></p>
           </div>
         </div>
         <div className="bg-white p-4 border border-slate-200 shadow-sm flex items-center">
@@ -69,7 +62,7 @@ export const CleaningWorkspace: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Duplicates</p>
-            <p className="text-xl font-bold text-slate-900">28 <span className="text-xs font-normal text-slate-400">suspects</span></p>
+            <p className="text-xl font-bold text-slate-900">{duplicateCount} <span className="text-xs font-normal text-slate-400">suspects</span></p>
           </div>
         </div>
         <div className="bg-white p-4 border border-slate-200 shadow-sm flex items-center">
@@ -78,7 +71,7 @@ export const CleaningWorkspace: React.FC = () => {
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Malformed Data</p>
-            <p className="text-xl font-bold text-slate-900">56 <span className="text-xs font-normal text-slate-400">errors</span></p>
+            <p className="text-xl font-bold text-slate-900">{malformedCount} <span className="text-xs font-normal text-slate-400">errors</span></p>
           </div>
         </div>
       </div>

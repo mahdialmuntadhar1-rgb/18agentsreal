@@ -8,7 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "runtime:start": "tsx server/runtime/index.ts",
+    "runtime:api": "RUNTIME_MODE=api tsx server/runtime/index.ts",
+    "runtime:worker": "RUNTIME_MODE=worker tsx server/runtime/index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

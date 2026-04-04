@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { hasSupabaseConfig, supabase } from '../lib/supabase';
 import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent } from '../types';
 
 export function useDashboardStats() {
@@ -8,14 +8,23 @@ export function useDashboardStats() {
 
   useEffect(() => {
     async function fetchStats() {
+      if (!hasSupabaseConfig) {
+        setStats({
+          totalRecords: 0,
+          activeAgents: 0,
+          staged: 0,
+          readyToPush: 0,
+          failedJobs: 0,
+        });
+        setLoading(false);
+        return;
+      }
       try {
-        // In a real app, these would be real queries
-        // For now, we'll try to fetch from Supabase and fallback to mock if it fails or returns empty
         const { count: totalRecords } = await supabase.from('records').select('*', { count: 'exact', head: true });
-        const { count: activeAgents } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'RUNNING');
+        const { count: activeAgents } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'running');
         const { count: staged } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'STAGED');
         const { count: readyToPush } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED');
-        const { count: failedJobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'FAILED');
+        const { count: failedJobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'failed');
 
         setStats({
           totalRecords: totalRecords || 0,
@@ -34,6 +43,9 @@ export function useDashboardStats() {
     fetchStats();
     
     // Set up real-time subscription
+    if (!hasSupabaseConfig) {
+      return;
+    }
     const subscription = supabase
       .channel('dashboard-stats')
       .on('postgres_changes', { event: '*', schema: 'public' }, () => fetchStats())
@@ -53,10 +65,15 @@ export function useActiveJobs() {
 
   useEffect(() => {
     async function fetchJobs() {
+      if (!hasSupabaseConfig) {
+        setJobs([]);
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('jobs')
         .select('*')
-        .order('last_updated', { ascending: false });
+        .order('last_heartbeat_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching jobs:', error);
@@ -68,6 +85,9 @@ export function useActiveJobs() {
 
     fetchJobs();
 
+    if (!hasSupabaseConfig) {
+      return;
+    }
     const subscription = supabase
       .channel('active-jobs')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => fetchJobs())
@@ -87,12 +107,17 @@ export function useRecords(status?: string) {
 
   useEffect(() => {
     async function fetchRecords() {
+      if (!hasSupabaseConfig) {
+        setRecords([]);
+        setLoading(false);
+        return;
+      }
       let query = supabase.from('records').select('*');
       if (status) {
         query = query.eq('status', status);
       }
       
-      const { data, error } = await query.order('last_updated', { ascending: false });
+      const { data, error } = await query.order('collected_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching records:', error);
@@ -114,6 +139,11 @@ export function useDiscoveryRuns() {
 
   useEffect(() => {
     async function fetchRuns() {
+      if (!hasSupabaseConfig) {
+        setRuns([]);
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('discovery_runs')
         .select('*')
@@ -129,6 +159,9 @@ export function useDiscoveryRuns() {
 
     fetchRuns();
 
+    if (!hasSupabaseConfig) {
+      return;
+    }
     const subscription = supabase
       .channel('discovery-runs')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'discovery_runs' }, () => fetchRuns())
@@ -148,10 +181,15 @@ export function useLogs() {
 
   useEffect(() => {
     async function fetchLogs() {
+      if (!hasSupabaseConfig) {
+        setLogs([]);
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
-        .from('logs')
+        .from('job_events')
         .select('*')
-        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) {
@@ -164,9 +202,12 @@ export function useLogs() {
 
     fetchLogs();
 
+    if (!hasSupabaseConfig) {
+      return;
+    }
     const subscription = supabase
       .channel('logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, () => fetchLogs())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_events' }, () => fetchLogs())
       .subscribe();
 
     return () => {
