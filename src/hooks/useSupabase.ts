@@ -4,21 +4,20 @@ import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent } from
 
 const mapJob = (row: any): AgentJob => ({
   id: String(row.id),
-  agentName: row.agent_name ?? row.agentName ?? row.source ?? 'collection-runner',
+  agentName: row.assigned_agent_id ?? 'unassigned',
   governorate: row.governorate ?? 'Unknown',
   city: row.city ?? 'Unknown',
   category: row.category ?? 'unknown',
   status: (row.status ?? 'queued').toUpperCase(),
-  progress: row.progress ?? 0,
-  recordsFound: row.records_found ?? row.recordsFound ?? 0,
-  lastUpdated: row.last_updated ?? row.updated_at ?? row.created_at ?? '',
-  errorCount: row.error_count ?? 0,
+  recordsFound: row.result?.normalized_records ?? 0,
+  lastUpdated: row.updated_at ?? row.created_at ?? '',
+  errorCount: row.status === 'failed' ? 1 : 0,
 });
 
 const mapRecord = (row: any): BusinessRecord => ({
   id: String(row.id),
   nameAr: row.name_ar ?? '',
-  nameEn: row.name_en ?? row.name ?? '',
+  nameEn: row.name ?? '',
   category: row.category ?? 'unknown',
   governorate: row.governorate ?? 'Unknown',
   city: row.city ?? 'Unknown',
@@ -26,7 +25,7 @@ const mapRecord = (row: any): BusinessRecord => ({
   whatsapp: row.whatsapp ?? '',
   completenessScore: row.completeness_score ?? 0,
   status: row.status ?? 'RAW',
-  lastUpdated: row.last_updated ?? row.updated_at ?? row.created_at ?? '',
+  lastUpdated: row.updated_at ?? row.collected_at ?? '',
   issues: row.validation_issues ?? [],
 });
 
@@ -35,18 +34,19 @@ const mapRun = (row: any): DiscoveryRun => ({
   governorate: row.governorate ?? 'Unknown',
   category: row.category ?? 'unknown',
   status: (row.status ?? 'PENDING').toUpperCase(),
-  sourceCount: row.source_count ?? 0,
-  recordsFound: row.records_found ?? 0,
+  sourceCount: 1,
+  recordsFound: row.job_results?.normalized_records ?? 0,
   startedAt: row.started_at ?? row.created_at ?? '',
-  completedAt: row.completed_at ?? undefined,
+  completedAt: row.finished_at ?? undefined,
 });
 
 const mapLog = (row: any): LogEvent => ({
   id: String(row.id),
-  timestamp: row.timestamp ?? row.created_at ?? '',
-  level: row.level ?? 'INFO',
-  source: row.source ?? 'system',
-  message: row.message ?? '',
+  created_at: row.created_at ?? '',
+  timestamp: row.created_at ?? '',
+  level: row.event_type === 'failed' ? 'ERROR' : row.event_type === 'retried' ? 'WARN' : 'INFO',
+  source: row.agent_id ?? 'worker',
+  message: row.message ?? row.event_type,
   metadata: row.metadata ?? undefined,
 });
 
@@ -57,46 +57,28 @@ export function useDashboardStats() {
   useEffect(() => {
     async function fetchStats() {
       if (!hasSupabaseConfig) {
-        setStats({
-          totalRecords: 0,
-          activeAgents: 0,
-          staged: 0,
-          readyToPush: 0,
-          failedJobs: 0,
-        });
+        setStats({ totalRecords: 0, activeAgents: 0, staged: 0, readyToPush: 0, failedJobs: 0 });
         setLoading(false);
         return;
       }
-      try {
-        const { count: totalRecords } = await supabase.from('records').select('*', { count: 'exact', head: true });
-        const { count: activeAgents } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'running');
-        const { count: staged } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'STAGED');
-        const { count: readyToPush } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED');
-        const { count: failedJobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'failed');
 
-        setStats({
-          totalRecords: totalRecords || 0,
-          activeAgents: activeAgents || 0,
-          staged: staged || 0,
-          readyToPush: readyToPush || 0,
-          failedJobs: failedJobs || 0,
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-      } finally {
-        setLoading(false);
-      }
+      const { count: totalRecords } = await supabase.from('records').select('*', { count: 'exact', head: true });
+      const { count: activeAgents } = await supabase.from('agent_states').select('*', { count: 'exact', head: true }).eq('status', 'running');
+      const { count: staged } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'STAGED');
+      const { count: readyToPush } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED');
+      const { count: failedJobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'failed');
+
+      setStats({
+        totalRecords: totalRecords || 0,
+        activeAgents: activeAgents || 0,
+        staged: staged || 0,
+        readyToPush: readyToPush || 0,
+        failedJobs: failedJobs || 0,
+      });
+      setLoading(false);
     }
 
-    fetchStats();
-    const subscription = supabase
-      .channel('dashboard-stats')
-      .on('postgres_changes', { event: '*', schema: 'public' }, () => fetchStats())
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    void fetchStats();
   }, []);
 
   return { stats, loading };
@@ -108,16 +90,25 @@ export function useActiveJobs() {
 
   useEffect(() => {
     async function fetchJobs() {
-      const { data, error } = await supabase.from('jobs').select('*').order('last_updated', { ascending: false });
-      if (error) console.error('Error fetching jobs:', error);
-      else setJobs((data || []).map(mapJob));
+      if (!hasSupabaseConfig) {
+        setJobs([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*,result:job_results(normalized_records)')
+        .order('created_at', { ascending: false });
+
+      if (!error) setJobs((data || []).map(mapJob));
       setLoading(false);
     }
 
-    fetchJobs();
+    void fetchJobs();
     const subscription = supabase
       .channel('active-jobs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => fetchJobs())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => void fetchJobs())
       .subscribe();
 
     return () => {
@@ -139,15 +130,15 @@ export function useRecords(status?: string) {
         setLoading(false);
         return;
       }
+
       let query = supabase.from('records').select('*');
       if (status) query = query.eq('status', status);
-      const { data, error } = await query.order('last_updated', { ascending: false });
-      if (error) console.error('Error fetching records:', error);
-      else setRecords((data || []).map(mapRecord));
+      const { data, error } = await query.order('updated_at', { ascending: false });
+      if (!error) setRecords((data || []).map(mapRecord));
       setLoading(false);
     }
 
-    fetchRecords();
+    void fetchRecords();
   }, [status]);
 
   return { records, loading };
@@ -159,21 +150,23 @@ export function useDiscoveryRuns() {
 
   useEffect(() => {
     async function fetchRuns() {
-      const { data, error } = await supabase.from('discovery_runs').select('*').order('started_at', { ascending: false });
-      if (error) console.error('Error fetching discovery runs:', error);
-      else setRuns((data || []).map(mapRun));
+      if (!hasSupabaseConfig) {
+        setRuns([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*,job_results(normalized_records)')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (!error) setRuns((data || []).map(mapRun));
       setLoading(false);
     }
 
-    fetchRuns();
-    const subscription = supabase
-      .channel('discovery-runs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'discovery_runs' }, () => fetchRuns())
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    void fetchRuns();
   }, []);
 
   return { runs, loading };
@@ -185,16 +178,21 @@ export function useLogs() {
 
   useEffect(() => {
     async function fetchLogs() {
-      const { data, error } = await supabase.from('logs').select('*').order('timestamp', { ascending: false }).limit(100);
-      if (error) console.error('Error fetching logs:', error);
-      else setLogs((data || []).map(mapLog));
+      if (!hasSupabaseConfig) {
+        setLogs([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.from('job_events').select('*').order('created_at', { ascending: false }).limit(200);
+      if (!error) setLogs((data || []).map(mapLog));
       setLoading(false);
     }
 
-    fetchLogs();
+    void fetchLogs();
     const subscription = supabase
-      .channel('logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_events' }, () => fetchLogs())
+      .channel('job-events')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_events' }, () => void fetchLogs())
       .subscribe();
 
     return () => {

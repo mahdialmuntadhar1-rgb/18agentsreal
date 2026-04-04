@@ -39,14 +39,25 @@ export interface FinalReport {
 const IRAQI_GOVERNORATE_COUNT = 19;
 
 const fetchRawRecords = async (): Promise<RawBusinessRecord[]> => {
-  const attempts = ['iraqi_businesses', 'businesses', 'records'];
+  const { data, error } = await supabase.from('records').select('*').limit(5000);
+  if (error || !data) return [];
 
-  for (const table of attempts) {
-    const { data, error } = await supabase.from(table).select('*').limit(5000);
-    if (!error && data) return data as RawBusinessRecord[];
-  }
-
-  return [];
+  return data.map((row: any, idx) => ({
+    id: row.source_record_id ?? `record-${idx + 1}`,
+    name: row.name,
+    name_ar: row.name_ar,
+    category: row.category,
+    city: row.city,
+    governorate: row.governorate,
+    phone: row.phone,
+    whatsapp: row.whatsapp,
+    email: row.email,
+    website: row.website,
+    source_name: row.provider,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    isVerified: row.isverified,
+  }));
 };
 
 const getMatchKey = (record: NormalizedBusinessRecord): string => {

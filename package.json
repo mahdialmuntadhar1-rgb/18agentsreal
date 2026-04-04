@@ -9,8 +9,11 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "worker:collection": "tsx server/index.ts",
-    "worker:once": "tsx -e \"import('./server/worker/collection-runner.ts').then(m=>m.processSingleJob())\""
+    "worker:runtime": "tsx scripts/start-runtime.ts worker",
+    "worker:api": "tsx scripts/start-runtime.ts api",
+    "worker:all": "tsx scripts/start-runtime.ts all",
+    "workers:scoped": "tsx scripts/run-workers.ts",
+    "jobs:bootstrap": "tsx scripts/bootstrap-jobs.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

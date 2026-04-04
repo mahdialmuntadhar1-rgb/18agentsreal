@@ -52,7 +52,7 @@ export const PushControl: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold">Production Release Candidate</h3>
-              <p className="text-slate-400 text-sm font-mono">RC-2026-04-04-001</p>
+              <p className="text-slate-400 text-sm font-mono">Runtime-generated from approved records</p>
             </div>
           </div>
           <div className="text-right">
@@ -158,7 +158,7 @@ export const PushControl: React.FC = () => {
               
               <div className="p-4 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-500">
                 Action: PUSH_TO_PROD<br />
-                Operator: {process.env.USER_EMAIL || 'Current Operator'}<br />
+                Operator: {import.meta.env.VITE_OPERATOR_EMAIL || 'Current Operator'}<br />
                 Timestamp: {new Date().toISOString()}
               </div>
 

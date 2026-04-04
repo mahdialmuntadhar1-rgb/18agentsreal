@@ -16,6 +16,9 @@ export interface QueueJob {
   finished_at: string | null;
   last_heartbeat_at: string | null;
   failure_reason: string | null;
+  failure_details: Record<string, unknown> | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface JobEvent {

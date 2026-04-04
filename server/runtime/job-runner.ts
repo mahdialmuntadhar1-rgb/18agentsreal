@@ -5,10 +5,14 @@ import { supabaseAdmin } from './supabase-admin.ts';
 import type { AgentState, JobEvent, JobResult, QueueJob } from './contracts.ts';
 import { resolveGovernor } from './governor-registry.ts';
 
-const HEARTBEAT_INTERVAL_MS = 10_000;
-const STALE_JOB_MS = 120_000;
+const HEARTBEAT_INTERVAL_MS = Number(process.env.WORKER_HEARTBEAT_MS ?? '10000');
+const POLL_MS = Number(process.env.WORKER_POLL_MS ?? '3000');
+const STALE_JOB_MS = Number(process.env.WORKER_STALE_MS ?? '120000');
 
 export class QueueJobRunner {
+  private recordsCollected = 0;
+  private errorsCount = 0;
+
   constructor(private readonly agentId: string, private readonly agentName: string, private readonly agentScope: string) {}
 
   async runLoop(): Promise<void> {
@@ -18,7 +22,7 @@ export class QueueJobRunner {
       const job = await this.claimNextJob();
       if (!job) {
         await this.heartbeat(null, null, 'idle');
-        await this.sleep(3000);
+        await this.sleep(POLL_MS);
         continue;
       }
 
@@ -28,67 +32,35 @@ export class QueueJobRunner {
 
   private async recoverStaleJobs(): Promise<void> {
     const staleAt = new Date(Date.now() - STALE_JOB_MS).toISOString();
-    const { data } = await supabaseAdmin
-      .from('jobs')
-      .select('id,attempt_count,max_attempts')
-      .eq('status', 'running')
-      .lt('last_heartbeat_at', staleAt)
-      .eq('assigned_agent_id', this.agentId);
+    const { data, error } = await supabaseAdmin.rpc('recover_stale_jobs', {
+      p_governorate_scope: this.agentScope,
+      p_stale_before: staleAt,
+    });
 
-    for (const job of data ?? []) {
+    if (error || !data) return;
+
+    for (const job of data as Array<{ id: string; attempt_count: number; max_attempts: number }>) {
       const willRetry = (job.attempt_count ?? 0) < (job.max_attempts ?? 1);
-      await supabaseAdmin
-        .from('jobs')
-        .update({
-          status: willRetry ? 'retrying' : 'failed',
-          failure_reason: willRetry ? 'stale_job_recovered' : 'stale_job_max_attempts',
-          assigned_agent_id: null,
-        })
-        .eq('id', job.id)
-        .eq('status', 'running');
-
       await this.logEvent({
         job_id: job.id,
         event_type: willRetry ? 'retried' : 'failed',
         message: willRetry ? 'Recovered stale running job into retrying' : 'Stale running job failed at max attempts',
+        metadata: { recovery: true, attempt_count: job.attempt_count, max_attempts: job.max_attempts },
       });
     }
   }
 
   private async claimNextJob(): Promise<QueueJob | null> {
-    const { data: candidates } = await supabaseAdmin
-      .from('jobs')
-      .select('*')
-      .in('status', ['queued', 'retrying'])
-      .eq('governorate', this.agentScope)
-      .order('created_at', { ascending: true })
-      .limit(5);
+    const { data, error } = await supabaseAdmin.rpc('claim_next_job', {
+      p_agent_id: this.agentId,
+      p_governorate_scope: this.agentScope,
+    });
 
-    for (const candidate of candidates ?? []) {
-      const now = new Date().toISOString();
-      const { data: claimed } = await supabaseAdmin
-        .from('jobs')
-        .update({
-          status: 'running',
-          assigned_agent_id: this.agentId,
-          claimed_at: now,
-          started_at: candidate.started_at ?? now,
-          last_heartbeat_at: now,
-          attempt_count: (candidate.attempt_count ?? 0) + 1,
-          failure_reason: null,
-        })
-        .eq('id', candidate.id)
-        .in('status', ['queued', 'retrying'])
-        .select('*')
-        .maybeSingle();
+    if (error || !data || data.length === 0) return null;
 
-      if (!claimed) continue;
-
-      await this.logEvent({ job_id: claimed.id, event_type: 'claimed', message: `Claimed by ${this.agentId}` });
-      return claimed as QueueJob;
-    }
-
-    return null;
+    const claimed = data[0] as QueueJob;
+    await this.logEvent({ job_id: claimed.id, event_type: 'claimed', message: `Claimed by ${this.agentId}` });
+    return claimed;
   }
 
   private async executeJob(job: QueueJob): Promise<void> {
@@ -152,11 +124,12 @@ export class QueueJobRunner {
           website: record.website ?? null,
           latitude: record.latitude ?? null,
           longitude: record.longitude ?? null,
-          isVerified: record.isVerified,
+          isverified: record.isVerified,
           completeness_score: calculateCompletenessScore(record),
           validation_issues: validation.issues,
           match_decision: match,
           collected_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
       });
 
@@ -178,31 +151,38 @@ export class QueueJobRunner {
         match_review: matchCounts.REVIEW,
       };
 
-      await supabaseAdmin.from('job_results').upsert(result, { onConflict: 'job_id' });
+      await supabaseAdmin.from('job_results').upsert({ ...result, updated_at: new Date().toISOString() }, { onConflict: 'job_id' });
       await supabaseAdmin
         .from('jobs')
-        .update({ status: 'completed', finished_at: new Date().toISOString(), last_heartbeat_at: new Date().toISOString() })
+        .update({
+          status: 'completed',
+          finished_at: new Date().toISOString(),
+          last_heartbeat_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', job.id)
         .eq('assigned_agent_id', this.agentId);
       await this.logEvent({ job_id: job.id, event_type: 'completed' });
+      this.recordsCollected += upserts.length;
       await this.upsertAgentState({
         status: 'idle',
         current_job_id: null,
         current_city: null,
         current_category: null,
-        records_collected_inc: upserts.length,
       });
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      const retriesLeft = job.attempt_count < job.max_attempts;
+      const failure = this.formatFailure(error, job);
+      const retriesLeft = (job.attempt_count ?? 0) < (job.max_attempts ?? 1);
       await supabaseAdmin
         .from('jobs')
         .update({
           status: retriesLeft ? 'retrying' : 'failed',
-          failure_reason: reason,
+          failure_reason: failure.summary,
+          failure_details: failure.details,
           assigned_agent_id: null,
           last_heartbeat_at: new Date().toISOString(),
           finished_at: retriesLeft ? null : new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq('id', job.id)
         .eq('assigned_agent_id', this.agentId);
@@ -210,19 +190,36 @@ export class QueueJobRunner {
       await this.logEvent({
         job_id: job.id,
         event_type: retriesLeft ? 'retried' : 'failed',
-        message: reason,
+        message: failure.summary,
+        metadata: failure.details,
       });
 
+      this.errorsCount += 1;
       await this.upsertAgentState({
         status: retriesLeft ? 'idle' : 'error',
         current_job_id: null,
         current_city: null,
         current_category: null,
-        errors_count_inc: 1,
       });
     } finally {
       clearInterval(heartbeatTimer);
     }
+  }
+
+  private formatFailure(error: unknown, job: QueueJob): { summary: string; details: Record<string, unknown> } {
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    return {
+      summary: `${job.category}/${job.city}: ${rawMessage}`,
+      details: {
+        error: rawMessage,
+        category: job.category,
+        city: job.city,
+        governorate: job.governorate,
+        attempt_count: job.attempt_count,
+        max_attempts: job.max_attempts,
+        at: new Date().toISOString(),
+      },
+    };
   }
 
   private async heartbeat(currentJobId: string | null, currentCategory: string | null, status: AgentState['status']): Promise<void> {
@@ -230,7 +227,7 @@ export class QueueJobRunner {
     if (currentJobId) {
       await supabaseAdmin
         .from('jobs')
-        .update({ last_heartbeat_at: now })
+        .update({ last_heartbeat_at: now, updated_at: now })
         .eq('id', currentJobId)
         .eq('assigned_agent_id', this.agentId)
         .eq('status', 'running');
@@ -240,32 +237,29 @@ export class QueueJobRunner {
   }
 
   private async upsertAgentState(
-    input: Partial<AgentState> & { records_collected_inc?: number; errors_count_inc?: number; heartbeatOnly?: boolean },
+    input: Partial<AgentState> & { heartbeatOnly?: boolean },
   ): Promise<void> {
     const now = new Date().toISOString();
-    const { data: existing } = await supabaseAdmin
-      .from('agent_states')
-      .select('*')
-      .eq('agent_id', this.agentId)
-      .maybeSingle();
-
-    const payload: AgentState = {
+    const payload = {
       agent_id: this.agentId,
       agent_name: this.agentName,
       governorate_scope: this.agentScope,
-      status: input.status ?? existing?.status ?? 'idle',
-      current_job_id: input.current_job_id ?? existing?.current_job_id ?? null,
-      current_city: input.current_city ?? existing?.current_city ?? null,
-      current_category: input.current_category ?? existing?.current_category ?? null,
+      status: input.status ?? 'idle',
+      current_job_id: input.current_job_id ?? null,
+      current_city: input.current_city ?? null,
+      current_category: input.current_category ?? null,
       last_heartbeat_at: now,
-      records_collected: (existing?.records_collected ?? 0) + (input.records_collected_inc ?? 0),
-      errors_count: (existing?.errors_count ?? 0) + (input.errors_count_inc ?? 0),
+      records_collected: this.recordsCollected,
+      errors_count: this.errorsCount,
+      updated_at: now,
     };
 
-    if (input.heartbeatOnly && existing) {
-      payload.records_collected = existing.records_collected;
-      payload.errors_count = existing.errors_count;
-      payload.current_city = existing.current_city;
+    if (input.heartbeatOnly) {
+      await supabaseAdmin
+        .from('agent_states')
+        .update({ status: payload.status, current_job_id: payload.current_job_id, current_category: payload.current_category, last_heartbeat_at: now, updated_at: now })
+        .eq('agent_id', this.agentId);
+      return;
     }
 
     await supabaseAdmin.from('agent_states').upsert(payload, { onConflict: 'agent_id' });
