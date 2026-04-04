@@ -146,29 +146,45 @@ export default function GovernorControl() {
 
     const selectedAgentsList = agents.filter(a => selectedAgents.has(a.id));
     const categoryArray = Array.from(selectedCategories);
+    const totalLaunches = selectedAgentsList.length * categoryArray.length;
+
+    console.log(`🚀 Launching ${selectedAgentsList.length} agents × ${categoryArray.length} categories = ${totalLaunches} jobs`);
 
     // Launch all agents with all categories in parallel
     const promises = selectedAgentsList.flatMap(agent =>
-      categoryArray.map(category =>
-        fetch('/api/agents/run', {
+      categoryArray.map(category => {
+        const payload = {
+          agentName: agent.name,
+          city: agent.city,
+          category,
+        };
+        console.log(`📤 Sending request for ${agent.name} → ${category}`);
+
+        return fetch('/api/agents/run', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentName: agent.name,
-            city: agent.city,
-            category,
-          }),
-        })
-      )
+          body: JSON.stringify(payload),
+        }).then(async res => {
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(`❌ ${agent.name} × ${category} failed:`, data.error);
+            throw new Error(data.error || `HTTP ${res.status}`);
+          }
+          console.log(`✅ ${agent.name} × ${category} started (Job: ${data.jobId})`);
+          return data;
+        });
+      })
     );
 
     try {
-      await Promise.all(promises);
-      console.log(`✅ Launched ${selectedAgents.size} agents for ${selectedCategories.size} categories!`);
+      const results = await Promise.all(promises);
+      console.log(`✅ ALL LAUNCHED: ${results.length} jobs started`);
+      alert(`✅ Success! Started ${results.length} collection jobs.\n\nGo to "Progress Dashboard" to watch them run.`);
       setRunning(false);
       // Keep selections visible after launch
     } catch (err) {
-      console.error('Failed to launch agents:', err);
+      console.error('❌ Launch error:', err);
+      alert(`❌ Error: ${(err as any).message}`);
       setRunning(false);
     }
   };
