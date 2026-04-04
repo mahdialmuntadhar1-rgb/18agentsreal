@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type JobStatus = 'RUNNING' | 'COMPLETED' | 'WAITING' | 'FAILED' | 'QUEUED' | 'RETRYING';
+export type JobStatus = 'QUEUED' | 'RUNNING' | 'RETRYING' | 'COMPLETED' | 'FAILED';
 export type RecordStatus = 'RAW' | 'NEEDS_CLEANING' | 'DUPLICATE_SUSPECT' | 'STAGED' | 'APPROVED' | 'REJECTED';
 
 export interface AgentJob {
@@ -46,7 +46,7 @@ export interface DiscoveryRun {
   id: string;
   governorate: string;
   category: string;
-  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'QUEUED' | 'RUNNING' | 'RETRYING' | 'COMPLETED' | 'FAILED';
   sourceCount: number;
   recordsFound: number;
   startedAt: string;

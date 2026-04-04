@@ -24,8 +24,8 @@ export const PushControl: React.FC = () => {
     totalRecords: records.length,
     governorates: new Set(records.map(r => r.governorate)).size,
     categories: new Set(records.map(r => r.category)).size,
-    avgCompleteness: records.length > 0 
-      ? Math.round(records.reduce((acc, r) => acc + r.completenessScore, 0) / records.length) 
+    avgCompleteness: records.length > 0
+      ? Math.round(records.reduce((acc, r) => acc + r.completenessScore, 0) / records.length)
       : 0
   };
 
@@ -153,7 +153,7 @@ export const PushControl: React.FC = () => {
             </div>
             <div className="p-8 space-y-6">
               <p className="text-slate-600 text-sm leading-relaxed">
-                You are about to push <strong>{PUSH_STATS.totalRecords.toLocaleString()} records</strong> to the live production database.
+                You are about to push <strong>{PUSH_STATS.totalRecords.toLocaleString()} records</strong> to the live production database. This action will update public-facing business directories and cannot be easily undone.
               </p>
               
               <div className="p-4 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-500">

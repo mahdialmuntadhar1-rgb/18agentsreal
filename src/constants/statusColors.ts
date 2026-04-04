@@ -5,10 +5,14 @@
 
 export const STATUS_COLORS = {
   // Job Statuses
+  QUEUED: 'bg-yellow-500 text-black',
   RUNNING: 'bg-blue-500 text-white',
+  RETRYING: 'bg-amber-600 text-white',
   COMPLETED: 'bg-green-500 text-white',
-  WAITING: 'bg-yellow-500 text-black',
   FAILED: 'bg-red-500 text-white',
+
+  // Backward compatibility
+  WAITING: 'bg-yellow-500 text-black',
 
   // Record Statuses
   RAW: 'bg-gray-500 text-white',

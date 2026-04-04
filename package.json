@@ -9,9 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "runtime:start": "tsx server/runtime/index.ts",
-    "runtime:api": "RUNTIME_MODE=api tsx server/runtime/index.ts",
-    "runtime:worker": "RUNTIME_MODE=worker tsx server/runtime/index.ts"
+    "worker:collection": "tsx server/index.ts",
+    "worker:once": "tsx -e \"import('./server/worker/collection-runner.ts').then(m=>m.processSingleJob())\""
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

@@ -17,8 +17,5 @@ This repository contains the internal collection dashboard and the real DB-backe
 3. Run the dashboard:
    `npm run dev`
 
-## Runtime (real queue + workers)
-
-* Start worker: `npm run runtime:worker`
-* Start API enqueue endpoint: `npm run runtime:api`
-* Start both in one process (local only): `npm run runtime:start` with `RUNTIME_MODE=all`
+4. Run the collection worker (separate terminal):
+   `npm run worker:collection`
