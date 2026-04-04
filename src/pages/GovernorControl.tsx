@@ -72,27 +72,43 @@ export default function GovernorControl() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [jobs, setJobs] = useState<Map<string, Job>>(new Map());
   const [running, setRunning] = useState(false);
+  const [launchedJobIds, setLaunchedJobIds] = useState<Set<string>>(new Set());
 
   // Fetch jobs for progress dashboard
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch('/api/agents/list');
+        const response = await fetch('/api/agents/list?jobIds=' + Array.from(launchedJobIds).join(','));
         if (response.ok) {
           const data = await response.json();
           // Map jobs by ID to support multiple jobs per agent
           const jobMap = new Map(data.map((j: any) => [j.id, j]));
           setJobs(jobMap);
+
+          // Remove completed jobs from tracked list after 5 seconds
+          const completedIds = Array.from(jobMap.values())
+            .filter((j: any) => j.status === 'completed')
+            .map((j: any) => j.id);
+
+          if (completedIds.length > 0) {
+            setTimeout(() => {
+              const updated = new Set(launchedJobIds);
+              completedIds.forEach(id => updated.delete(id));
+              setLaunchedJobIds(updated);
+            }, 5000);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch jobs:', err);
       }
     };
 
-    fetchJobs();
-    const interval = setInterval(fetchJobs, 1500); // Update every 1.5 seconds for real-time feel
-    return () => clearInterval(interval);
-  }, []);
+    if (launchedJobIds.size > 0) {
+      fetchJobs();
+      const interval = setInterval(fetchJobs, 1500); // Update every 1.5 seconds for real-time feel
+      return () => clearInterval(interval);
+    }
+  }, [launchedJobIds]);
 
   // Toggle agent selection
   const toggleAgent = (agentId: string) => {
@@ -186,6 +202,16 @@ export default function GovernorControl() {
     try {
       const results = await Promise.all(promises);
       console.log(`✅ ALL LAUNCHED: ${results.length} jobs started`);
+
+      // Track launched job IDs locally
+      const newJobIds = new Set(launchedJobIds);
+      results.forEach((result: any) => {
+        if (result.jobId) {
+          newJobIds.add(result.jobId);
+        }
+      });
+      setLaunchedJobIds(newJobIds);
+
       alert(`✅ Success! Started ${results.length} collection jobs.\n\nGo to "Progress Dashboard" to watch them run.`);
       setRunning(false);
       // Keep selections visible after launch
