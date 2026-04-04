@@ -30,10 +30,10 @@ export const PushControl: React.FC = () => {
   };
 
   const CHECKLIST = [
-    { label: 'Incomplete fields < 5%', status: 'PASS', value: '3.1%' },
-    { label: 'Duplicate risk assessment', status: 'PASS', value: 'Low' },
-    { label: 'All records approved by operator', status: 'PASS', value: '100%' },
-    { label: 'Geocoding validation', status: 'WARNING', value: '92% verified' },
+    { label: 'Approved records available', status: records.length > 0 ? 'PASS' : 'WARNING', value: records.length.toString() },
+    { label: 'Duplicate risk assessment', status: 'PASS', value: 'runtime-enforced' },
+    { label: 'All records approved by operator', status: 'PASS', value: 'DB truth' },
+    { label: 'Geocoding validation', status: 'WARNING', value: 'check records.latitude/longitude' },
   ];
 
   return (
@@ -126,13 +126,13 @@ export const PushControl: React.FC = () => {
             <div className="p-4 bg-orange-50 border border-orange-100 rounded flex items-start">
               <Info className="w-5 h-5 text-orange-600 mr-3 mt-0.5" />
               <p className="text-xs text-orange-800 leading-relaxed">
-                <strong>Geocoding Incomplete:</strong> 8% of records in Nineveh governorate are missing precise coordinates. These will be pushed with city-level centroids.
+                <strong>Geocoding Check:</strong> Review approved records missing precise coordinates before push.
               </p>
             </div>
             <div className="p-4 bg-blue-50 border border-blue-100 rounded flex items-start">
               <Info className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
               <p className="text-xs text-blue-800 leading-relaxed">
-                <strong>Batch Size:</strong> This push contains 3,105 records. Estimated propagation time to public API is 4 minutes.
+                <strong>Batch Size:</strong> This push contains {PUSH_STATS.totalRecords.toLocaleString()} approved records.
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export const PushControl: React.FC = () => {
                 <button 
                   className="w-full py-4 bg-rose-600 text-white font-bold rounded hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
                   onClick={() => {
-                    alert('Production push initiated successfully.');
+                    console.log('Production push initiated');
                     setIsModalOpen(false);
                   }}
                 >

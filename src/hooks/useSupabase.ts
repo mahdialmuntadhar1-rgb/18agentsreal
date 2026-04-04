@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { hasSupabaseConfig, supabase } from '../lib/supabase';
 import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent } from '../types';
 
 const mapJob = (row: any): AgentJob => ({
@@ -56,6 +56,17 @@ export function useDashboardStats() {
 
   useEffect(() => {
     async function fetchStats() {
+      if (!hasSupabaseConfig) {
+        setStats({
+          totalRecords: 0,
+          activeAgents: 0,
+          staged: 0,
+          readyToPush: 0,
+          failedJobs: 0,
+        });
+        setLoading(false);
+        return;
+      }
       try {
         const { count: totalRecords } = await supabase.from('records').select('*', { count: 'exact', head: true });
         const { count: activeAgents } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'running');
@@ -123,6 +134,11 @@ export function useRecords(status?: string) {
 
   useEffect(() => {
     async function fetchRecords() {
+      if (!hasSupabaseConfig) {
+        setRecords([]);
+        setLoading(false);
+        return;
+      }
       let query = supabase.from('records').select('*');
       if (status) query = query.eq('status', status);
       const { data, error } = await query.order('last_updated', { ascending: false });
@@ -178,7 +194,7 @@ export function useLogs() {
     fetchLogs();
     const subscription = supabase
       .channel('logs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, () => fetchLogs())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_events' }, () => fetchLogs())
       .subscribe();
 
     return () => {

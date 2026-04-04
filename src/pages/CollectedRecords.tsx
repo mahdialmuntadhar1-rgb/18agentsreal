@@ -13,15 +13,6 @@ import { BusinessRecord } from '../types';
 import { Column } from '../components/DataTable';
 import { useRecords } from '../hooks/useSupabase';
 
-const MOCK_RECORDS: BusinessRecord[] = [
-  { id: 'REC-001', nameAr: 'مطعم الزيتون', nameEn: 'Al Zaitoon Restaurant', category: 'Restaurants', governorate: 'Baghdad', city: 'Mansour', phone: '07701234567', whatsapp: '07701234567', completenessScore: 95, status: 'STAGED', lastUpdated: '2026-04-01' },
-  { id: 'REC-002', nameAr: 'فندق بابل', nameEn: 'Babylon Hotel', category: 'Hotels', governorate: 'Baghdad', city: 'Jadriya', phone: '07809876543', whatsapp: '', completenessScore: 75, status: 'NEEDS_CLEANING', lastUpdated: '2026-04-02', issues: ['Missing WhatsApp'] },
-  { id: 'REC-003', nameAr: 'صيدلية النور', nameEn: 'Al Noor Pharmacy', category: 'Pharmacies', governorate: 'Basra', city: 'Ashar', phone: '07501112223', whatsapp: '07501112223', completenessScore: 100, status: 'APPROVED', lastUpdated: '2026-03-30' },
-  { id: 'REC-004', nameAr: 'سوبر ماركت الرافدين', nameEn: 'Al Rafidain Supermarket', category: 'Retail', governorate: 'Erbil', city: 'Ainkawa', phone: '07712223334', whatsapp: '07712223334', completenessScore: 85, status: 'RAW', lastUpdated: '2026-04-03' },
-  { id: 'REC-005', nameAr: 'شركة النقل السريع', nameEn: 'Fast Transport Co', category: 'Logistics', governorate: 'Nineveh', city: 'Mosul', phone: '07814445556', whatsapp: '', completenessScore: 60, status: 'DUPLICATE_SUSPECT', lastUpdated: '2026-04-02', issues: ['Possible duplicate of REC-089'] },
-  { id: 'REC-006', nameAr: 'مقهى الشابندر', nameEn: 'Shabandar Cafe', category: 'Cafes', governorate: 'Baghdad', city: 'Mutanabbi', phone: '07705556667', whatsapp: '07705556667', completenessScore: 92, status: 'APPROVED', lastUpdated: '2026-04-01' },
-];
-
 export const CollectedRecords: React.FC = () => {
   const { records, loading } = useRecords();
   const [selectedRecord, setSelectedRecord] = useState<BusinessRecord | null>(null);
@@ -30,7 +21,7 @@ export const CollectedRecords: React.FC = () => {
   const [confidence, setConfidence] = useState(0);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'lastUpdated', direction: 'desc' });
 
-  const displayRecords = records.length > 0 ? records : MOCK_RECORDS;
+  const displayRecords = records;
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
