@@ -1,20 +1,55 @@
--- Minimal schema notes for real collection runner.
--- This file documents columns expected by server/worker + frontend hooks.
+-- Canonical runtime contract used by server/runtime/* and frontend DB hooks.
 
--- jobs table
--- required: id, status, governorate, city, category, source
--- required lifecycle fields: retry_count, max_retries, claimed_at, started_at, finished_at, failure_reason, last_updated
--- optional: discovery_run_id, records_found, error_count, agent_name, created_at
+-- jobs
+--   id uuid PK
+--   governorate text
+--   city text
+--   category text
+--   status text: queued|running|retrying|failed|completed
+--   assigned_agent_id text nullable
+--   attempt_count int
+--   max_attempts int
+--   claimed_at/started_at/finished_at/last_heartbeat_at timestamptz
+--   failure_reason text nullable
+--   failure_details jsonb nullable
+--   created_at/updated_at timestamptz
 
--- discovery_runs table
--- required: id, status, governorate, category, started_at, completed_at, records_found, source_count
--- optional: summary (jsonb), error_message
+-- records
+--   id uuid PK
+--   source_record_id text
+--   job_id uuid FK -> jobs.id
+--   name/name_ar/category/governorate/city/provider
+--   contact + geo fields
+--   isverified boolean
+--   completeness_score int
+--   validation_issues text[]
+--   match_decision text: NEW|UPDATE|DUPLICATE|REVIEW
+--   status text (RAW/NEEDS_CLEANING/STAGED/APPROVED/REJECTED)
+--   collected_at/updated_at timestamptz
+--   unique(source_record_id, provider, governorate, city)
 
--- records table (canonical target)
--- required: id, name_en, name_ar, category, governorate, city
--- required canonical mapping: latitude/longitude + is_verified + source_name
--- required quality fields: completeness_score, validation_issues, match_decision, status, last_updated
--- optional: phone, whatsapp, email, website, address, source_url, external_id
+-- job_events
+--   id bigserial PK
+--   job_id uuid FK -> jobs.id
+--   agent_id text nullable
+--   event_type text
+--   message text nullable
+--   metadata jsonb nullable
+--   created_at timestamptz
 
--- logs table
--- required: id, timestamp, level, source, message, metadata
+-- job_results
+--   job_id uuid PK/FK -> jobs.id
+--   total_raw_records/normalized_records/valid_records/invalid_records
+--   match_new/match_update/match_duplicate/match_review
+--   created_at/updated_at timestamptz
+
+-- agent_states
+--   agent_id text PK
+--   agent_name text
+--   governorate_scope text
+--   status text: idle|running|error|stopped
+--   current_job_id uuid nullable FK -> jobs.id
+--   current_city/current_category nullable
+--   last_heartbeat_at timestamptz
+--   records_collected/errors_count int
+--   updated_at timestamptz

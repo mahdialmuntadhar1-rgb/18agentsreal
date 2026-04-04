@@ -4,18 +4,18 @@
 
 # 18agentsreal collection runtime
 
-This repository contains the internal collection dashboard and the real DB-backed runtime worker/API for 18-governorate collection orchestration.
+Supabase-backed multi-agent collection runtime with DB-backed frontend observability.
 
-## Run Locally
+## Local run
+1. `npm install`
+2. Copy `.env.example` to `.env` and configure values.
+3. Frontend: `npm run dev`
+4. Runtime API: `npm run worker:api`
+5. Worker: `npm run worker:runtime`
 
-**Prerequisites:**  Node.js
+## Useful scripts
+- `npm run worker:all` - API + worker in one process.
+- `npm run workers:scoped` - start one worker process per scope in `WORKER_SCOPES`.
+- `npm run jobs:bootstrap` - seed jobs through runtime API.
 
-
-1. Install dependencies:
-   `npm install`
-2. Set variables from [.env.example](.env.example)
-3. Run the dashboard:
-   `npm run dev`
-
-4. Run the collection worker (separate terminal):
-   `npm run worker:collection`
+See `DEPLOYMENT.md` for production hosting split and `VALIDATION.md` for proof-of-execution steps.
