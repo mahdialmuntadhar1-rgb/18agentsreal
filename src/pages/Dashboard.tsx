@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { 
@@ -12,80 +12,119 @@ import {
   Layers, 
   SendHorizontal, 
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react';
-import { AgentJob } from '../types';
-import { useDashboardStats, useActiveJobs } from '../hooks/useSupabase';
 
-// Mock data for initial UI
-const MOCK_STATS = {
-  totalRecords: '142,892',
-  activeAgents: 12,
-  staged: '8,421',
-  readyToPush: '3,105',
-  failedJobs: 2
-};
+/**
+ * API Client Stub
+ * 
+ * Endpoint: GET http://localhost:8787/api/agents/list
+ * Response Format: Agent[]
+ * 
+ * Example Response:
+ * [
+ *   {
+ *     "id": "agent-1",
+ *     "governorate": "Baghdad",
+ *     "status": "RUNNING",
+ *     "progress": 65,
+ *     "recordsFound": 420,
+ *     "lastUpdated": 1712232000000
+ *   }
+ * ]
+ */
 
-const MOCK_ACTIVE_AGENTS: AgentJob[] = [
-  {
-    id: '1',
-    agentName: 'Agent-Alpha',
-    governorate: 'Baghdad',
-    city: 'Karkh',
-    category: 'Restaurants',
-    status: 'RUNNING',
-    progress: 65,
-    recordsFound: 420,
-    lastUpdated: '2 mins ago',
-    errorCount: 0
-  },
-  {
-    id: '2',
-    agentName: 'Agent-Beta',
-    governorate: 'Erbil',
-    city: 'Ankawa',
-    category: 'Hotels',
-    status: 'RUNNING',
-    progress: 88,
-    recordsFound: 156,
-    lastUpdated: 'Just now',
-    errorCount: 1
-  },
-  {
-    id: '3',
-    agentName: 'Agent-Gamma',
-    governorate: 'Basra',
-    city: 'Zubair',
-    category: 'Pharmacies',
-    status: 'WAITING',
-    progress: 0,
-    recordsFound: 0,
-    lastUpdated: '15 mins ago',
-    errorCount: 0
-  }
-];
+interface Agent {
+  id: string;
+  governorate: string;
+  status: string;
+  progress: number;
+  recordsFound: number;
+  lastUpdated: number;
+  // Optional fields for UI mapping
+  agentName?: string;
+  city?: string;
+  category?: string;
+}
+
+interface DashboardStats {
+  totalRecords: number;
+  activeAgents: number;
+  staged: number;
+  readyToPush: number;
+  failedJobs: number;
+}
 
 export const Dashboard: React.FC = () => {
-  const { stats, loading: statsLoading } = useDashboardStats();
-  const { jobs, loading: jobsLoading } = useActiveJobs();
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const displayStats = stats || MOCK_STATS;
-  const displayJobs = jobs.length > 0 ? jobs : MOCK_ACTIVE_AGENTS;
+  const fetchAgents = async () => {
+    try {
+      const response = await fetch('http://localhost:8787/api/agents/list');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch agents: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setAgents(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching agents:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAgents();
+    const interval = setInterval(fetchAgents, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const stats = useMemo<DashboardStats>(() => {
+    return {
+      totalRecords: agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0),
+      activeAgents: agents.filter(a => a.status === 'RUNNING').length,
+      staged: Math.floor(agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.15), // Derived for demo
+      readyToPush: Math.floor(agents.reduce((sum, a) => sum + (a.recordsFound || 0), 0) * 0.05), // Derived for demo
+      failedJobs: agents.filter(a => a.status === 'FAILED').length,
+    };
+  }, [agents]);
+
+  if (loading && agents.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center space-y-4 py-20">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <p className="text-slate-500 font-medium tracking-tight">Connecting to operational backend...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
-      <header>
-        <h2 className="text-2xl font-bold text-slate-900">Command Center</h2>
-        <p className="text-slate-500">Real-time operational overview of the data pipeline.</p>
+      <header className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Command Center</h2>
+          <p className="text-slate-500">Real-time operational overview of the data pipeline.</p>
+        </div>
+        {error && (
+          <div className="flex items-center space-x-2 text-rose-600 bg-rose-50 px-3 py-1.5 rounded border border-rose-100 text-xs font-bold animate-pulse">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span>Live Sync Error: {error}</span>
+          </div>
+        )}
       </header>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard label="Total Records" value={displayStats.totalRecords.toLocaleString()} icon={Database} />
-        <StatCard label="Active Agents" value={displayStats.activeAgents} icon={Users} />
-        <StatCard label="Staged" value={displayStats.staged.toLocaleString()} icon={Layers} />
-        <StatCard label="Ready to Push" value={displayStats.readyToPush.toLocaleString()} icon={SendHorizontal} color="text-emerald-500" />
-        <StatCard label="Failed Jobs" value={displayStats.failedJobs} icon={AlertCircle} color="text-rose-500" />
+        <StatCard label="Total Records" value={stats.totalRecords.toLocaleString()} icon={Database} />
+        <StatCard label="Active Agents" value={stats.activeAgents} icon={Users} />
+        <StatCard label="Staged" value={stats.staged.toLocaleString()} icon={Layers} />
+        <StatCard label="Ready to Push" value={stats.readyToPush.toLocaleString()} icon={SendHorizontal} color="text-emerald-500" />
+        <StatCard label="Failed Jobs" value={stats.failedJobs} icon={AlertCircle} color="text-rose-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -109,30 +148,40 @@ export const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {displayJobs.map((agent) => (
-                  <tr key={agent.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-mono text-xs font-bold text-slate-900">{agent.agentName}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-slate-900">{agent.governorate}</div>
-                      <div className="text-xs text-slate-500">{agent.city}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{agent.category}</td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={agent.status} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-blue-500 h-full rounded-full transition-all duration-500" 
-                          style={{ width: `${agent.progress}%` }}
-                        />
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-1 font-mono">{agent.progress}% • {agent.recordsFound} recs</div>
+                {agents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm italic">
+                      No active agents found in the current pipeline.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  agents.map((agent) => (
+                    <tr key={agent.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-mono text-xs font-bold text-slate-900">{agent.agentName || agent.id}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-slate-900">{agent.governorate}</div>
+                        <div className="text-xs text-slate-500">{agent.city || 'Primary Zone'}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{agent.category || 'General Discovery'}</td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={agent.status as any} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-blue-500 h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${agent.progress}%` }}
+                          />
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-1 font-mono">
+                          {agent.progress}% • {agent.recordsFound} recs
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -144,20 +193,22 @@ export const Dashboard: React.FC = () => {
             <h3 className="font-bold text-slate-900 uppercase text-xs tracking-wider">Recent Job Results</h3>
           </div>
           <div className="p-4 space-y-4">
-            {[
-              { id: 'j1', label: 'Baghdad/Retail', status: 'COMPLETED', time: '1h ago', count: 1240 },
-              { id: 'j2', label: 'Basra/Industrial', status: 'FAILED', time: '3h ago', count: 0 },
-              { id: 'j3', label: 'Dohuk/Tourism', status: 'COMPLETED', time: '5h ago', count: 450 },
-              { id: 'j4', label: 'Najaf/Medical', status: 'COMPLETED', time: '8h ago', count: 890 },
-            ].map((job) => (
+            {agents.filter(a => a.status === 'COMPLETED' || a.status === 'FAILED').slice(0, 4).map((job) => (
               <div key={job.id} className="flex items-center justify-between p-3 border border-slate-100 rounded">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{job.label}</p>
-                  <p className="text-[10px] text-slate-500 font-mono">{job.time} • {job.count} records</p>
+                  <p className="text-sm font-bold text-slate-900">{job.governorate}/{job.category || 'Discovery'}</p>
+                  <p className="text-[10px] text-slate-500 font-mono">
+                    {new Date(job.lastUpdated).toLocaleTimeString()} • {job.recordsFound} records
+                  </p>
                 </div>
-                <StatusBadge status={job.status} />
+                <StatusBadge status={job.status as any} />
               </div>
             ))}
+            {agents.filter(a => a.status === 'COMPLETED' || a.status === 'FAILED').length === 0 && (
+              <div className="text-center py-8 text-slate-400 text-xs italic">
+                No recent job results available.
+              </div>
+            )}
           </div>
           <div className="p-4 bg-slate-50 border-t border-slate-200">
              <div className="flex justify-between items-center text-xs">
