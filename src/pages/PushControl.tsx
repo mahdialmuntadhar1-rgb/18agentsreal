@@ -3,22 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   SendHorizontal, 
   CheckCircle2, 
   AlertTriangle, 
   Info, 
   ShieldCheck,
-  ArrowRight,
-  X
+  ArrowRight
 } from 'lucide-react';
 
 import { useRecords } from '../hooks/useSupabase';
 
 export const PushControl: React.FC = () => {
-  const { records, loading } = useRecords('APPROVED');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { records } = useRecords('APPROVED');
 
   const PUSH_STATS = {
     totalRecords: records.length,
@@ -56,8 +54,8 @@ export const PushControl: React.FC = () => {
             </div>
           </div>
           <div className="text-right">
-            <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded text-[10px] font-bold uppercase tracking-widest">
-              Ready for Push
+            <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded text-[10px] font-bold uppercase tracking-widest">
+              Manual Push Required
             </span>
           </div>
         </div>
@@ -86,11 +84,12 @@ export const PushControl: React.FC = () => {
             <ShieldCheck className="w-4 h-4 mr-2 text-emerald-500" />
             Security & Integrity Check Passed
           </div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="px-8 py-4 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-600/30 flex items-center"
+          <button
+            disabled
+            className="px-8 py-4 bg-slate-400 text-white font-bold rounded cursor-not-allowed flex items-center"
+            title="Direct production push is not wired in this frontend"
           >
-            EXECUTE PRODUCTION PUSH <ArrowRight className="w-5 h-5 ml-3" />
+            PUSH VIA EXTERNAL RUNBOOK <ArrowRight className="w-5 h-5 ml-3" />
           </button>
         </div>
       </div>
@@ -139,50 +138,6 @@ export const PushControl: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-rose-600 text-white">
-              <h3 className="font-bold text-lg flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2" /> Confirm Production Push
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-rose-500 rounded">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-8 space-y-6">
-              <p className="text-slate-600 text-sm leading-relaxed">
-                You are about to push <strong>{PUSH_STATS.totalRecords.toLocaleString()} records</strong> to the live production database. This action will update public-facing business directories and cannot be easily undone.
-              </p>
-              
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-500">
-                Action: PUSH_TO_PROD<br />
-                Operator: {import.meta.env.VITE_OPERATOR_EMAIL || 'Current Operator'}<br />
-                Timestamp: {new Date().toISOString()}
-              </div>
-
-              <div className="space-y-3">
-                <button 
-                  className="w-full py-4 bg-rose-600 text-white font-bold rounded hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20"
-                  onClick={() => {
-                    console.log('Production push initiated');
-                    setIsModalOpen(false);
-                  }}
-                >
-                  CONFIRM & EXECUTE PUSH
-                </button>
-                <button 
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-full py-4 bg-white text-slate-500 font-bold rounded hover:bg-slate-50 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

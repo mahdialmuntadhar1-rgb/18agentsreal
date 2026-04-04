@@ -19,19 +19,35 @@ Host this as a separate service/container (Railway/Fly/Render/VM/etc).
 Required env vars:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `GEMINI_API_KEY`
+- `GEMINI_API_KEY` (required for worker/all mode)
 - `RUNTIME_MODE` (`api`, `worker`, or `all`)
 - worker identity vars: `AGENT_ID`, `AGENT_NAME`, `AGENT_SCOPE`
 
+Startup guardrails fail fast when env vars, canonical tables, or required RPCs are missing.
+
 Commands:
-- API only: `npm run worker:api`
-- single worker: `npm run worker:runtime`
-- API + worker in one process (small deployments): `npm run worker:all`
+- API only: `npm run runtime:api`
+- single worker: `npm run runtime:worker`
+- API + worker in one process (small deployments): `npm run runtime:all`
 
 ## 4) Multi-agent launch (one worker per governorate)
-- Set `WORKER_SCOPES="Baghdad,Basra,Erbil,..."`
-- Run: `npm run workers:scoped`
-- Each child gets unique `AGENT_ID`/`AGENT_NAME` and its own `AGENT_SCOPE`.
+Use the scoped launcher from one process supervisor unit.
+
+### Linux/macOS shells
+```bash
+export WORKER_SCOPES="Baghdad,Basra,Erbil"
+npm run runtime:workers:scoped
+```
+
+### Windows PowerShell
+```powershell
+$env:WORKER_SCOPES="Baghdad,Basra,Erbil"
+npm run runtime:workers:scoped
+```
+
+(You can also pass scopes as a single argument: `npm run runtime:workers:scoped -- "Baghdad,Basra,Erbil"`.)
+
+Each child gets unique `AGENT_ID`/`AGENT_NAME` and its own `AGENT_SCOPE`.
 
 ## 5) Enqueue jobs
 - Single job: `POST /jobs`

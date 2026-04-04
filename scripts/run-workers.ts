@@ -14,20 +14,16 @@ if (scopes.length === 0) {
 const baseAgentName = process.env.AGENT_NAME_PREFIX ?? 'agent';
 
 for (const [idx, scope] of scopes.entries()) {
-  const child = spawn(
-    process.execPath,
-    ['node_modules/tsx/dist/cli.mjs', 'server/runtime/index.ts'],
-    {
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        RUNTIME_MODE: 'worker',
-        AGENT_SCOPE: scope,
-        AGENT_ID: `${baseAgentName}-${idx + 1}`,
-        AGENT_NAME: `${baseAgentName}-${idx + 1}`,
-      },
+  const child = spawn(process.execPath, ['--import', 'tsx', 'scripts/start-runtime.ts', 'worker'], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      RUNTIME_MODE: 'worker',
+      AGENT_SCOPE: scope,
+      AGENT_ID: `${baseAgentName}-${idx + 1}`,
+      AGENT_NAME: `${baseAgentName}-${idx + 1}`,
     },
-  );
+  });
 
   child.on('exit', (code) => {
     console.error(`[worker ${scope}] exited with code ${code ?? 0}`);

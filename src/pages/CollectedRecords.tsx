@@ -11,10 +11,11 @@ import { SidePanel } from '../components/SidePanel';
 import { Download, Phone, MessageSquare, MapPin, Tag, Calendar, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { BusinessRecord } from '../types';
 import { Column } from '../components/DataTable';
-import { useRecords } from '../hooks/useSupabase';
+import { useRecords, useRecordStatusActions } from '../hooks/useSupabase';
 
 export const CollectedRecords: React.FC = () => {
-  const { records, loading } = useRecords();
+  const { records, loading, refresh } = useRecords();
+  const { updateStatus, updating } = useRecordStatusActions();
   const [selectedRecord, setSelectedRecord] = useState<BusinessRecord | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -131,7 +132,7 @@ export const CollectedRecords: React.FC = () => {
             <h2 className="text-2xl font-bold text-slate-900">Collected Records</h2>
             <p className="text-slate-500">Browse and inspect all business data collected by agents.</p>
           </div>
-          <button className="flex items-center px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-bold rounded hover:bg-slate-50 transition-colors">
+          <button disabled className="flex items-center px-4 py-2 border border-slate-200 bg-white text-slate-400 text-sm font-bold rounded cursor-not-allowed" title="CSV export is not wired yet">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
           </button>
@@ -177,10 +178,10 @@ export const CollectedRecords: React.FC = () => {
         subtitle={selectedRecord?.id}
         footer={
           <div className="grid grid-cols-2 gap-4">
-            <button className="px-4 py-3 border border-slate-200 text-slate-700 text-sm font-bold rounded hover:bg-white transition-colors">
+            <button disabled={updating} onClick={() => { if (!selectedRecord) return; void updateStatus([selectedRecord.id], 'REJECTED').then((ok) => { if (ok) { void refresh(); setSelectedRecord(null); } }); }} className="px-4 py-3 border border-slate-200 text-slate-700 text-sm font-bold rounded hover:bg-white transition-colors disabled:opacity-60">
               Reject Record
             </button>
-            <button className="px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition-colors flex items-center justify-center">
+            <button disabled={updating} onClick={() => { if (!selectedRecord) return; void updateStatus([selectedRecord.id], 'APPROVED').then((ok) => { if (ok) { void refresh(); setSelectedRecord(null); } }); }} className="px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-60">
               <CheckCircle2 className="w-4 h-4 mr-2" /> Approve
             </button>
           </div>

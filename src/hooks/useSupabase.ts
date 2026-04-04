@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { hasSupabaseConfig, supabase } from '../lib/supabase';
-import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent } from '../types';
+import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent, RecordStatus } from '../types';
 
 const mapJob = (row: any): AgentJob => ({
   id: String(row.id),
@@ -88,23 +88,23 @@ export function useActiveJobs() {
   const [jobs, setJobs] = useState<AgentJob[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchJobs() {
-      if (!hasSupabaseConfig) {
-        setJobs([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*,result:job_results(normalized_records)')
-        .order('created_at', { ascending: false });
-
-      if (!error) setJobs((data || []).map(mapJob));
+  const fetchJobs = useCallback(async () => {
+    if (!hasSupabaseConfig) {
+      setJobs([]);
       setLoading(false);
+      return;
     }
 
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*,result:job_results(normalized_records)')
+      .order('created_at', { ascending: false });
+
+    if (!error) setJobs((data || []).map(mapJob));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     void fetchJobs();
     const subscription = supabase
       .channel('active-jobs')
@@ -114,34 +114,53 @@ export function useActiveJobs() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [fetchJobs]);
 
-  return { jobs, loading };
+  return { jobs, loading, refresh: fetchJobs };
 }
 
 export function useRecords(status?: string) {
   const [records, setRecords] = useState<BusinessRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchRecords() {
-      if (!hasSupabaseConfig) {
-        setRecords([]);
-        setLoading(false);
-        return;
-      }
-
-      let query = supabase.from('records').select('*');
-      if (status) query = query.eq('status', status);
-      const { data, error } = await query.order('updated_at', { ascending: false });
-      if (!error) setRecords((data || []).map(mapRecord));
+  const fetchRecords = useCallback(async () => {
+    if (!hasSupabaseConfig) {
+      setRecords([]);
       setLoading(false);
+      return;
     }
 
-    void fetchRecords();
+    let query = supabase.from('records').select('*');
+    if (status) query = query.eq('status', status);
+    const { data, error } = await query.order('updated_at', { ascending: false });
+    if (!error) setRecords((data || []).map(mapRecord));
+    setLoading(false);
   }, [status]);
 
-  return { records, loading };
+  useEffect(() => {
+    void fetchRecords();
+  }, [fetchRecords]);
+
+  return { records, loading, refresh: fetchRecords };
+}
+
+export function useRecordStatusActions() {
+  const [updating, setUpdating] = useState(false);
+
+  const updateStatus = useCallback(async (recordIds: string[], status: RecordStatus): Promise<boolean> => {
+    if (!hasSupabaseConfig || recordIds.length === 0) return false;
+
+    setUpdating(true);
+    const { error } = await supabase
+      .from('records')
+      .update({ status, updated_at: new Date().toISOString() })
+      .in('id', recordIds);
+    setUpdating(false);
+
+    return !error;
+  }, []);
+
+  return { updateStatus, updating };
 }
 
 export function useDiscoveryRuns() {

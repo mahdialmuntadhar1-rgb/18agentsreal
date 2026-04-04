@@ -11,7 +11,7 @@
 
 ## 3. Start runtime API
 ```bash
-npm run worker:api
+npm run runtime:api
 ```
 Expect `/health` to return `{ ok: true }`.
 
@@ -31,7 +31,7 @@ npm run jobs:bootstrap
 
 ## 5. Run one worker
 ```bash
-npm run worker:runtime
+npm run runtime:worker
 ```
 Verify job lifecycle in DB:
 - `jobs.status` transitions `queued -> running -> completed|failed`
@@ -53,7 +53,7 @@ Check tables populate:
 
 ## 8. Verify multi-worker safety
 1. Set `WORKER_SCOPES` for multiple governorates.
-2. Run `npm run workers:scoped`.
+2. Run `npm run runtime:workers:scoped`.
 3. Enqueue jobs across those governorates.
 4. Confirm:
    - workers only claim jobs in their own `AGENT_SCOPE`

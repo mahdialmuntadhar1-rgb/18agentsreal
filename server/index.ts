@@ -1,7 +1,4 @@
 import 'dotenv/config';
-import { startCollectionWorker } from './worker/collection-runner.ts';
 
-startCollectionWorker().catch((error) => {
-  console.error('Fatal collection worker boot error', error);
-  process.exit(1);
-});
+console.error('[deprecated] server/index.ts is deprecated. Use scripts/start-runtime.ts or npm run runtime:* commands.');
+await import('./runtime/index.ts');

@@ -12,7 +12,7 @@ import { AgentJob } from '../types';
 import { useActiveJobs } from '../hooks/useSupabase';
 
 export const ActiveJobs: React.FC = () => {
-  const { jobs } = useActiveJobs();
+  const { jobs, refresh, loading } = useActiveJobs();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'recordsFound', direction: 'desc' });
@@ -93,7 +93,7 @@ export const ActiveJobs: React.FC = () => {
           <h2 className="text-2xl font-bold text-slate-900">Active Jobs</h2>
           <p className="text-slate-500">Real DB-backed queue state from the collection worker.</p>
         </div>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition-colors">
+        <button onClick={() => void refresh()} disabled={loading} className="flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh Status
         </button>
