@@ -22,25 +22,29 @@ const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
-// Import governors
-import RestaurantsGovernor from "./server/governors/restaurants.ts";
-import CafesGovernor from "./server/governors/cafes.ts";
-import BakeriesGovernor from "./server/governors/bakeries.ts";
-import HotelsGovernor from "./server/governors/hotels.ts";
-import GymsGovernor from "./server/governors/gyms.ts";
-import BeautySalonsGovernor from "./server/governors/beauty-salons.ts";
-import PharmaciesGovernor from "./server/governors/pharmacies.ts";
-import SupermarketsGovernor from "./server/governors/supermarkets.ts";
+// Import GenericGovernor
+import { GenericGovernor } from "./server/governors/generic-governor.ts";
 
-const governors: Record<string, any> = {
-  "Agent-01": RestaurantsGovernor,
-  "Agent-02": CafesGovernor,
-  "Agent-03": BakeriesGovernor,
-  "Agent-04": HotelsGovernor,
-  "Agent-05": GymsGovernor,
-  "Agent-06": BeautySalonsGovernor,
-  "Agent-07": PharmaciesGovernor,
-  "Agent-08": SupermarketsGovernor,
+// 18 Agents configuration
+const agentConfig: Record<string, { category: string; city: string; governRate: string }> = {
+  "Agent-01": { category: "Restaurants & Dining", city: "Baghdad", governRate: "Level 1" },
+  "Agent-02": { category: "Cafes & Coffee", city: "Baghdad", governRate: "Level 1" },
+  "Agent-03": { category: "Bakeries", city: "Basra", governRate: "Level 1" },
+  "Agent-04": { category: "Hotels & Stays", city: "Erbil", governRate: "Level 2" },
+  "Agent-05": { category: "Gyms & Fitness", city: "Najaf", governRate: "Level 2" },
+  "Agent-06": { category: "Beauty & Salons", city: "Karbala", governRate: "Level 2" },
+  "Agent-07": { category: "Pharmacy & Drugs", city: "Sulaymaniyah", governRate: "Level 2" },
+  "Agent-08": { category: "Supermarkets", city: "Kirkuk", governRate: "Level 2" },
+  "Agent-09": { category: "Car Services", city: "Anbar", governRate: "Level 3" },
+  "Agent-10": { category: "Real Estate", city: "Diyala", governRate: "Level 3" },
+  "Agent-11": { category: "Schools", city: "Muthanna", governRate: "Level 3" },
+  "Agent-12": { category: "Universities", city: "Qadisiyyah", governRate: "Level 3" },
+  "Agent-13": { category: "Law Firms", city: "Maysan", governRate: "Level 3" },
+  "Agent-14": { category: "Engineering", city: "Wasit", governRate: "Level 3" },
+  "Agent-15": { category: "Travel Agencies", city: "Babil", governRate: "Level 4" },
+  "Agent-16": { category: "Banks & Finance", city: "Dhi Qar", governRate: "Level 4" },
+  "Agent-17": { category: "Factories", city: "Salah al-Din", governRate: "Level 4" },
+  "Agent-18": { category: "Hospitals", city: "Duhok", governRate: "Level 5" },
 };
 
 // Active jobs tracker (persisted in Supabase)
@@ -64,47 +68,43 @@ async function logCheckpoint(jobId: string, checkpointType: string, data: any) {
 // Start a job and keep running it with retries
 async function executeJobWithCheckpoints(jobId: string, agentName: string, city: string, category: string) {
   try {
-    const Governor = governors[agentName];
-    if (!Governor) throw new Error(`Unknown agent: ${agentName}`);
+    const config = agentConfig[agentName];
+    if (!config) throw new Error(`Unknown agent: ${agentName}`);
 
     // Log: Job started
     await logCheckpoint(jobId, "JOB_START", { agentName, city, category, timestamp: new Date().toISOString() });
 
     let totalRecords = 0;
-    const sources = ["GooglePlaces", "WebCrawler", "Yelp", "YellowPages"];
 
-    // Try each source in sequence (with retries)
-    for (const source of sources) {
-      try {
-        await logCheckpoint(jobId, "SOURCE_ATTEMPT", { source, attempt: 1 });
+    try {
+      // Create governor instance with agent config
+      const governor = new GenericGovernor(agentName, category, city, config.governRate);
+      await logCheckpoint(jobId, "GOVERNOR_INITIALIZED", { agentName, city, category });
 
-        const governor = new Governor();
-        const records = await governor.gather({ city, category, source });
+      // Gather data
+      const records = await governor.gather(city, category);
 
-        if (records.length > 0) {
-          await supabase?.from("staging_records").insert(records);
-          totalRecords += records.length;
+      if (records && records.length > 0) {
+        await supabase?.from("staging_records").insert(records);
+        totalRecords = records.length;
 
-          await logCheckpoint(jobId, "SOURCE_SUCCESS", {
-            source,
-            recordsFound: records.length,
-            totalSoFar: totalRecords
-          });
-
-          // Update progress in real-time
-          await supabase?.from("jobs").update({
-            records_found: totalRecords,
-          }).eq("id", jobId);
-        }
-      } catch (sourceErr) {
-        await logCheckpoint(jobId, "SOURCE_RETRY", {
-          source,
-          error: (sourceErr as any).message,
-          nextAttemptIn: "30 seconds"
+        await logCheckpoint(jobId, "DATA_COLLECTED", {
+          recordsFound: records.length,
+          totalSoFar: totalRecords
         });
-        // Continue to next source on failure
-        continue;
+
+        // Update progress in real-time
+        await supabase?.from("jobs").update({
+          records_found: totalRecords,
+        }).eq("id", jobId);
+      } else {
+        await logCheckpoint(jobId, "NO_DATA_FOUND", { city, category });
       }
+    } catch (gatherErr) {
+      await logCheckpoint(jobId, "GATHER_ERROR", {
+        error: (gatherErr as any).message,
+      });
+      throw gatherErr;
     }
 
     // Job completed
