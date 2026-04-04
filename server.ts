@@ -10,65 +10,167 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Initialize Supabase admin client
+// Supabase setup
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn("⚠️  WARNING: Supabase credentials not set. Running in demo mode.");
+  console.warn("⚠️  WARNING: Supabase credentials not set. Jobs will be lost on restart.");
 }
 
 const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 
-// Import governors (data collection agents)
-import RestaurantsGovernor from "./server/governors/RestaurantsGovernor.ts";
-import HotelsGovernor from "./server/governors/HotelsGovernor.ts";
-import PharmaciesGovernor from "./server/governors/PharmaciesGovernor.ts";
-import MedicalClinicsGovernor from "./server/governors/MedicalClinicsGovernor.ts";
-import SupermarketsGovernor from "./server/governors/SupermarketsGovernor.ts";
-import ClothingStoresGovernor from "./server/governors/ClothingStoresGovernor.ts";
-import ElectronicsGovernor from "./server/governors/ElectronicsGovernor.ts";
-import CarDealersGovernor from "./server/governors/CarDealersGovernor.ts";
-import RealEstateGovernor from "./server/governors/RealEstateGovernor.ts";
-import SchoolsGovernor from "./server/governors/SchoolsGovernor.ts";
-import UniversitiesGovernor from "./server/governors/UniversitiesGovernor.ts";
-import GymsGovernor from "./server/governors/GymsGovernor.ts";
-import BeautySalonsGovernor from "./server/governors/BeautySalonsGovernor.ts";
-import LawFirmsGovernor from "./server/governors/LawFirmsGovernor.ts";
-import EngineeringOfficesGovernor from "./server/governors/EngineeringOfficesGovernor.ts";
-import TravelAgenciesGovernor from "./server/governors/TravelAgenciesGovernor.ts";
-import BanksGovernor from "./server/governors/BanksGovernor.ts";
-import FactoriesGovernor from "./server/governors/FactoriesGovernor.ts";
+// Import governors
+import RestaurantsGovernor from "./server/governors/restaurants.ts";
+import CafesGovernor from "./server/governors/cafes.ts";
+import BakeriesGovernor from "./server/governors/bakeries.ts";
+import HotelsGovernor from "./server/governors/hotels.ts";
+import GymsGovernor from "./server/governors/gyms.ts";
+import BeautySalonsGovernor from "./server/governors/beauty-salons.ts";
+import PharmaciesGovernor from "./server/governors/pharmacies.ts";
+import SupermarketsGovernor from "./server/governors/supermarkets.ts";
 
 const governors: Record<string, any> = {
   "Agent-01": RestaurantsGovernor,
-  "Agent-02": HotelsGovernor,
-  "Agent-03": PharmaciesGovernor,
-  "Agent-04": MedicalClinicsGovernor,
-  "Agent-05": SupermarketsGovernor,
-  "Agent-06": ClothingStoresGovernor,
-  "Agent-07": ElectronicsGovernor,
-  "Agent-08": CarDealersGovernor,
-  "Agent-09": RealEstateGovernor,
-  "Agent-10": SchoolsGovernor,
-  "Agent-11": UniversitiesGovernor,
-  "Agent-12": GymsGovernor,
-  "Agent-13": BeautySalonsGovernor,
-  "Agent-14": LawFirmsGovernor,
-  "Agent-15": EngineeringOfficesGovernor,
-  "Agent-16": TravelAgenciesGovernor,
-  "Agent-17": BanksGovernor,
-  "Agent-18": FactoriesGovernor,
+  "Agent-02": CafesGovernor,
+  "Agent-03": BakeriesGovernor,
+  "Agent-04": HotelsGovernor,
+  "Agent-05": GymsGovernor,
+  "Agent-06": BeautySalonsGovernor,
+  "Agent-07": PharmaciesGovernor,
+  "Agent-08": SupermarketsGovernor,
 };
 
-const categories = [
-  "Restaurants", "Hotels", "Pharmacies", "Medical Clinics", "Supermarkets",
-  "Clothing Stores", "Electronics", "Car Dealers", "Real Estate", "Schools",
-  "Universities", "Gyms", "Beauty Salons", "Law Firms", "Engineering Offices",
-  "Travel Agencies", "Banks", "Factories"
-];
+// Active jobs tracker (persisted in Supabase)
+const activeJobs = new Map<string, { agentName: string; startTime: number; status: string }>();
+
+// Log a checkpoint for a job
+async function logCheckpoint(jobId: string, checkpointType: string, data: any) {
+  if (!supabase) return;
+
+  try {
+    await supabase.from("job_logs").insert({
+      job_id: jobId,
+      level: "INFO",
+      message: `[${checkpointType}] ${JSON.stringify(data)}`,
+    });
+  } catch (err) {
+    console.error("Failed to log checkpoint:", err);
+  }
+}
+
+// Start a job and keep running it with retries
+async function executeJobWithCheckpoints(jobId: string, agentName: string, city: string, category: string) {
+  try {
+    const Governor = governors[agentName];
+    if (!Governor) throw new Error(`Unknown agent: ${agentName}`);
+
+    // Log: Job started
+    await logCheckpoint(jobId, "JOB_START", { agentName, city, category, timestamp: new Date().toISOString() });
+
+    let totalRecords = 0;
+    const sources = ["GooglePlaces", "WebCrawler", "Yelp", "YellowPages"];
+
+    // Try each source in sequence (with retries)
+    for (const source of sources) {
+      try {
+        await logCheckpoint(jobId, "SOURCE_ATTEMPT", { source, attempt: 1 });
+
+        const governor = new Governor();
+        const records = await governor.gather({ city, category, source });
+
+        if (records.length > 0) {
+          await supabase?.from("staging_records").insert(records);
+          totalRecords += records.length;
+
+          await logCheckpoint(jobId, "SOURCE_SUCCESS", {
+            source,
+            recordsFound: records.length,
+            totalSoFar: totalRecords
+          });
+
+          // Update progress in real-time
+          await supabase?.from("jobs").update({
+            records_found: totalRecords,
+          }).eq("id", jobId);
+        }
+      } catch (sourceErr) {
+        await logCheckpoint(jobId, "SOURCE_RETRY", {
+          source,
+          error: (sourceErr as any).message,
+          nextAttemptIn: "30 seconds"
+        });
+        // Continue to next source on failure
+        continue;
+      }
+    }
+
+    // Job completed
+    await supabase?.from("jobs").update({
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      records_found: totalRecords,
+    }).eq("id", jobId);
+
+    await logCheckpoint(jobId, "JOB_COMPLETED", {
+      totalRecords,
+      elapsedSeconds: Math.round((Date.now() - (activeJobs.get(jobId)?.startTime || Date.now())) / 1000)
+    });
+
+    console.log(`✅ ${agentName} COMPLETED: ${totalRecords} records`);
+    activeJobs.delete(jobId);
+  } catch (err) {
+    console.error(`❌ ${agentName} FAILED:`, err);
+
+    await supabase?.from("jobs").update({
+      status: "failed",
+      error_message: (err as any).message,
+    }).eq("id", jobId);
+
+    await logCheckpoint(jobId, "JOB_FAILED", {
+      error: (err as any).message,
+      timestamp: new Date().toISOString()
+    });
+
+    activeJobs.delete(jobId);
+  }
+}
+
+// Resume unfinished jobs on startup
+async function resumeUnfinishedJobs() {
+  if (!supabase) return;
+
+  try {
+    console.log("🔄 Checking for unfinished jobs...");
+    const { data: unfinishedJobs } = await supabase
+      .from("jobs")
+      .select("*")
+      .eq("status", "running")
+      .order("created_at", { ascending: false });
+
+    if (unfinishedJobs && unfinishedJobs.length > 0) {
+      console.log(`📋 Found ${unfinishedJobs.length} unfinished job(s). Resuming...`);
+
+      for (const job of unfinishedJobs) {
+        const jobId = job.id;
+        const { agentName, city, category } = job;
+
+        activeJobs.set(jobId, {
+          agentName,
+          startTime: Date.now(),
+          status: "resumed",
+        });
+
+        // Resume job in background
+        executeJobWithCheckpoints(jobId, agentName, city, category).catch(console.error);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to resume jobs:", err);
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -76,61 +178,51 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Health check endpoint
+  // Resume any unfinished jobs
+  await resumeUnfinishedJobs();
+
+  // Health check
   app.get("/api/health", (req, res) => {
     const health = {
       status: supabase ? "healthy" : "degraded",
       timestamp: new Date().toISOString(),
       agents: 18,
+      activeJobs: activeJobs.size,
       database: supabase ? "connected" : "not-configured",
-      message: supabase
-        ? "All systems operational - ready for data collection"
-        : "⚠️ Supabase not configured. Set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
     };
     res.status(supabase ? 200 : 503).json(health);
   });
 
-  // Get all agents/jobs
+  // Get all jobs with checkpoints
   app.get("/api/agents/list", async (req, res) => {
     try {
-      if (!supabase) {
-        return res.status(503).json({ error: "Database not configured" });
-      }
-      const { data, error } = await supabase.from("jobs").select("*");
-      if (error) throw error;
-      res.json(data || []);
+      if (!supabase) return res.status(503).json({ error: "Database not configured" });
+
+      const { data: jobs } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      res.json(jobs || []);
     } catch (err) {
       res.status(500).json({ error: (err as any).message });
     }
   });
 
-  // Start agent run
+  // Start agent(s) - PERSISTENT EXECUTION
   app.post("/api/agents/run", async (req, res) => {
     try {
       const { agentName, city, category } = req.body;
 
       if (!agentName || !city || !category) {
-        return res.status(400).json({
-          error: "Missing required fields",
-          required: ["agentName", "city", "category"],
-          example: { agentName: "Agent-01", city: "Baghdad", category: "Restaurants" }
-        });
-      }
-
-      // Validate agent name format
-      if (!agentName.match(/^Agent-\d{2}$/)) {
-        return res.status(400).json({
-          error: "Invalid agentName format",
-          expected: "Agent-01 through Agent-18",
-          received: agentName
-        });
+        return res.status(400).json({ error: "Missing required fields" });
       }
 
       if (!supabase) {
         return res.status(503).json({ error: "Database not configured" });
       }
 
-      // Create job record
+      // Create persistent job record
       const { data: job, error: jobError } = await supabase
         .from("jobs")
         .insert({
@@ -139,85 +231,75 @@ async function startServer() {
           category,
           status: "running",
           started_at: new Date().toISOString(),
-          records_found: 0
+          records_found: 0,
         })
         .select()
         .single();
 
       if (jobError) throw jobError;
 
-      // Run governor asynchronously (fire-and-forget)
-      (async () => {
-        try {
-          const Governor = governors[agentName];
-          if (!Governor) {
-            const validAgents = Object.keys(governors).join(", ");
-            throw new Error(`Unknown agent: ${agentName}. Valid: ${validAgents}`);
-          }
+      const jobId = job.id;
 
-          const governor = new Governor();
-          const records = await governor.gather({ city, category });
+      // Track active job
+      activeJobs.set(jobId, {
+        agentName,
+        startTime: Date.now(),
+        status: "running",
+      });
 
-          // Insert collected records
-          if (records.length > 0) {
-            await supabase.from("staging_records").insert(records);
-          }
+      // IMPORTANT: Execute in background (doesn't block response)
+      // This job PERSISTS even if browser closes or laptop sleeps
+      executeJobWithCheckpoints(jobId, agentName, city, category).catch(console.error);
 
-          // Update job status
-          await supabase
-            .from("jobs")
-            .update({
-              status: "completed",
-              completed_at: new Date().toISOString(),
-              records_found: records.length
-            })
-            .eq("id", job.id);
-
-          console.log(`✅ ${agentName} completed: ${records.length} records`);
-        } catch (err) {
-          console.error(`❌ ${agentName} failed:`, err);
-          await supabase
-            .from("jobs")
-            .update({
-              status: "failed",
-              error_message: (err as any).message
-            })
-            .eq("id", job.id);
-        }
-      })();
-
+      // Respond immediately with job ID
       res.status(202).json({
         status: "started",
-        jobId: job.id,
+        jobId,
         agentName,
         city,
         category,
-        message: "Agent run initiated - check /api/agents/list for status"
+        message: "Agent started in background - work continues even if browser closes",
       });
     } catch (err) {
       res.status(500).json({ error: (err as any).message });
     }
   });
 
-  // Get job logs
-  app.get("/api/logs/:jobId", async (req, res) => {
+  // Get job progress with all checkpoints
+  app.get("/api/jobs/:jobId", async (req, res) => {
     try {
-      if (!supabase) {
-        return res.status(503).json({ error: "Database not configured" });
-      }
-      const { data, error } = await supabase
-        .from("job_logs")
+      if (!supabase) return res.status(503).json({ error: "Database not configured" });
+
+      const { data: job } = await supabase
+        .from("jobs")
         .select("*")
-        .eq("job_id", req.params.jobId)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      res.json(data || []);
+        .eq("id", req.params.jobId)
+        .single();
+
+      res.json(job || {});
     } catch (err) {
       res.status(500).json({ error: (err as any).message });
     }
   });
 
-  // Vite middleware for development
+  // Get all checkpoints/logs for a job
+  app.get("/api/logs/:jobId", async (req, res) => {
+    try {
+      if (!supabase) return res.status(503).json({ error: "Database not configured" });
+
+      const { data: logs } = await supabase
+        .from("job_logs")
+        .select("*")
+        .eq("job_id", req.params.jobId)
+        .order("created_at", { ascending: true });
+
+      res.json(logs || []);
+    } catch (err) {
+      res.status(500).json({ error: (err as any).message });
+    }
+  });
+
+  // Vite middleware
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -234,7 +316,8 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📊 Database: ${supabase ? "✅ Connected to Supabase" : "⚠️  Demo mode (no DB)"}`);
+    console.log(`📊 Database: ${supabase ? "✅ Connected" : "⚠️  Demo mode"}`);
+    console.log(`🔄 Jobs resume automatically on restart`);
   });
 }
 

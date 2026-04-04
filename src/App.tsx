@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
+import GovernorControl from './pages/GovernorControl';
 import { ScraperControl } from './pages/ScraperControl';
 import { Dashboard } from './pages/Dashboard';
 import { ActiveJobs } from './pages/ActiveJobs';
@@ -16,10 +17,11 @@ import { PushControl } from './pages/PushControl';
 import { LogsEvents } from './pages/LogsEvents';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('scraper');
+  const [activePage, setActivePage] = useState('governor');
 
   const renderPage = () => {
     switch (activePage) {
+      case 'governor': return <GovernorControl />;
       case 'scraper': return <ScraperControl />;
       case 'dashboard': return <Dashboard />;
       case 'jobs': return <ActiveJobs />;
@@ -29,18 +31,16 @@ export default function App() {
       case 'staging': return <StagingQueue />;
       case 'push': return <PushControl />;
       case 'logs': return <LogsEvents />;
-      default: return <ScraperControl />;
+      default: return <GovernorControl />;
     }
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-950 overflow-hidden">
       <Sidebar activePage={activePage} onPageChange={setActivePage} />
-      
-      <main className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-7xl mx-auto">
-          {renderPage()}
-        </div>
+
+      <main className="flex-1 overflow-y-auto">
+        {renderPage()}
       </main>
     </div>
   );
