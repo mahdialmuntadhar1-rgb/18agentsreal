@@ -15,6 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { AgentJob } from '../types';
+import { useDashboardStats, useActiveJobs } from '../hooks/useSupabase';
 
 // Mock data for initial UI
 const MOCK_STATS = {
@@ -65,6 +66,12 @@ const MOCK_ACTIVE_AGENTS: AgentJob[] = [
 ];
 
 export const Dashboard: React.FC = () => {
+  const { stats, loading: statsLoading } = useDashboardStats();
+  const { jobs, loading: jobsLoading } = useActiveJobs();
+
+  const displayStats = stats || MOCK_STATS;
+  const displayJobs = jobs.length > 0 ? jobs : MOCK_ACTIVE_AGENTS;
+
   return (
     <div className="space-y-8">
       <header>
@@ -74,11 +81,11 @@ export const Dashboard: React.FC = () => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard label="Total Records" value={MOCK_STATS.totalRecords} icon={Database} />
-        <StatCard label="Active Agents" value={MOCK_STATS.activeAgents} icon={Users} />
-        <StatCard label="Staged" value={MOCK_STATS.staged} icon={Layers} />
-        <StatCard label="Ready to Push" value={MOCK_STATS.readyToPush} icon={SendHorizontal} color="text-emerald-500" />
-        <StatCard label="Failed Jobs" value={MOCK_STATS.failedJobs} icon={AlertCircle} color="text-rose-500" />
+        <StatCard label="Total Records" value={displayStats.totalRecords.toLocaleString()} icon={Database} />
+        <StatCard label="Active Agents" value={displayStats.activeAgents} icon={Users} />
+        <StatCard label="Staged" value={displayStats.staged.toLocaleString()} icon={Layers} />
+        <StatCard label="Ready to Push" value={displayStats.readyToPush.toLocaleString()} icon={SendHorizontal} color="text-emerald-500" />
+        <StatCard label="Failed Jobs" value={displayStats.failedJobs} icon={AlertCircle} color="text-rose-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -102,7 +109,7 @@ export const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {MOCK_ACTIVE_AGENTS.map((agent) => (
+                {displayJobs.map((agent) => (
                   <tr key={agent.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-mono text-xs font-bold text-slate-900">{agent.agentName}</div>

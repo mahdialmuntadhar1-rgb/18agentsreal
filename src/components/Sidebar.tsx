@@ -10,7 +10,9 @@ import {
   Database, 
   Wand2, 
   Layers, 
-  SendHorizontal 
+  SendHorizontal,
+  Search,
+  Terminal
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,10 +23,12 @@ interface SidebarProps {
 const navItems = [
   { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
   { id: 'jobs', label: 'Active Jobs', icon: PlayCircle },
+  { id: 'discovery', label: 'Discovery Runs', icon: Search },
   { id: 'records', label: 'Collected Records', icon: Database },
   { id: 'cleaning', label: 'Cleaning Workspace', icon: Wand2 },
   { id: 'staging', label: 'Staging Queue', icon: Layers },
   { id: 'push', label: 'Push Control', icon: SendHorizontal },
+  { id: 'logs', label: 'Logs & Events', icon: Terminal },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange }) => {

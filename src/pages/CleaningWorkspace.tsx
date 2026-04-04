@@ -16,6 +16,7 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import { BusinessRecord } from '../types';
+import { useRecords } from '../hooks/useSupabase';
 
 const MOCK_ISSUES = [
   { id: 'REC-002', name: 'Babylon Hotel', issue: 'Missing WhatsApp', type: 'MISSING_DATA' },
@@ -25,8 +26,17 @@ const MOCK_ISSUES = [
 ];
 
 export const CleaningWorkspace: React.FC = () => {
-  const [selectedId, setSelectedId] = useState(MOCK_ISSUES[0].id);
+  const { records, loading } = useRecords('NEEDS_CLEANING');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'duplicates' | 'missing'>('all');
+
+  const displayRecords = records.length > 0 ? records : [];
+  const currentId = selectedId || (displayRecords.length > 0 ? displayRecords[0].id : (MOCK_ISSUES.length > 0 ? MOCK_ISSUES[0].id : null));
+  const selectedRecord = displayRecords.find(r => r.id === currentId) || null;
+
+  const issueList = displayRecords.length > 0 
+    ? displayRecords.map(r => ({ id: r.id, name: r.nameEn, issue: r.issues?.[0] || 'Unknown Issue', type: 'DATA_QUALITY' }))
+    : MOCK_ISSUES;
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -101,12 +111,12 @@ export const CleaningWorkspace: React.FC = () => {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-            {MOCK_ISSUES.map((item) => (
+            {issueList.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setSelectedId(item.id)}
                 className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-start justify-between ${
-                  selectedId === item.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                  currentId === item.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
                 }`}
               >
                 <div className="space-y-1">
@@ -116,7 +126,7 @@ export const CleaningWorkspace: React.FC = () => {
                   </p>
                   <p className="text-[10px] text-slate-400 font-mono">{item.id}</p>
                 </div>
-                <ChevronRight className={`w-4 h-4 mt-1 ${selectedId === item.id ? 'text-blue-500' : 'text-slate-300'}`} />
+                <ChevronRight className={`w-4 h-4 mt-1 ${currentId === item.id ? 'text-blue-500' : 'text-slate-300'}`} />
               </button>
             ))}
           </div>
@@ -140,61 +150,72 @@ export const CleaningWorkspace: React.FC = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-8 space-y-8">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Business Name (EN)</label>
-                <input 
-                  type="text" 
-                  defaultValue="Babylon Hotel"
-                  className="w-full px-4 py-2 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Business Name (AR)</label>
-                <input 
-                  type="text" 
-                  defaultValue="فندق بابل"
-                  dir="rtl"
-                  className="w-full px-4 py-2 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-right font-bold"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
-                <select className="w-full px-4 py-2 border border-slate-200 rounded text-sm outline-none">
-                  <option>Hotels</option>
-                  <option>Restaurants</option>
-                  <option>Pharmacies</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
-                <input 
-                  type="text" 
-                  defaultValue="07809876543"
-                  className="w-full px-4 py-2 border border-slate-200 rounded text-sm font-mono outline-none"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">WhatsApp</label>
-                <div className="relative">
+            {selectedRecord ? (
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Business Name (EN)</label>
                   <input 
                     type="text" 
-                    placeholder="Missing..."
-                    className="w-full px-4 py-2 border border-rose-200 bg-rose-50 rounded text-sm font-mono outline-none focus:border-blue-500"
+                    defaultValue={selectedRecord.nameEn}
+                    className="w-full px-4 py-2 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                   />
-                  <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Business Name (AR)</label>
+                  <input 
+                    type="text" 
+                    defaultValue={selectedRecord.nameAr}
+                    dir="rtl"
+                    className="w-full px-4 py-2 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-right font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Category</label>
+                  <select className="w-full px-4 py-2 border border-slate-200 rounded text-sm outline-none" defaultValue={selectedRecord.category}>
+                    <option>Hotels</option>
+                    <option>Restaurants</option>
+                    <option>Pharmacies</option>
+                    <option>Retail</option>
+                    <option>Medical</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                  <input 
+                    type="text" 
+                    defaultValue={selectedRecord.phone || ''}
+                    className="w-full px-4 py-2 border border-slate-200 rounded text-sm font-mono outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">WhatsApp</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      defaultValue={selectedRecord.whatsapp || ''}
+                      placeholder="Missing..."
+                      className={`w-full px-4 py-2 border rounded text-sm font-mono outline-none focus:border-blue-500 ${
+                        !selectedRecord.whatsapp ? 'border-rose-200 bg-rose-50' : 'border-slate-200'
+                      }`}
+                    />
+                    {!selectedRecord.whatsapp && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-500" />}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Governorate</label>
+                  <input 
+                    type="text" 
+                    defaultValue={selectedRecord.governorate}
+                    disabled
+                    className="w-full px-4 py-2 border border-slate-100 bg-slate-50 rounded text-sm text-slate-500 outline-none"
+                  />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Governorate</label>
-                <input 
-                  type="text" 
-                  defaultValue="Baghdad"
-                  disabled
-                  className="w-full px-4 py-2 border border-slate-100 bg-slate-50 rounded text-sm text-slate-500 outline-none"
-                />
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">
+                Select a record to begin cleaning
               </div>
-            </div>
+            )}
 
             <div className="p-6 bg-slate-900 rounded-lg text-white space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Operational Actions</h4>

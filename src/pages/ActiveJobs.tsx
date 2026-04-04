@@ -9,6 +9,7 @@ import { FilterBar } from '../components/FilterBar';
 import { DataTable, Column } from '../components/DataTable';
 import { RefreshCw } from 'lucide-react';
 import { AgentJob } from '../types';
+import { useActiveJobs } from '../hooks/useSupabase';
 
 const MOCK_JOBS: AgentJob[] = [
   { id: '1', agentName: 'Agent-Alpha', governorate: 'Baghdad', city: 'Karkh', category: 'Restaurants', status: 'RUNNING', progress: 65, recordsFound: 420, lastUpdated: '2 mins ago', errorCount: 0 },
@@ -20,9 +21,12 @@ const MOCK_JOBS: AgentJob[] = [
 ];
 
 export const ActiveJobs: React.FC = () => {
+  const { jobs, loading } = useActiveJobs();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'recordsFound', direction: 'desc' });
+
+  const displayJobs = jobs.length > 0 ? jobs : MOCK_JOBS;
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -33,7 +37,7 @@ export const ActiveJobs: React.FC = () => {
     });
   };
 
-  const filteredData = MOCK_JOBS
+  const filteredData = displayJobs
     .filter(job => {
       const matchesSearch = 
         job.agentName.toLowerCase().includes(search.toLowerCase()) ||

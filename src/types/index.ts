@@ -41,3 +41,23 @@ export interface DashboardStats {
   readyToPush: number;
   failedJobs: number;
 }
+
+export interface DiscoveryRun {
+  id: string;
+  governorate: string;
+  category: string;
+  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  sourceCount: number;
+  recordsFound: number;
+  startedAt: string;
+  completedAt?: string;
+}
+
+export interface LogEvent {
+  id: string;
+  timestamp: string;
+  level: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL';
+  source: string;
+  message: string;
+  metadata?: Record<string, any>;
+}

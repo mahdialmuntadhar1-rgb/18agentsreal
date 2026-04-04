@@ -22,6 +22,9 @@ interface DataTableProps<T> {
   dense?: boolean;
   sortConfig?: { key: string; direction: 'asc' | 'desc' } | null;
   onSort?: (key: string) => void;
+  className?: string;
+  headerClassName?: string;
+  rowClassName?: string;
 }
 
 export function DataTable<T>({ 
@@ -31,13 +34,16 @@ export function DataTable<T>({
   keyExtractor,
   dense = false,
   sortConfig,
-  onSort
+  onSort,
+  className = "bg-white border border-slate-200 shadow-sm",
+  headerClassName = "bg-slate-50 text-slate-500 border-b border-slate-200",
+  rowClassName = "divide-y divide-slate-100"
 }: DataTableProps<T>) {
   return (
-    <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+    <div className={`${className} overflow-hidden`}>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-wider border-b border-slate-200">
+          <thead className={`${headerClassName} text-[10px] uppercase font-bold tracking-wider`}>
             <tr>
               {columns.map((col, i) => {
                 const isSortable = !!col.sortKey && !!onSort;
@@ -66,7 +72,7 @@ export function DataTable<T>({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className={rowClassName}>
             {data.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-slate-400 text-sm">

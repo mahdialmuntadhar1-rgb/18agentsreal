@@ -9,6 +9,7 @@ import { FilterBar } from '../components/FilterBar';
 import { DataTable, Column } from '../components/DataTable';
 import { CheckSquare, Square, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { BusinessRecord } from '../types';
+import { useRecords } from '../hooks/useSupabase';
 
 const MOCK_STAGED: BusinessRecord[] = [
   { id: 'REC-001', nameAr: 'مطعم الزيتون', nameEn: 'Al Zaitoon Restaurant', category: 'Restaurants', governorate: 'Baghdad', city: 'Mansour', phone: '07701234567', whatsapp: '07701234567', completenessScore: 95, status: 'STAGED', lastUpdated: '2026-04-01' },
@@ -18,10 +19,13 @@ const MOCK_STAGED: BusinessRecord[] = [
 ];
 
 export const StagingQueue: React.FC = () => {
+  const { records, loading } = useRecords('STAGED');
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(['REC-001', 'REC-010']));
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'lastUpdated', direction: 'desc' });
+
+  const displayRecords = records.length > 0 ? records : MOCK_STAGED;
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -41,7 +45,7 @@ export const StagingQueue: React.FC = () => {
     });
   };
 
-  const filteredData = MOCK_STAGED
+  const filteredData = displayRecords
     .filter(record => {
       const matchesSearch = 
         record.nameEn.toLowerCase().includes(search.toLowerCase()) ||

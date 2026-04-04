@@ -14,14 +14,19 @@ import {
   X
 } from 'lucide-react';
 
+import { useRecords } from '../hooks/useSupabase';
+
 export const PushControl: React.FC = () => {
+  const { records, loading } = useRecords('APPROVED');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const PUSH_STATS = {
-    totalRecords: 3105,
-    governorates: 12,
-    categories: 8,
-    avgCompleteness: 94.2
+    totalRecords: records.length > 0 ? records.length : 3105,
+    governorates: records.length > 0 ? new Set(records.map(r => r.governorate)).size : 12,
+    categories: records.length > 0 ? new Set(records.map(r => r.category)).size : 8,
+    avgCompleteness: records.length > 0 
+      ? Math.round(records.reduce((acc, r) => acc + r.completenessScore, 0) / records.length) 
+      : 94.2
   };
 
   const CHECKLIST = [

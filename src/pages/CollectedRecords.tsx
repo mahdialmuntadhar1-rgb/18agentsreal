@@ -11,6 +11,7 @@ import { SidePanel } from '../components/SidePanel';
 import { Download, Phone, MessageSquare, MapPin, Tag, Calendar, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { BusinessRecord } from '../types';
 import { Column } from '../components/DataTable';
+import { useRecords } from '../hooks/useSupabase';
 
 const MOCK_RECORDS: BusinessRecord[] = [
   { id: 'REC-001', nameAr: 'مطعم الزيتون', nameEn: 'Al Zaitoon Restaurant', category: 'Restaurants', governorate: 'Baghdad', city: 'Mansour', phone: '07701234567', whatsapp: '07701234567', completenessScore: 95, status: 'STAGED', lastUpdated: '2026-04-01' },
@@ -22,11 +23,14 @@ const MOCK_RECORDS: BusinessRecord[] = [
 ];
 
 export const CollectedRecords: React.FC = () => {
+  const { records, loading } = useRecords();
   const [selectedRecord, setSelectedRecord] = useState<BusinessRecord | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [confidence, setConfidence] = useState(0);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'lastUpdated', direction: 'desc' });
+
+  const displayRecords = records.length > 0 ? records : MOCK_RECORDS;
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -37,7 +41,7 @@ export const CollectedRecords: React.FC = () => {
     });
   };
 
-  const filteredData = MOCK_RECORDS
+  const filteredData = displayRecords
     .filter(record => {
       const matchesSearch = 
         record.nameEn.toLowerCase().includes(search.toLowerCase()) ||
