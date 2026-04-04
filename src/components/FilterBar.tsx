@@ -47,7 +47,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           onChange={(e) => onFilterChange?.(filter.id, e.target.value)}
           className="px-4 py-2 border border-slate-200 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         >
-          <option value="">{filter.label}</option>
+          <option key="default" value="">{filter.label}</option>
           {filter.options.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}

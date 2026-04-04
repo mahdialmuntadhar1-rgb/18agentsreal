@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface StatCardProps {
   label: string;
@@ -17,21 +17,25 @@ interface StatCardProps {
   color?: string;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, trend, color = 'text-blue-500' }) => {
+export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, trend, color = 'text-blue-600' }) => {
   return (
-    <div className="bg-white p-6 border border-slate-200 shadow-sm">
+    <div className="bg-white p-5 border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group">
       <div className="flex justify-between items-start">
-        <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</p>
-          <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">{label}</p>
+          <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{value}</h3>
           
           {trend && (
-            <p className={`text-xs mt-2 font-medium ${trend.isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {trend.isPositive ? '↑' : '↓'} {trend.value} <span className="text-slate-400 font-normal ml-1">vs last period</span>
-            </p>
+            <div className={`flex items-center space-x-1 text-[10px] font-bold ${trend.isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <span className="flex items-center">
+                {trend.isPositive ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                {trend.value}
+              </span>
+              <span className="text-slate-400 font-medium">vs last sync</span>
+            </div>
           )}
         </div>
-        <div className={`p-2 bg-slate-50 rounded ${color}`}>
+        <div className={`p-2.5 bg-slate-50 rounded-lg group-hover:scale-110 transition-transform duration-300 ${color}`}>
           <Icon className="w-5 h-5" />
         </div>
       </div>

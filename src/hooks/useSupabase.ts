@@ -1,114 +1,85 @@
 import { useEffect, useState } from 'react';
-import { hasSupabaseConfig, supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { AgentJob, BusinessRecord, DashboardStats, DiscoveryRun, LogEvent } from '../types';
-
-const mapJob = (row: any): AgentJob => ({
-  id: String(row.id),
-  agentName: row.assigned_agent_id ?? 'unassigned',
-  governorate: row.governorate ?? 'Unknown',
-  city: row.city ?? 'Unknown',
-  category: row.category ?? 'unknown',
-  status: (row.status ?? 'queued').toUpperCase(),
-  recordsFound: row.result?.normalized_records ?? 0,
-  lastUpdated: row.updated_at ?? row.created_at ?? '',
-  errorCount: row.status === 'failed' ? 1 : 0,
-});
-
-const mapRecord = (row: any): BusinessRecord => ({
-  id: String(row.id),
-  nameAr: row.name_ar ?? '',
-  nameEn: row.name ?? '',
-  category: row.category ?? 'unknown',
-  governorate: row.governorate ?? 'Unknown',
-  city: row.city ?? 'Unknown',
-  phone: row.phone ?? '',
-  whatsapp: row.whatsapp ?? '',
-  completenessScore: row.completeness_score ?? 0,
-  status: row.status ?? 'RAW',
-  lastUpdated: row.updated_at ?? row.collected_at ?? '',
-  issues: row.validation_issues ?? [],
-});
-
-const mapRun = (row: any): DiscoveryRun => ({
-  id: String(row.id),
-  governorate: row.governorate ?? 'Unknown',
-  category: row.category ?? 'unknown',
-  status: (row.status ?? 'PENDING').toUpperCase(),
-  sourceCount: 1,
-  recordsFound: row.job_results?.normalized_records ?? 0,
-  startedAt: row.started_at ?? row.created_at ?? '',
-  completedAt: row.finished_at ?? undefined,
-});
-
-const mapLog = (row: any): LogEvent => ({
-  id: String(row.id),
-  created_at: row.created_at ?? '',
-  timestamp: row.created_at ?? '',
-  level: row.event_type === 'failed' ? 'ERROR' : row.event_type === 'retried' ? 'WARN' : 'INFO',
-  source: row.agent_id ?? 'worker',
-  message: row.message ?? row.event_type,
-  metadata: row.metadata ?? undefined,
-});
 
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
-      if (!hasSupabaseConfig) {
-        setStats({ totalRecords: 0, activeAgents: 0, staged: 0, readyToPush: 0, failedJobs: 0 });
+      try {
+        const { count: totalRecords, error: e1 } = await supabase.from('records').select('*', { count: 'exact', head: true });
+        const { count: activeAgents, error: e2 } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'RUNNING');
+        const { count: staged, error: e3 } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'STAGED');
+        const { count: readyToPush, error: e4 } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED');
+        const { count: failedJobs, error: e5 } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'FAILED');
+
+        if (e1 || e2 || e3 || e4 || e5) {
+          throw new Error('Failed to fetch some stats');
+        }
+
+        setStats({
+          totalRecords: totalRecords || 0,
+          activeAgents: activeAgents || 0,
+          staged: staged || 0,
+          readyToPush: readyToPush || 0,
+          failedJobs: failedJobs || 0
+        });
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError(err instanceof Error ? err.message : 'Connection error');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { count: totalRecords } = await supabase.from('records').select('*', { count: 'exact', head: true });
-      const { count: activeAgents } = await supabase.from('agent_states').select('*', { count: 'exact', head: true }).eq('status', 'running');
-      const { count: staged } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'STAGED');
-      const { count: readyToPush } = await supabase.from('records').select('*', { count: 'exact', head: true }).eq('status', 'APPROVED');
-      const { count: failedJobs } = await supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'failed');
-
-      setStats({
-        totalRecords: totalRecords || 0,
-        activeAgents: activeAgents || 0,
-        staged: staged || 0,
-        readyToPush: readyToPush || 0,
-        failedJobs: failedJobs || 0,
-      });
-      setLoading(false);
     }
 
-    void fetchStats();
+    fetchStats();
+    
+    const subscription = supabase
+      .channel('dashboard-stats')
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => fetchStats())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
-  return { stats, loading };
+  return { stats, loading, error };
 }
 
 export function useActiveJobs() {
   const [jobs, setJobs] = useState<AgentJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchJobs() {
-      if (!hasSupabaseConfig) {
-        setJobs([]);
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .order('last_updated', { ascending: false });
+
+        if (error) throw error;
+        setJobs(data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
+        setError(err instanceof Error ? err.message : 'Fetch failed');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*,result:job_results(normalized_records)')
-        .order('created_at', { ascending: false });
-
-      if (!error) setJobs((data || []).map(mapJob));
-      setLoading(false);
     }
 
-    void fetchJobs();
+    fetchJobs();
+
     const subscription = supabase
       .channel('active-jobs')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => void fetchJobs())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => fetchJobs())
       .subscribe();
 
     return () => {
@@ -116,83 +87,70 @@ export function useActiveJobs() {
     };
   }, []);
 
-  return { jobs, loading };
+  return { jobs, loading, error };
 }
 
 export function useRecords(status?: string) {
   const [records, setRecords] = useState<BusinessRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRecords() {
-      if (!hasSupabaseConfig) {
-        setRecords([]);
-        setLoading(false);
-        return;
-      }
+      try {
+        let query = supabase.from('records').select('*');
+        if (status) {
+          query = query.eq('status', status);
+        }
+        
+        const { data, error } = await query.order('last_updated', { ascending: false });
 
-      let query = supabase.from('records').select('*');
-      if (status) query = query.eq('status', status);
-      const { data, error } = await query.order('updated_at', { ascending: false });
-      if (!error) setRecords((data || []).map(mapRecord));
-      setLoading(false);
+        if (error) throw error;
+        setRecords(data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching records:', err);
+        setError(err instanceof Error ? err.message : 'Fetch failed');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    void fetchRecords();
+    fetchRecords();
   }, [status]);
 
-  return { records, loading };
+  return { records, loading, error };
 }
 
 export function useDiscoveryRuns() {
   const [runs, setRuns] = useState<DiscoveryRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRuns() {
-      if (!hasSupabaseConfig) {
-        setRuns([]);
+      try {
+        const { data, error } = await supabase
+          .from('discovery_runs')
+          .select('*')
+          .order('started_at', { ascending: false });
+
+        if (error) throw error;
+        setRuns(data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching discovery runs:', err);
+        setError(err instanceof Error ? err.message : 'Fetch failed');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*,job_results(normalized_records)')
-        .order('created_at', { ascending: false })
-        .limit(200);
-
-      if (!error) setRuns((data || []).map(mapRun));
-      setLoading(false);
     }
 
-    void fetchRuns();
-  }, []);
+    fetchRuns();
 
-  return { runs, loading };
-}
-
-export function useLogs() {
-  const [logs, setLogs] = useState<LogEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchLogs() {
-      if (!hasSupabaseConfig) {
-        setLogs([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase.from('job_events').select('*').order('created_at', { ascending: false }).limit(200);
-      if (!error) setLogs((data || []).map(mapLog));
-      setLoading(false);
-    }
-
-    void fetchLogs();
     const subscription = supabase
-      .channel('job-events')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'job_events' }, () => void fetchLogs())
+      .channel('discovery-runs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'discovery_runs' }, () => fetchRuns())
       .subscribe();
 
     return () => {
@@ -200,5 +158,45 @@ export function useLogs() {
     };
   }, []);
 
-  return { logs, loading };
+  return { runs, loading, error };
+}
+
+export function useLogs() {
+  const [logs, setLogs] = useState<LogEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchLogs() {
+      try {
+        const { data, error } = await supabase
+          .from('logs')
+          .select('*')
+          .order('timestamp', { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        setLogs(data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching logs:', err);
+        setError(err instanceof Error ? err.message : 'Fetch failed');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLogs();
+
+    const subscription = supabase
+      .channel('logs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'logs' }, () => fetchLogs())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+  return { logs, loading, error };
 }

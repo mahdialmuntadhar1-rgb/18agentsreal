@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { ScraperControl } from './pages/ScraperControl';
 import { Dashboard } from './pages/Dashboard';
 import { ActiveJobs } from './pages/ActiveJobs';
 import { DiscoveryRuns } from './pages/DiscoveryRuns';
@@ -13,13 +14,13 @@ import { CleaningWorkspace } from './pages/CleaningWorkspace';
 import { StagingQueue } from './pages/StagingQueue';
 import { PushControl } from './pages/PushControl';
 import { LogsEvents } from './pages/LogsEvents';
-import { FinalReportPage } from './pages/reports/FinalReportPage';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, setActivePage] = useState('scraper');
 
   const renderPage = () => {
     switch (activePage) {
+      case 'scraper': return <ScraperControl />;
       case 'dashboard': return <Dashboard />;
       case 'jobs': return <ActiveJobs />;
       case 'discovery': return <DiscoveryRuns />;
@@ -28,8 +29,7 @@ export default function App() {
       case 'staging': return <StagingQueue />;
       case 'push': return <PushControl />;
       case 'logs': return <LogsEvents />;
-      case 'final-report': return <FinalReportPage />;
-      default: return <Dashboard />;
+      default: return <ScraperControl />;
     }
   };
 

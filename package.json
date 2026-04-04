@@ -4,16 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "tsx server.ts",
     "build": "vite build",
+    "start": "node server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
-    "worker:runtime": "tsx scripts/start-runtime.ts worker",
-    "worker:api": "tsx scripts/start-runtime.ts api",
-    "worker:all": "tsx scripts/start-runtime.ts all",
-    "workers:scoped": "tsx scripts/run-workers.ts",
-    "jobs:bootstrap": "tsx scripts/bootstrap-jobs.ts"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
