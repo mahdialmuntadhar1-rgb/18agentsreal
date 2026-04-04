@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import GovernorControl from './pages/GovernorControl';
+import HealthCheck from './pages/HealthCheck';
 import { ScraperControl } from './pages/ScraperControl';
 import { Dashboard } from './pages/Dashboard';
 import { ActiveJobs } from './pages/ActiveJobs';
@@ -22,6 +23,7 @@ export default function App() {
   const renderPage = () => {
     switch (activePage) {
       case 'governor': return <GovernorControl />;
+      case 'health': return <HealthCheck />;
       case 'scraper': return <ScraperControl />;
       case 'dashboard': return <Dashboard />;
       case 'jobs': return <ActiveJobs />;

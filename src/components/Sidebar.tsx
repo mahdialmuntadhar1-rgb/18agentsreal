@@ -4,14 +4,15 @@
  */
 
 import React from 'react';
-import { 
+import {
   Activity,
-  LayoutDashboard, 
-  Database, 
-  Wand2, 
-  Layers, 
+  LayoutDashboard,
+  Database,
+  Wand2,
+  Layers,
   SendHorizontal,
-  Terminal
+  Terminal,
+  AlertCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -20,6 +21,7 @@ interface SidebarProps {
 }
 
 const navItems = [
+  { id: 'health', label: '🔍 Health Check', icon: AlertCircle },
   { id: 'scraper', label: 'Operator Command', icon: Activity },
   { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
   { id: 'records', label: 'Collected Records', icon: Database },
