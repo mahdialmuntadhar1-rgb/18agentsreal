@@ -80,7 +80,8 @@ export default function GovernorControl() {
         const response = await fetch('/api/agents/list');
         if (response.ok) {
           const data = await response.json();
-          const jobMap = new Map(data.map((j: Job) => [j.agent_name, j]));
+          // Map jobs by ID to support multiple jobs per agent
+          const jobMap = new Map(data.map((j: any) => [j.id, j]));
           setJobs(jobMap);
         }
       } catch (err) {
@@ -89,7 +90,7 @@ export default function GovernorControl() {
     };
 
     fetchJobs();
-    const interval = setInterval(fetchJobs, 2000);
+    const interval = setInterval(fetchJobs, 1500); // Update every 1.5 seconds for real-time feel
     return () => clearInterval(interval);
   }, []);
 
@@ -384,46 +385,77 @@ export default function GovernorControl() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-slate-900/50 border border-slate-700 rounded-2xl p-8"
+            className="bg-slate-900/50 border border-slate-700 rounded-2xl p-8 space-y-6"
           >
-            <h2 className="text-2xl font-black text-white mb-6">📊 AGENT STATUS</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {agents.map(agent => {
-                const job = jobs.get(agent.name);
-                return (
-                  <motion.div
-                    key={agent.id}
-                    whileHover={{ scale: 1.02 }}
-                    className={`p-4 rounded-xl border-2 ${getStatusColor(job?.status || 'idle')}`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-bold text-white">{agent.name}</p>
-                        <p className="text-xs text-slate-400">{agent.governorate}</p>
-                      </div>
-                      {getStatusIcon(job?.status || 'idle')}
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Status:</span>
-                        <span className="font-bold capitalize">{job?.status || 'Idle'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Records:</span>
-                        <span className="font-bold">{job?.records_found || 0}</span>
-                      </div>
-                      {job?.started_at && (
-                        <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Started:</span>
-                          <span>{new Date(job.started_at).toLocaleTimeString()}</span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                📊 REAL-TIME COLLECTION STATUS
+              </h2>
+              <span className="text-sm font-bold text-slate-400">
+                {jobs.size} active jobs
+              </span>
             </div>
+
+            {jobs.size === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-400 text-lg">No active jobs. Launch agents to start collection.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {Array.from(jobs.values()).map((job: any) => {
+                  const agent = agents.find(a => a.name === job.agent_name);
+                  const progress = Math.min((job.records_found / 50) * 100, 100);
+
+                  return (
+                    <motion.div
+                      key={job.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`p-4 rounded-lg border-2 ${getStatusColor(job.status)}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {getStatusIcon(job.status)}
+                            <p className="font-bold text-white">{job.agent_name}</p>
+                          </div>
+                          <p className="text-sm text-slate-300">
+                            📂 {job.category} • 🏙️ {job.city}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-black text-white">{job.records_found}</p>
+                          <p className="text-xs text-slate-400">records found</p>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Status Info */}
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>
+                          {job.status === 'running' && '⏱️ In Progress'}
+                          {job.status === 'completed' && '✅ Completed'}
+                          {job.status === 'failed' && '❌ Failed'}
+                          {job.status === 'idle' && '⏸️ Idle'}
+                        </span>
+                        <span>
+                          {job.started_at && new Date(job.started_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
 
