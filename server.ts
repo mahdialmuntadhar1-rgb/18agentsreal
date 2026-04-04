@@ -2,175 +2,220 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createClient } from "@supabase/supabase-js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Supabase admin client
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("⚠️  WARNING: Supabase credentials not set. Running in demo mode.");
+}
+
+const supabase = supabaseUrl && supabaseKey
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
+
+// Import governors (data collection agents)
+import RestaurantsGovernor from "./server/governors/RestaurantsGovernor.ts";
+import HotelsGovernor from "./server/governors/HotelsGovernor.ts";
+import PharmaciesGovernor from "./server/governors/PharmaciesGovernor.ts";
+import MedicalClinicsGovernor from "./server/governors/MedicalClinicsGovernor.ts";
+import SupermarketsGovernor from "./server/governors/SupermarketsGovernor.ts";
+import ClothingStoresGovernor from "./server/governors/ClothingStoresGovernor.ts";
+import ElectronicsGovernor from "./server/governors/ElectronicsGovernor.ts";
+import CarDealersGovernor from "./server/governors/CarDealersGovernor.ts";
+import RealEstateGovernor from "./server/governors/RealEstateGovernor.ts";
+import SchoolsGovernor from "./server/governors/SchoolsGovernor.ts";
+import UniversitiesGovernor from "./server/governors/UniversitiesGovernor.ts";
+import GymsGovernor from "./server/governors/GymsGovernor.ts";
+import BeautySalonsGovernor from "./server/governors/BeautySalonsGovernor.ts";
+import LawFirmsGovernor from "./server/governors/LawFirmsGovernor.ts";
+import EngineeringOfficesGovernor from "./server/governors/EngineeringOfficesGovernor.ts";
+import TravelAgenciesGovernor from "./server/governors/TravelAgenciesGovernor.ts";
+import BanksGovernor from "./server/governors/BanksGovernor.ts";
+import FactoriesGovernor from "./server/governors/FactoriesGovernor.ts";
+
+const governors: Record<string, any> = {
+  "Agent-01": RestaurantsGovernor,
+  "Agent-02": HotelsGovernor,
+  "Agent-03": PharmaciesGovernor,
+  "Agent-04": MedicalClinicsGovernor,
+  "Agent-05": SupermarketsGovernor,
+  "Agent-06": ClothingStoresGovernor,
+  "Agent-07": ElectronicsGovernor,
+  "Agent-08": CarDealersGovernor,
+  "Agent-09": RealEstateGovernor,
+  "Agent-10": SchoolsGovernor,
+  "Agent-11": UniversitiesGovernor,
+  "Agent-12": GymsGovernor,
+  "Agent-13": BeautySalonsGovernor,
+  "Agent-14": LawFirmsGovernor,
+  "Agent-15": EngineeringOfficesGovernor,
+  "Agent-16": TravelAgenciesGovernor,
+  "Agent-17": BanksGovernor,
+  "Agent-18": FactoriesGovernor,
+};
+
+const categories = [
+  "Restaurants", "Hotels", "Pharmacies", "Medical Clinics", "Supermarkets",
+  "Clothing Stores", "Electronics", "Car Dealers", "Real Estate", "Schools",
+  "Universities", "Gyms", "Beauty Salons", "Law Firms", "Engineering Offices",
+  "Travel Agencies", "Banks", "Factories"
+];
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Mock database for the API
-  let agents = [
-    {
-      id: "agent-1",
-      governorate: "Baghdad",
-      status: "IDLE",
-      progress: 0,
-      recordsFound: 0,
-      lastUpdated: Date.now(),
-      agentName: "Agent-01",
-      city: "Karkh",
-      category: "Restaurants"
-    },
-    {
-      id: "agent-2",
-      governorate: "Erbil",
-      status: "IDLE",
-      progress: 0,
-      recordsFound: 0,
-      lastUpdated: Date.now(),
-      agentName: "Agent-02",
-      city: "Ankawa",
-      category: "Hotels"
-    },
-    {
-      id: "agent-3",
-      governorate: "Basra",
-      status: "IDLE",
-      progress: 0,
-      recordsFound: 0,
-      lastUpdated: Date.now(),
-      agentName: "Agent-03",
-      city: "Zubair",
-      category: "Pharmacies"
-    },
-    {
-      id: "agent-4",
-      governorate: "Najaf",
-      status: "IDLE",
-      progress: 0,
-      recordsFound: 0,
-      lastUpdated: Date.now(),
-      agentName: "Agent-04",
-      city: "Old City",
-      category: "Medical Clinics"
-    }
-  ];
-
-  // Initialize all 18 agents if not present
-  const categories = [
-    'Restaurants', 'Hotels', 'Pharmacies', 'Medical Clinics', 'Supermarkets',
-    'Clothing Stores', 'Electronics', 'Car Dealers', 'Real Estate', 'Schools',
-    'Universities', 'Gyms', 'Beauty Salons', 'Law Firms', 'Engineering Offices',
-    'Travel Agencies', 'Banks', 'Factories'
-  ];
-
-  if (agents.length < 18) {
-    const existingCategories = agents.map(a => a.category);
-    categories.forEach((cat, index) => {
-      if (!existingCategories.includes(cat)) {
-        agents.push({
-          id: `agent-${index + 1}`,
-          governorate: "Baghdad",
-          status: "IDLE",
-          progress: 0,
-          recordsFound: 0,
-          lastUpdated: Date.now(),
-          agentName: `Agent-${(index + 1).toString().padStart(2, '0')}`,
-          city: "Various",
-          category: cat
-        });
-      }
-    });
-  }
-
-  // API routes
   app.use(express.json());
 
-  app.get("/api/agents/list", (req, res) => {
-    res.json(agents);
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    const health = {
+      status: supabase ? "healthy" : "degraded",
+      timestamp: new Date().toISOString(),
+      agents: 18,
+      database: supabase ? "connected" : "not-configured",
+      message: supabase
+        ? "All systems operational - ready for data collection"
+        : "⚠️ Supabase not configured. Set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+    };
+    res.status(supabase ? 200 : 503).json(health);
   });
 
-  app.post("/api/agents/start", (req, res) => {
-    const { governorates, agentIds } = req.body;
-    agents = agents.map(agent => {
-      if (agentIds.includes(agent.id)) {
-        return {
-          ...agent,
-          status: "RUNNING",
-          progress: 0,
-          recordsFound: 0,
-          lastUpdated: Date.now(),
-          governorate: governorates[0] || agent.governorate
-        };
+  // Get all agents/jobs
+  app.get("/api/agents/list", async (req, res) => {
+    try {
+      if (!supabase) {
+        return res.status(503).json({ error: "Database not configured" });
       }
-      return agent;
-    });
-    res.json({ status: "ok", message: "Agents started" });
+      const { data, error } = await supabase.from("jobs").select("*");
+      if (error) throw error;
+      res.json(data || []);
+    } catch (err) {
+      res.status(500).json({ error: (err as any).message });
+    }
   });
 
-  app.post("/api/agents/stop", (req, res) => {
-    const { agentIds } = req.body;
-    agents = agents.map(agent => {
-      if (agentIds.includes(agent.id)) {
-        return { ...agent, status: "IDLE", progress: 0, lastUpdated: Date.now() };
+  // Start agent run
+  app.post("/api/agents/run", async (req, res) => {
+    try {
+      const { agentName, city, category } = req.body;
+
+      if (!agentName || !city || !category) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          required: ["agentName", "city", "category"],
+          example: { agentName: "Agent-01", city: "Baghdad", category: "Restaurants" }
+        });
       }
-      return agent;
-    });
-    res.json({ status: "ok", message: "Agents stopped" });
-  });
 
-  app.post("/api/agents/pause", (req, res) => {
-    const { agentIds } = req.body;
-    agents = agents.map(agent => {
-      if (agentIds.includes(agent.id)) {
-        return { ...agent, status: "PAUSED", lastUpdated: Date.now() };
+      // Validate agent name format
+      if (!agentName.match(/^Agent-\d{2}$/)) {
+        return res.status(400).json({
+          error: "Invalid agentName format",
+          expected: "Agent-01 through Agent-18",
+          received: agentName
+        });
       }
-      return agent;
-    });
-    res.json({ status: "ok", message: "Agents paused" });
-  });
 
-  app.post("/api/agents/resume", (req, res) => {
-    const { agentIds } = req.body;
-    agents = agents.map(agent => {
-      if (agentIds.includes(agent.id)) {
-        return { ...agent, status: "RUNNING", lastUpdated: Date.now() };
+      if (!supabase) {
+        return res.status(503).json({ error: "Database not configured" });
       }
-      return agent;
-    });
-    res.json({ status: "ok", message: "Agents resumed" });
+
+      // Create job record
+      const { data: job, error: jobError } = await supabase
+        .from("jobs")
+        .insert({
+          agent_name: agentName,
+          city,
+          category,
+          status: "running",
+          started_at: new Date().toISOString(),
+          records_found: 0
+        })
+        .select()
+        .single();
+
+      if (jobError) throw jobError;
+
+      // Run governor asynchronously (fire-and-forget)
+      (async () => {
+        try {
+          const Governor = governors[agentName];
+          if (!Governor) {
+            const validAgents = Object.keys(governors).join(", ");
+            throw new Error(`Unknown agent: ${agentName}. Valid: ${validAgents}`);
+          }
+
+          const governor = new Governor();
+          const records = await governor.gather({ city, category });
+
+          // Insert collected records
+          if (records.length > 0) {
+            await supabase.from("staging_records").insert(records);
+          }
+
+          // Update job status
+          await supabase
+            .from("jobs")
+            .update({
+              status: "completed",
+              completed_at: new Date().toISOString(),
+              records_found: records.length
+            })
+            .eq("id", job.id);
+
+          console.log(`✅ ${agentName} completed: ${records.length} records`);
+        } catch (err) {
+          console.error(`❌ ${agentName} failed:`, err);
+          await supabase
+            .from("jobs")
+            .update({
+              status: "failed",
+              error_message: (err as any).message
+            })
+            .eq("id", job.id);
+        }
+      })();
+
+      res.status(202).json({
+        status: "started",
+        jobId: job.id,
+        agentName,
+        city,
+        category,
+        message: "Agent run initiated - check /api/agents/list for status"
+      });
+    } catch (err) {
+      res.status(500).json({ error: (err as any).message });
+    }
   });
 
-  app.post("/api/agents/clear", (req, res) => {
-    agents = agents.map(agent => ({
-      ...agent,
-      status: "IDLE",
-      progress: 0,
-      recordsFound: 0,
-      lastUpdated: Date.now()
-    }));
-    res.json({ status: "ok", message: "All agents cleared" });
-  });
-
-  // Simulate progress for running agents
-  setInterval(() => {
-    agents = agents.map(agent => {
-      if (agent.status === "RUNNING") {
-        const newProgress = Math.min(100, agent.progress + Math.floor(Math.random() * 5));
-        const newRecords = agent.recordsFound + (newProgress < 100 ? Math.floor(Math.random() * 10) : 0);
-        return {
-          ...agent,
-          progress: newProgress,
-          recordsFound: newRecords,
-          status: newProgress === 100 ? "COMPLETED" : "RUNNING",
-          lastUpdated: Date.now()
-        };
+  // Get job logs
+  app.get("/api/logs/:jobId", async (req, res) => {
+    try {
+      if (!supabase) {
+        return res.status(503).json({ error: "Database not configured" });
       }
-      return agent;
-    });
-  }, 3000);
+      const { data, error } = await supabase
+        .from("job_logs")
+        .select("*")
+        .eq("job_id", req.params.jobId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      res.json(data || []);
+    } catch (err) {
+      res.status(500).json({ error: (err as any).message });
+    }
+  });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
@@ -180,16 +225,17 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Database: ${supabase ? "✅ Connected to Supabase" : "⚠️  Demo mode (no DB)"}`);
   });
 }
 
-startServer();
+startServer().catch(console.error);
