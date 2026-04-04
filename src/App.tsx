@@ -13,6 +13,7 @@ import { CleaningWorkspace } from './pages/CleaningWorkspace';
 import { StagingQueue } from './pages/StagingQueue';
 import { PushControl } from './pages/PushControl';
 import { LogsEvents } from './pages/LogsEvents';
+import { FinalReportPage } from './pages/reports/FinalReportPage';
 
 export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -27,6 +28,7 @@ export default function App() {
       case 'staging': return <StagingQueue />;
       case 'push': return <PushControl />;
       case 'logs': return <LogsEvents />;
+      case 'final-report': return <FinalReportPage />;
       default: return <Dashboard />;
     }
   };

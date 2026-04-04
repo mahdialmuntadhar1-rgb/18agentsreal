@@ -12,7 +12,8 @@ import {
   Layers, 
   SendHorizontal,
   Search,
-  Terminal
+  Terminal,
+  FileBarChart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ const navItems = [
   { id: 'staging', label: 'Staging Queue', icon: Layers },
   { id: 'push', label: 'Push Control', icon: SendHorizontal },
   { id: 'logs', label: 'Logs & Events', icon: Terminal },
+  { id: 'final-report', label: 'Final Report', icon: FileBarChart },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange }) => {
