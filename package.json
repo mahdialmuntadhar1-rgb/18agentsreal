@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "worker:collection": "tsx server/index.ts",
+    "worker:once": "tsx -e \"import('./server/worker/collection-runner.ts').then(m=>m.processSingleJob())\""
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
