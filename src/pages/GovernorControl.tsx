@@ -137,11 +137,17 @@ export default function GovernorControl() {
 
   // Launch selected agents with selected categories
   const launchAgents = async () => {
+    console.log('🎯 LAUNCH BUTTON CLICKED');
+    console.log('Selected agents:', Array.from(selectedAgents));
+    console.log('Selected categories:', Array.from(selectedCategories));
+
     if (selectedAgents.size === 0 || selectedCategories.size === 0) {
+      console.warn('❌ No agents or categories selected');
       alert('Please select at least one agent and one category');
       return;
     }
 
+    console.log('✅ Validation passed, starting launch...');
     setRunning(true);
 
     const selectedAgentsList = agents.filter(a => selectedAgents.has(a.id));
@@ -428,18 +434,24 @@ export default function GovernorControl() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 flex gap-4"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={launchAgents}
-              disabled={selectedAgents.size === 0 || selectedCategories.size === 0 || running}
-              className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 text-white font-black text-lg rounded-xl shadow-lg shadow-green-500/50 flex items-center justify-center gap-3 transition-all"
-            >
-              <Play size={24} />
-              {running
-                ? `Launching ${selectedAgents.size} agents × ${selectedCategories.size} categories...`
-                : `🚀 LAUNCH - ${selectedAgents.size} Agents × ${selectedCategories.size} Categories`}
-            </motion.button>
+            {selectedAgents.size === 0 || selectedCategories.size === 0 ? (
+              <div className="flex-1 py-4 bg-red-500/20 border-2 border-red-500 text-red-300 font-black text-lg rounded-xl flex items-center justify-center gap-3">
+                ⚠️ Select at least 1 agent and 1 category to launch
+              </div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={launchAgents}
+                disabled={running}
+                className="flex-1 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 text-white font-black text-lg rounded-xl shadow-lg shadow-green-500/50 flex items-center justify-center gap-3 transition-all"
+              >
+                <Play size={24} />
+                {running
+                  ? `🔄 Launching ${selectedAgents.size} agents × ${selectedCategories.size} categories...`
+                  : `🚀 LAUNCH - ${selectedAgents.size} Agents × ${selectedCategories.size} Categories`}
+              </motion.button>
+            )}
           </motion.div>
         )}
       </div>
