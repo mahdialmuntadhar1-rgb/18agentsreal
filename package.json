@@ -7,12 +7,12 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "lint": "tsc --noEmit",
-    "worker:runtime": "tsx scripts/start-runtime.ts worker",
-    "worker:api": "tsx scripts/start-runtime.ts api",
-    "worker:all": "tsx scripts/start-runtime.ts all",
-    "workers:scoped": "tsx scripts/run-workers.ts",
+    "runtime:worker": "tsx scripts/start-runtime.ts worker",
+    "runtime:api": "tsx scripts/start-runtime.ts api",
+    "runtime:all": "tsx scripts/start-runtime.ts all",
+    "runtime:workers:scoped": "tsx scripts/run-workers.ts",
     "jobs:bootstrap": "tsx scripts/bootstrap-jobs.ts"
   },
   "dependencies": {

@@ -4,21 +4,19 @@
  */
 
 import React, { useState } from 'react';
-import { StatusBadge } from '../components/StatusBadge';
 import { FilterBar } from '../components/FilterBar';
 import { DataTable, Column } from '../components/DataTable';
-import { CheckSquare, Square, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { CheckSquare, Square, CheckCircle2 } from 'lucide-react';
 import { BusinessRecord } from '../types';
-import { useRecords } from '../hooks/useSupabase';
+import { useRecords, useRecordStatusActions } from '../hooks/useSupabase';
 
 export const StagingQueue: React.FC = () => {
-  const { records, loading } = useRecords('STAGED');
+  const { records, refresh } = useRecords('STAGED');
+  const { updateStatus, updating } = useRecordStatusActions();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>({ key: 'lastUpdated', direction: 'desc' });
-
-  const displayRecords = records;
 
   const handleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -30,7 +28,7 @@ export const StagingQueue: React.FC = () => {
   };
 
   const toggleSelect = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -38,12 +36,19 @@ export const StagingQueue: React.FC = () => {
     });
   };
 
-  const filteredData = displayRecords
-    .filter(record => {
-      const matchesSearch = 
+  const runBatchAction = async (status: 'APPROVED' | 'REJECTED') => {
+    const ok = await updateStatus([...selectedIds], status);
+    if (!ok) return;
+    setSelectedIds(new Set());
+    await refresh();
+  };
+
+  const filteredData = records
+    .filter((record) => {
+      const matchesSearch =
         record.nameEn.toLowerCase().includes(search.toLowerCase()) ||
         record.id.toLowerCase().includes(search.toLowerCase());
-      
+
       const matchesCat = !filters.cat || record.category.toLowerCase() === filters.cat;
 
       return matchesSearch && matchesCat;
@@ -53,7 +58,7 @@ export const StagingQueue: React.FC = () => {
       const { key, direction } = sortConfig;
       const valA = a[key as keyof BusinessRecord] ?? '';
       const valB = b[key as keyof BusinessRecord] ?? '';
-      
+
       if (valA < valB) return direction === 'asc' ? -1 : 1;
       if (valA > valB) return direction === 'asc' ? 1 : -1;
       return 0;
@@ -111,12 +116,10 @@ export const StagingQueue: React.FC = () => {
     {
       header: 'Actions',
       headerClassName: 'text-right',
-      accessor: () => (
+      accessor: (record) => (
         <div className="flex justify-end space-x-3">
-          <button className="text-rose-600 text-xs font-bold hover:underline">Reject</button>
-          <button className="text-blue-600 text-xs font-bold hover:underline flex items-center">
-            Review <ArrowUpRight className="w-3 h-3 ml-0.5" />
-          </button>
+          <button disabled={updating} onClick={() => void updateStatus([record.id], 'REJECTED').then((ok) => ok && refresh())} className="text-rose-600 text-xs font-bold hover:underline disabled:opacity-60">Reject</button>
+          <button disabled className="text-slate-400 text-xs font-bold cursor-not-allowed" title="Record review flow not yet wired">Review (coming soon)</button>
         </div>
       )
     }
@@ -129,28 +132,32 @@ export const StagingQueue: React.FC = () => {
           <h2 className="text-2xl font-bold text-slate-900">Staging Queue</h2>
           <p className="text-slate-500">Cleaned records awaiting final approval before production push.</p>
         </div>
-        <button className="flex items-center px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">
+        <button
+          disabled={selectedIds.size === 0 || updating}
+          onClick={() => void runBatchAction('APPROVED')}
+          className="flex items-center px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
           <CheckCircle2 className="w-4 h-4 mr-2" /> Batch Approve Selected
         </button>
       </header>
 
-      <FilterBar 
+      <FilterBar
         searchPlaceholder="Search staging queue..."
         onSearchChange={setSearch}
         filters={[
           { id: 'cat', label: 'All Categories', options: [
-            { value: 'restaurants', label: 'Restaurants' }, 
+            { value: 'restaurants', label: 'Restaurants' },
             { value: 'hotels', label: 'Hotels' },
             { value: 'pharmacies', label: 'Pharmacies' },
             { value: 'retail', label: 'Retail' }
           ] }
         ]}
-        onFilterChange={(id, val) => setFilters(prev => ({ ...prev, [id]: val }))}
+        onFilterChange={(id, val) => setFilters((prev) => ({ ...prev, [id]: val }))}
       />
 
-      <DataTable 
-        columns={columns} 
-        data={filteredData} 
+      <DataTable
+        columns={columns}
+        data={filteredData}
         keyExtractor={(r) => r.id}
         dense
         sortConfig={sortConfig}
@@ -160,7 +167,7 @@ export const StagingQueue: React.FC = () => {
       <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
         <div className="flex items-center text-blue-800 text-sm">
           <CheckCircle2 className="w-5 h-5 mr-3 text-blue-600" />
-          <span>You have <strong>{selectedIds.size}</strong> records selected for approval. These will move to the Push Control queue.</span>
+          <span>You have <strong>{selectedIds.size}</strong> records selected for approval. These updates write directly to <code>records.status</code>.</span>
         </div>
       </div>
     </div>
