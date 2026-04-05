@@ -3,22 +3,39 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/index.ts"
     },
     {
       "src": "/(robots.txt|sitemap.xml|favicon.svg|apple-touch-icon.svg|manifest.webmanifest)",
-      "dest": "/$1"
+      "dest": "/public/$1"
     },
     {
-      "src": "/(.+)",
-      "dest": "/index.html"
+      "src": "/assets/(.*)",
+      "dest": "/dist/assets/$1"
     },
     {
-      "src": "/",
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -37,15 +54,6 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    },
-    {
-      "source": "/(robots.txt|sitemap.xml)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "text/plain; charset=utf-8"
         }
       ]
     }
