@@ -35,7 +35,7 @@ export default function TrendingSection({ businesses, loading }: TrendingSection
             <div className="relative h-[60%] overflow-hidden">
               <img 
                 src={biz.image} 
-                alt={biz.name}
+                alt={biz.business_name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
@@ -56,7 +56,7 @@ export default function TrendingSection({ businesses, loading }: TrendingSection
             <div className="p-4 flex flex-col flex-1 justify-between">
               <div>
                 <h3 className="text-base font-bold text-[#2B2F33] mb-1 line-clamp-1 poppins-semibold">
-                  {biz.name}
+                  {biz.business_name}
                 </h3>
                 <div className="flex items-center gap-1 text-[#6B7280] text-[11px]">
                   <MapPin className="w-3 h-3" />

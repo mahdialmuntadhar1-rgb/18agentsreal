@@ -6,33 +6,40 @@ import StoryRow from "@/components/home/StoryRow";
 import CategoryGrid from "@/components/home/CategoryGrid";
 import TrendingSection from "@/components/home/TrendingSection";
 import BusinessGrid from "@/components/home/BusinessGrid";
+import FeedComponent from "@/components/home/FeedComponent";
 import { useHomeStore } from "@/stores/homeStore";
-import type { Business } from "@/lib/supabase";
+import { fetchBusinesses, type Business } from "@/lib/supabase";
 
 export default function HomePage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { selectedGovernorate, selectedCategory, selectedCity } = useHomeStore();
 
   useEffect(() => {
     const loadBusinesses = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const mockData = generateMockBusinesses();
+        console.log('[HomePage] Fetching businesses with filters:', {
+          governorate: selectedGovernorate,
+          city: selectedCity,
+          category: selectedCategory
+        });
         
-        // Filter logic
-        let filtered = mockData;
-        if (selectedGovernorate) {
-          filtered = filtered.filter(b => b.governorate === selectedGovernorate);
-        }
-        if (selectedCity) {
-          filtered = filtered.filter(b => b.city === selectedCity);
-        }
-        if (selectedCategory) {
-          filtered = filtered.filter(b => b.category === selectedCategory);
-        }
+        const data = await fetchBusinesses({
+          governorate: selectedGovernorate || undefined,
+          city: selectedCity || undefined,
+          category: selectedCategory || undefined,
+          limit: 100,
+        });
         
-        setBusinesses(filtered);
+        console.log(`[HomePage] Loaded ${data.length} businesses`);
+        setBusinesses(data);
+      } catch (err) {
+        console.error('[HomePage] Failed to load businesses:', err);
+        setError('Failed to load businesses. Please try again.');
+        setBusinesses([]);
       } finally {
         setLoading(false);
       }
@@ -82,6 +89,15 @@ export default function HomePage() {
       </header>
 
       <main className="pb-20">
+        {/* Error Message */}
+        {error && (
+          <div className="max-w-6xl mx-auto px-4 py-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          </div>
+        )}
+
         {/* HERO / FEATURED CAROUSEL */}
         <HeroSection businesses={businesses} />
 
@@ -184,45 +200,4 @@ export default function HomePage() {
       </footer>
     </div>
   );
-}
-
-// Mock data generator
-function generateMockBusinesses(): Business[] {
-  const categories = [
-    'dining_cuisine', 'cafe_coffee', 'shopping_retail', 
-    'entertainment_events', 'accommodation_stays', 'culture_heritage',
-    'business_services', 'health_wellness', 'doctors', 'hospitals',
-    'clinics', 'transport_mobility', 'public_essential', 'lawyers', 'education'
-  ];
-  
-  const governorates = ["Baghdad", "Erbil", "Basra", "Mosul", "Sulaymaniyah"];
-  const cities: Record<string, string[]> = {
-    Baghdad: ["Central", "Kadhimiya", "Adhamiyah"],
-    Erbil: ["Erbil Center", "Ankawa", "Shaqlawa"],
-    Basra: ["Basra City", "Zubair"],
-    Mosul: ["Mosul Center", "Hamdaniya"],
-    Sulaymaniyah: ["Suli Center", "Halabja"]
-  };
-
-  return Array.from({ length: 24 }, (_, i) => {
-    const gov = governorates[i % governorates.length];
-    const cityList = cities[gov];
-    const city = cityList[i % cityList.length];
-    
-    return {
-      id: `biz-${i}`,
-      name: `${['Al-Mansour', 'Babylon', 'Tigris', 'Euphrates', 'Mesopotamia'][i % 5]} ${['Plaza', 'Garden', 'Center', 'Hub', 'Lounge'][i % 5]}`,
-      category: categories[i % categories.length],
-      rating: 4 + (i % 10) / 10,
-      reviewCount: 10 + i * 5,
-      governorate: gov,
-      city: city,
-      address: `${city}, Iraq`,
-      image: `https://picsum.photos/seed/biz${i}/600/400`,
-      isFeatured: i < 8,
-      phone: "+964 770 123 4567",
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-  });
 }

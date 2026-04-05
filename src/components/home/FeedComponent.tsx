@@ -36,7 +36,7 @@ export default function FeedComponent({ businesses, loading }: FeedComponentProp
         business,
         content:
           postType === "announcement"
-            ? `Check out our latest updates! Visit ${business.name} today.`
+            ? `Check out our latest updates! Visit ${business.business_name} today.`
             : undefined,
         timestamp: `${Math.floor(Math.random() * 24)} hours ago`,
         likes: Math.floor(Math.random() * 500),
@@ -100,17 +100,17 @@ export default function FeedComponent({ businesses, loading }: FeedComponentProp
                     {post.business.image ? (
                       <img
                         src={post.business.image}
-                        alt={post.business.name}
+                        alt={post.business.business_name}
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <span className="text-xl">{post.business.name.charAt(0)}</span>
+                      <span className="text-xl">{post.business.business_name.charAt(0)}</span>
                     )}
                   </div>
                   <div>
                     <h3 className="font-bold text-[#2B2F33] text-base poppins-semibold group-hover:text-[#8B1A1A] transition-colors">
-                      {post.business.name}
+                      {post.business.business_name}
                     </h3>
                     <p className="text-[10px] text-[#8B1A1A]/60 flex items-center gap-1.5 mt-0.5 font-bold uppercase tracking-widest">
                       <Clock size={12} className="text-[#8B1A1A]" /> {post.timestamp}
@@ -143,7 +143,7 @@ export default function FeedComponent({ businesses, loading }: FeedComponentProp
                       post.business.image ||
                       "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop"
                     }
-                    alt={post.business.name}
+                    alt={post.business.business_name}
                     className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-1000"
                     referrerPolicy="no-referrer"
                   />
@@ -166,7 +166,7 @@ export default function FeedComponent({ businesses, loading }: FeedComponentProp
                       <p className="text-xs font-bold text-[#8B1A1A] flex items-center gap-1">
                         ⭐ {post.business.rating?.toFixed(1) || "N/A"}
                         <span className="text-[#8B1A1A]/60 text-[10px] font-medium">
-                          ({post.business.reviewCount} reviews)
+                          ({post.business.reviewCount || 0} reviews)
                         </span>
                       </p>
                     </div>
@@ -223,9 +223,9 @@ export default function FeedComponent({ businesses, loading }: FeedComponentProp
               {/* Quick Contact Bar */}
               {post.type === "listing" && (
                 <div className="px-6 py-4 bg-[#2B2F33] flex gap-3">
-                  {post.business.phone && (
+                  {post.business.phone_1 && (
                     <a
-                      href={`tel:${post.business.phone}`}
+                      href={`tel:${post.business.phone_1}`}
                       className="flex-1 py-2.5 bg-[#8B1A1A] hover:bg-[#6b1414] text-white text-[10px] font-bold rounded-xl transition-all duration-300 text-center shadow-lg uppercase tracking-widest"
                     >
                       Call Now

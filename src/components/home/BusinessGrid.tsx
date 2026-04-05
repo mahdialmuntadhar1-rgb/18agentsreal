@@ -29,7 +29,7 @@ export default function BusinessGrid({ businesses, loading }: BusinessGridProps)
           <div className="relative aspect-[4/3] overflow-hidden">
             <img 
               src={biz.image} 
-              alt={biz.name}
+              alt={biz.business_name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               referrerPolicy="no-referrer"
             />
@@ -51,7 +51,7 @@ export default function BusinessGrid({ businesses, loading }: BusinessGridProps)
           {/* Info Section */}
           <div className="p-3 flex flex-col justify-between flex-1">
             <h3 className="text-sm font-bold text-[#2B2F33] mb-1 line-clamp-1 poppins-semibold">
-              {biz.name}
+              {biz.business_name}
             </h3>
             <div className="flex items-center gap-1 text-[#6B7280] text-[10px]">
               <MapPin className="w-2.5 h-2.5" />
