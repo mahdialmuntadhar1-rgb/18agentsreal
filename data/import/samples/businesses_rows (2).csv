@@ -1,0 +1,297 @@
+id,name,nameAr,nameKu,imageUrl,coverImage,isPremium,isFeatured,category,subcategory,rating,isVerified,reviewCount,governorate,city,address,phone,description,openHours,priceRange,tags,lat,lng,createdAt,business_name,verification_status,created_by_agent,confidence_score,source_name,external_source_id,distance,whatsapp,website,descriptionAr,descriptionKu,namear,nameku,imageurl,coverimage,descriptionar,descriptionku,openhours,pricerange
+001d3069-9137-47c5-93c0-730d9f571fee,Basra Fuel - Krmat Ali,,,,,false,false,fuel,,4.0,false,0,Krmat Ali,Krmat Ali,"Street 9, Krmat Ali, Dhi Qar",,"Basra Fuel - Krmat Ali - Gas station providing fuel, petroleum products, and basic automotive services. Located in Krmat Ali, Iraq.
+
+Located at Street 9, Krmat Ali, Dhi Qar, Krmat Ali, Krmat Ali Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+001e23f7-0da2-46f5-abe9-136664156e1c,Baghdad Furniture 4 - Diwaniyah,,,,,false,false,furniture,,4.0,false,0,Al-Qadisiyyah,Diwaniyah,"Street 21, Diwaniyah, Qadisiyyah",,"Baghdad Furniture 4 - Diwaniyah - Store offering home and office furniture, furnishings, and interior décor items. Located in Diwaniyah, Iraq.
+
+Located at Street 21, Diwaniyah, Qadisiyyah, Diwaniyah, Al-Qadisiyyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0029f684-e9c2-4bde-a56e-f90b66ff6e54,Classic Wear - Pirde,,,,,false,false,clothes,,4.0,false,0,Pirde,Pirde,"Street 10, Pirde, Erbil",,"Classic Wear - Pirde - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Pirde, Iraq.
+
+Located at Street 10, Pirde, Erbil, Pirde, Pirde Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00422273-f527-4591-a660-7a85b143a5c7,Erbil Espresso - Kifl,,,,,false,false,cafe,,4.0,false,0,TestGov,Kifl,"Street 7, Kifl, Babil",,Test description,,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0046fa8d-4f26-41bc-98ae-49e70545a021,Dijla Restaurant 3 - Al-Multaqa,,,,,false,false,restaurant,,4.0,false,0,Al-Multaqa,Al-Multaqa,"Street 15, Al-Multaqa, Kirkuk",,"Dijla Restaurant 3 - Al-Multaqa - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Al-Multaqa, Iraq.
+
+Located at Street 15, Al-Multaqa, Kirkuk, Al-Multaqa, Al-Multaqa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00471c7c-72df-4e4d-a69c-0038346234a8,Imam Ali Shrine 4 - Sirwan,,,,,false,false,mosque,,4.0,false,0,Sirwan,Sirwan,"Street 23, Sirwan, Halabja",,Test description 2,,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0055d5e7-50c8-46ed-8c7b-a128c2c6495b,Baghdad Academy 4 - Al-Aziziyah,,,,,false,false,school,,4.0,false,0,Al-Aziziyah,Al-Aziziyah,"Street 22, Al-Aziziyah, Wasit",,"Baghdad Academy 4 - Al-Aziziyah - Educational institution providing academic instruction and learning programs for students. Located in Al-Aziziyah, Iraq.
+
+Located at Street 22, Al-Aziziyah, Wasit, Al-Aziziyah, Al-Aziziyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+005c451c-9b64-4724-a21a-fe782722dea8,Progress Academy 3 - Sawa,,,,,false,false,school,,4.0,false,0,TestGov,Sawa,"Street 20, Sawa, Babil",,"Progress Academy 3 - Sawa - Educational institution providing academic instruction and learning programs for students. Located in Sawa, Iraq.
+
+Located at Street 20, Sawa, Babil, Sawa, Sawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00614843-1ac6-45c4-9848-fd42d121db34,Basra Cafe 3 - Rabiya,,,,,false,false,cafe,,4.0,false,0,Rabiya,Rabiya,"Street 18, Rabiya, Mosul",,"Basra Cafe 3 - Rabiya - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Rabiya, Iraq.
+
+Located at Street 18, Rabiya, Mosul, Rabiya, Rabiya Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00741b93-8361-4ee8-88f3-e6f4717fd9c1,Palmera Coffee 3 - Tel Afar,,,,,false,false,cafe,,4.0,false,0,TestGov,Tel Afar,"Street 12, Tel Afar, Mosul",,"Palmera Coffee 3 - Tel Afar - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Tel Afar, Iraq.
+
+Located at Street 12, Tel Afar, Mosul, Tel Afar, Tel Afar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0079b313-271e-4e9a-b734-c994483643af,Tech City Baghdad 4 - Sulaymaniyah City,,,,,false,false,electronics,,4.0,false,0,Sulaymaniyah City,Sulaymaniyah City,"Street 21, Sulaymaniyah City, Sulaymaniyah",,"Tech City Baghdad 4 - Sulaymaniyah City - Store selling electronic devices, gadgets, appliances, and technology products. Located in Sulaymaniyah City, Iraq.
+
+Located at Street 21, Sulaymaniyah City, Sulaymaniyah, Sulaymaniyah City, Sulaymaniyah City Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0087e516-15ff-46ad-8424-f3cd9760e82f,Erbil Pharmacy - Al-Jubba,,,,,false,false,pharmacy,,4.0,false,0,Al-Jubba,Al-Jubba,"Street 7, Al-Jubba, Karbala",,"Erbil Pharmacy - Al-Jubba - Retail store dispensing prescription medications, health products, and medical supplies. Located in Al-Jubba, Iraq.
+
+Located at Street 7, Al-Jubba, Karbala, Al-Jubba, Al-Jubba Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00884fd6-2052-4e2f-baf2-6729a958735b,Karrada Grill 3 - Smawa,,,,,false,false,restaurant,,4.0,false,0,TestGov,Smawa,"Street 20, Smawa, Dhi Qar",,"Karrada Grill 3 - Smawa - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Smawa, Iraq.
+
+Located at Street 20, Smawa, Dhi Qar, Smawa, Smawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00927551-4f2c-4365-8a6e-0621df338142,Al-Mustansiriya School - Kirkuk City,,,,,false,false,school,,4.0,false,0,Kirkuk City,Kirkuk City,"Street 1, Kirkuk City, Kirkuk",,"Al-Mustansiriya School - Kirkuk City - Educational institution providing academic instruction and learning programs for students. Located in Kirkuk City, Iraq.
+
+Located at Street 1, Kirkuk City, Kirkuk, Kirkuk City, Kirkuk City Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+009415a8-18fb-4b4d-a9ac-1a2758f4553f,Erbil Fashion - Halabja,,,,,false,false,clothes,,4.0,false,0,Halabja,Halabja,"Street 3, Halabja, Sulaymaniyah",,"Erbil Fashion - Halabja - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Halabja, Iraq.
+
+Located at Street 3, Halabja, Sulaymaniyah, Halabja, Halabja Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0098e76d-4d84-4924-ae87-83f1fba51917,Kirkuk Terminal - Rabiya,,,,,false,false,bus_station,,4.0,false,0,Rabiya,Rabiya,"Street 8, Rabiya, Mosul",,"Kirkuk Terminal - Rabiya - Transportation hub for bus services, connecting passengers to various destinations. Located in Rabiya, Iraq.
+
+Located at Street 8, Rabiya, Mosul, Rabiya, Rabiya Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00a20b49-ac86-4708-8ad9-dba4d334acb9,Al-Zawraa Cafe 4 - Al-Hayy,,,,,false,false,cafe,,4.0,false,0,Al-Hayy,Al-Hayy,"Street 23, Al-Hayy, Wasit",,"Al-Zawraa Cafe 4 - Al-Hayy - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Al-Hayy, Iraq.
+
+Located at Street 23, Al-Hayy, Wasit, Al-Hayy, Al-Hayy Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00ababe7-35ae-4072-b129-39f687bc132e,Imam Ali Shrine - Muqdadiyah,,,,,false,false,mosque,,4.0,false,0,Muqdadiyah,Muqdadiyah,"Street 3, Muqdadiyah, Diyala",,"Imam Ali Shrine - Muqdadiyah - Islamic place of worship for prayer, religious gatherings, and community activities. Located in Muqdadiyah, Iraq.
+
+Located at Street 3, Muqdadiyah, Diyala, Muqdadiyah, Muqdadiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00ad95b2-99b5-450e-b323-d2d594609e3d,Al-Wasiti Hospital 3 - Bardarash,,,,,false,false,hospital,,4.0,false,0,Bardarash,Bardarash,"Street 18, Bardarash, Dohuk",,"Al-Wasiti Hospital 3 - Bardarash - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Bardarash, Iraq.
+
+Located at Street 18, Bardarash, Dohuk, Bardarash, Bardarash Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00b4cb53-e686-4cf9-8de0-b196a279a6ea,Basra Transport Hub 4 - Al-Aziziyah,,,,,false,false,bus_station,,4.0,false,0,Al-Aziziyah,Al-Aziziyah,"Street 22, Al-Aziziyah, Wasit",,"Basra Transport Hub 4 - Al-Aziziyah - Transportation hub for bus services, connecting passengers to various destinations. Located in Al-Aziziyah, Iraq.
+
+Located at Street 22, Al-Aziziyah, Wasit, Al-Aziziyah, Al-Aziziyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00c57625-b6de-49a4-8bbc-09e4986414cf,Erbil International School - Manathira,,,,,false,false,school,,4.0,false,0,Manathira,Manathira,"Street 3, Manathira, Najaf",,"Erbil International School - Manathira - Educational institution providing academic instruction and learning programs for students. Located in Manathira, Iraq.
+
+Located at Street 3, Manathira, Najaf, Manathira, Manathira Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00c72b2c-85a1-4656-bd96-75526096e4c1,Iron Body Gym - Nasiriyah,,,,,false,false,gym,,4.0,false,0,Dhi Qar,Nasiriyah,"Street 1, Nasiriyah, Dhi Qar",,"Iron Body Gym - Nasiriyah - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Nasiriyah, Iraq.
+
+Located at Street 1, Nasiriyah, Dhi Qar, Nasiriyah, Dhi Qar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00d837b2-37ba-4c86-93d0-58d859d632c4,National Bank of Iraq 3 - Al-Karkh,,,,,false,false,bank,,4.0,false,0,Al-Karkh,Al-Karkh,"Street 15, Al-Karkh, Baghdad",,"National Bank of Iraq 3 - Al-Karkh - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Al-Karkh, Iraq.
+
+Located at Street 15, Al-Karkh, Baghdad, Al-Karkh, Al-Karkh Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00dcab65-6ee5-4c25-9d7b-16253bd711ad,Erbil Espresso - Al-Tar,,,,,false,false,cafe,,4.0,false,0,Al-Tar,Al-Tar,"Street 7, Al-Tar, Dhi Qar",,"Erbil Espresso - Al-Tar - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Al-Tar, Iraq.
+
+Located at Street 7, Al-Tar, Dhi Qar, Al-Tar, Al-Tar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00e7ec2a-d25f-4ad0-9a10-39a938c4f063,Spinneys Baghdad - Baiji,,,,,false,false,supermarket,,4.0,false,0,Baiji,Baiji,"Street 3, Baiji, Saladin",,"Spinneys Baghdad - Baiji - Large retail store selling groceries, household items, and daily necessities. Located in Baiji, Iraq.
+
+Located at Street 3, Baiji, Saladin, Baiji, Baiji Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00e89210-82d6-41b0-bc44-dc2eba1321b1,Rafidain Bank 3 - Al-Hamza,,,,,false,false,bank,,4.0,false,0,Al-Hamza,Al-Hamza,"Street 13, Al-Hamza, Qadisiyyah",,"Rafidain Bank 3 - Al-Hamza - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Al-Hamza, Iraq.
+
+Located at Street 13, Al-Hamza, Qadisiyyah, Al-Hamza, Al-Hamza Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+00facd99-a244-4009-b9c9-b4e68cae9abe,Dijla Restaurant 3 - Mandali,,,,,false,false,restaurant,,4.0,false,0,Mandali,Mandali,"Street 15, Mandali, Diyala",,"Dijla Restaurant 3 - Mandali - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Mandali, Iraq.
+
+Located at Street 15, Mandali, Diyala, Mandali, Mandali Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01124759-6526-4e72-8d35-3e24a94eead6,Elite Gym - Al-Mishraq,,,,,false,false,gym,,4.0,false,0,Al-Mishraq,Al-Mishraq,"Street 9, Al-Mishraq, Najaf",,"Elite Gym - Al-Mishraq - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Al-Mishraq, Iraq.
+
+Located at Street 9, Al-Mishraq, Najaf, Al-Mishraq, Al-Mishraq Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0114686d-c656-49b8-b8c9-abba69be6e75,Commercial Bank 3 - Pirde,,,,,false,false,bank,,4.0,false,0,Pirde,Pirde,"Street 20, Pirde, Erbil",,"Commercial Bank 3 - Pirde - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Pirde, Iraq.
+
+Located at Street 20, Pirde, Erbil, Pirde, Pirde Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0118abcb-fdc2-403b-b75d-ee31f705e7bf,Progress Academy 3 - Darband-i-Khan,,,,,false,false,school,,4.0,false,0,Darband-i-Khan,Darband-i-Khan,"Street 20, Darband-i-Khan, Halabja",,"Progress Academy 3 - Darband-i-Khan - Educational institution providing academic instruction and learning programs for students. Located in Darband-i-Khan, Iraq.
+
+Located at Street 20, Darband-i-Khan, Halabja, Darband-i-Khan, Darband-i-Khan Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+011e3244-2cd4-4ff2-b3d6-a099e8c699ff,Home Center - Sayed Sadiq,,,,,false,false,furniture,,4.0,false,0,Sayed Sadiq,Sayed Sadiq,"Street 7, Sayed Sadiq, Maysan",,"Home Center - Sayed Sadiq - Store offering home and office furniture, furnishings, and interior décor items. Located in Sayed Sadiq, Iraq.
+
+Located at Street 7, Sayed Sadiq, Maysan, Sayed Sadiq, Sayed Sadiq Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+011ef4d1-afde-4e95-bb0e-c4c78644f3a8,Basra Cafe - Dora,,,,,false,false,cafe,,4.0,false,0,Dora,Dora,"Street 8, Dora, Baghdad",,"Basra Cafe - Dora - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Dora, Iraq.
+
+Located at Street 8, Dora, Baghdad, Dora, Dora Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01215bd5-519d-4f2c-8361-5efe1415102f,Erbil Pharmacy - Al-Tar,,,,,false,false,pharmacy,,4.0,false,0,Al-Tar,Al-Tar,"Street 7, Al-Tar, Dhi Qar",,"Erbil Pharmacy - Al-Tar - Retail store dispensing prescription medications, health products, and medical supplies. Located in Al-Tar, Iraq.
+
+Located at Street 7, Al-Tar, Dhi Qar, Al-Tar, Al-Tar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01242f34-2933-4dcd-a665-783ecd4e452a,Al-Rasheed Supermarket 3 - Al-Azizia,,,,,false,false,supermarket,,4.0,false,0,Al-Azizia,Al-Azizia,"Street 15, Al-Azizia, Wasit",,"Al-Rasheed Supermarket 3 - Al-Azizia - Large retail store selling groceries, household items, and daily necessities. Located in Al-Azizia, Iraq.
+
+Located at Street 15, Al-Azizia, Wasit, Al-Azizia, Al-Azizia Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+013da398-62dd-4df7-8800-80257eb0f429,Al-Karrada Fashion 3 - Khanaqin,,,,,false,false,clothes,,4.0,false,0,Diyala,Khanaqin,"Street 17, Khanaqin, Diyala",,"Al-Karrada Fashion 3 - Khanaqin - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Khanaqin, Iraq.
+
+Located at Street 17, Khanaqin, Diyala, Khanaqin, Diyala Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01437be4-0f35-4a68-be88-53ff3da9342d,Iron Body Gym - Karbala City,,,,,false,false,gym,,4.0,false,0,Karbala City,Karbala City,"Street 1, Karbala City, Karbala",,"Iron Body Gym - Karbala City - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Karbala City, Iraq.
+
+Located at Street 1, Karbala City, Karbala, Karbala City, Karbala City Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+014e2ce3-9cd2-4b84-80f5-fde2aeb843fd,Rafidain Bank 3 - Faw,,,,,false,false,bank,,4.0,false,0,Faw,Faw,"Street 13, Faw, Basra",,"Rafidain Bank 3 - Faw - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Faw, Iraq.
+
+Located at Street 13, Faw, Basra, Faw, Faw Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+015be137-7b42-49a9-9744-e314296688e8,Style Center 3 - Shinafiyah,,,,,false,false,clothes,,4.0,false,0,Shinafiyah,Shinafiyah,"Street 15, Shinafiyah, Qadisiyyah",,"Style Center 3 - Shinafiyah - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Shinafiyah, Iraq.
+
+Located at Street 15, Shinafiyah, Qadisiyyah, Shinafiyah, Shinafiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01834f53-e901-4a0e-ab88-648647b61564,Baghdad Central Bus Station - Karrada,,,,,false,false,bus_station,,4.0,false,0,Karrada,Karrada,"Street 1, Karrada, Baghdad",,"Baghdad Central Bus Station - Karrada - Transportation hub for bus services, connecting passengers to various destinations. Located in Karrada, Iraq.
+
+Located at Street 1, Karrada, Baghdad, Karrada, Karrada Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01844797-210b-4e9c-a8c0-37396d20d76d,Baghdad Hilton - Shirqat,,,,,false,false,hotel,,4.0,false,0,Shirqat,Shirqat,"Street 4, Shirqat, Saladin",,"Baghdad Hilton - Shirqat - Accommodation establishment providing lodging, amenities, and hospitality services for travelers. Located in Shirqat, Iraq.
+
+Located at Street 4, Shirqat, Saladin, Shirqat, Shirqat Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+018f6c2e-d465-46e4-8872-6f06dddc4ef9,Erbil Grand Mosque - Semel,,,,,false,false,mosque,,4.0,false,0,Semel,Semel,"Street 6, Semel, Dohuk",,"Erbil Grand Mosque - Semel - Islamic place of worship for prayer, religious gatherings, and community activities. Located in Semel, Iraq.
+
+Located at Street 6, Semel, Dohuk, Semel, Semel Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0191947f-01ab-4857-98d3-9869be5b5783,Al-Rasheed Hotel 3 - Shaqlawa,,,,,false,false,hotel,,4.0,false,0,Shaqlawa,Shaqlawa,"Street 12, Shaqlawa, Erbil",,"Al-Rasheed Hotel 3 - Shaqlawa - Accommodation establishment providing lodging, amenities, and hospitality services for travelers. Located in Shaqlawa, Iraq.
+
+Located at Street 12, Shaqlawa, Erbil, Shaqlawa, Shaqlawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0194a316-dd30-45ed-a4db-3986a4d3a6ee,Al-Tawbah Mosque 3 - Al-Sadda,,,,,false,false,mosque,,4.0,false,0,Al-Sadda,Al-Sadda,"Street 19, Al-Sadda, Babil",,"Al-Tawbah Mosque 3 - Al-Sadda - Islamic place of worship for prayer, religious gatherings, and community activities. Located in Al-Sadda, Iraq.
+
+Located at Street 19, Al-Sadda, Babil, Al-Sadda, Al-Sadda Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01a58529-ef58-4cab-95b8-4a2404c97d26,Al-Rasheed Hotel - Ain al-Tamur,,,,,false,false,hotel,,4.0,false,0,Ain al-Tamur,Ain al-Tamur,"Street 2, Ain al-Tamur, Karbala",,"Al-Rasheed Hotel - Ain al-Tamur - Accommodation establishment providing lodging, amenities, and hospitality services for travelers. Located in Ain al-Tamur, Iraq.
+
+Located at Street 2, Ain al-Tamur, Karbala, Ain al-Tamur, Ain al-Tamur Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01ad45d3-f5a6-4ad5-9ae9-fb2bd2a02219,Ibn Sina Hospital - Raniya,,,,,false,false,hospital,,4.0,false,0,Raniya,Raniya,"Street 7, Raniya, Halabja",,"Ibn Sina Hospital - Raniya - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Raniya, Iraq.
+
+Located at Street 7, Raniya, Halabja, Raniya, Raniya Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01bc8582-7fd9-476a-b64e-7d4aa790facb,Trend Store - Krmat Ali,,,,,false,false,clothes,,4.0,false,0,Krmat Ali,Krmat Ali,"Street 9, Krmat Ali, Dhi Qar",,"Trend Store - Krmat Ali - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Krmat Ali, Iraq.
+
+Located at Street 9, Krmat Ali, Dhi Qar, Krmat Ali, Krmat Ali Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01cda838-e449-49b4-9366-a8e9273b2e45,Babylon Restaurant - Kalar,,,,,false,false,restaurant,,4.0,false,0,Kalar,Kalar,"Street 7, Kalar, Sulaymaniyah",,"Babylon Restaurant - Kalar - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Kalar, Iraq.
+
+Located at Street 7, Kalar, Sulaymaniyah, Kalar, Kalar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01dc74b7-7589-4ac8-95f0-a89c08b954e3,Future Academy - Deralok,,,,,false,false,school,,4.0,false,0,Deralok,Deralok,"Street 6, Deralok, Zakho",,"Future Academy - Deralok - Educational institution providing academic instruction and learning programs for students. Located in Deralok, Iraq.
+
+Located at Street 6, Deralok, Zakho, Deralok, Deralok Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+01fefdc8-53b5-4086-b13c-3bd0d7b9ea60,Basra Transport Hub - Rania,,,,,false,false,bus_station,,4.0,false,0,Rania,Rania,"Street 2, Rania, Sulaymaniyah",,"Basra Transport Hub - Rania - Transportation hub for bus services, connecting passengers to various destinations. Located in Rania, Iraq.
+
+Located at Street 2, Rania, Sulaymaniyah, Rania, Rania Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0203cb0b-d5bb-4d62-89d2-4646f07eab6d,Luxury Decor 3 - Krmat Ali,,,,,false,false,furniture,,4.0,false,0,Krmat Ali,Krmat Ali,"Street 19, Krmat Ali, Dhi Qar",,"Luxury Decor 3 - Krmat Ali - Store offering home and office furniture, furnishings, and interior décor items. Located in Krmat Ali, Iraq.
+
+Located at Street 19, Krmat Ali, Dhi Qar, Krmat Ali, Krmat Ali Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0210b65e-fb9e-47b0-8603-cb3513661d2a,Digital World 3 - Sangasar,,,,,false,false,electronics,,4.0,false,0,Sangasar,Sangasar,"Street 19, Sangasar, Halabja",,"Digital World 3 - Sangasar - Store selling electronic devices, gadgets, appliances, and technology products. Located in Sangasar, Iraq.
+
+Located at Street 19, Sangasar, Halabja, Sangasar, Sangasar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02192d58-6a16-444e-b326-f97f09e97d5e,Erbil Fashion - Al-Shatrah,,,,,false,false,clothes,,4.0,false,0,Al-Shatrah,Al-Shatrah,"Street 3, Al-Shatrah, Dhi Qar",,"Erbil Fashion - Al-Shatrah - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Al-Shatrah, Iraq.
+
+Located at Street 3, Al-Shatrah, Dhi Qar, Al-Shatrah, Al-Shatrah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0230a9b1-8da2-4a57-b310-85e06ce11130,Baghdad Medical Center 3 - Hawija,,,,,false,false,hospital,,4.0,false,0,Hawija,Hawija,"Street 12, Hawija, Kirkuk",,"Baghdad Medical Center 3 - Hawija - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Hawija, Iraq.
+
+Located at Street 12, Hawija, Kirkuk, Hawija, Hawija Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0239a2a2-3515-4d36-a8a5-961180d68dc0,Erbil Bus Terminal - Sinjar,,,,,false,false,bus_station,,4.0,false,0,Sinjar,Sinjar,"Street 3, Sinjar, Mosul",,"Erbil Bus Terminal - Sinjar - Transportation hub for bus services, connecting passengers to various destinations. Located in Sinjar, Iraq.
+
+Located at Street 3, Sinjar, Mosul, Sinjar, Sinjar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+024c6d53-e6e5-4612-8ff6-4cb4fdd9c3ff,Baghdad Furniture 3 - Baquba,,,,,false,false,furniture,,4.0,false,0,Baquba,Baquba,"Street 11, Baquba, Diyala",,"Baghdad Furniture 3 - Baquba - Store offering home and office furniture, furnishings, and interior décor items. Located in Baquba, Iraq.
+
+Located at Street 11, Baquba, Diyala, Baquba, Baquba Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+024d8e3d-d345-4f2f-93aa-4515b33fff05,Byte Store - Sawa,,,,,false,false,electronics,,4.0,false,0,Sawa,Sawa,"Street 10, Sawa, Babil",,"Byte Store - Sawa - Store selling electronic devices, gadgets, appliances, and technology products. Located in Sawa, Iraq.
+
+Located at Street 10, Sawa, Babil, Sawa, Sawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02519a05-05cd-432c-baf4-07382bf64116,Baghdad Hilton - Akre,,,,,false,false,hotel,,4.0,false,0,Akre,Akre,"Street 4, Akre, Dohuk",,"Baghdad Hilton - Akre - Accommodation establishment providing lodging, amenities, and hospitality services for travelers. Located in Akre, Iraq.
+
+Located at Street 4, Akre, Dohuk, Akre, Akre Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+025e8e7b-e566-43fd-a129-5cd7ce1f048f,Fashion House Baghdad 3 - Karrada,,,,,false,false,clothes,,4.0,false,0,Karrada,Karrada,"Street 11, Karrada, Baghdad",,"Fashion House Baghdad 3 - Karrada - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Karrada, Iraq.
+
+Located at Street 11, Karrada, Baghdad, Karrada, Karrada Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0260b5f3-b1ef-44db-afea-9a072a14c6e9,Metro Market 4 - Al-Qaim,,,,,false,false,supermarket,,4.0,false,0,Al-Qaim,Al-Qaim,"Street 24, Al-Qaim, Anbar",,"Metro Market 4 - Al-Qaim - Large retail store selling groceries, household items, and daily necessities. Located in Al-Qaim, Iraq.
+
+Located at Street 24, Al-Qaim, Anbar, Al-Qaim, Al-Qaim Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+026d3c96-3850-4422-b9b0-626a9706a458,Iron Body Gym - Baquba,,,,,false,false,gym,,4.0,false,0,Baquba,Baquba,"Street 1, Baquba, Diyala",,"Iron Body Gym - Baquba - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Baquba, Iraq.
+
+Located at Street 1, Baquba, Diyala, Baquba, Baquba Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02777914-1c7e-4c66-9d5c-2584f862f343,Style Center - Mandali,,,,,false,false,clothes,,4.0,false,0,Mandali,Mandali,"Street 5, Mandali, Diyala",,"Style Center - Mandali - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Mandali, Iraq.
+
+Located at Street 5, Mandali, Diyala, Mandali, Mandali Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+028d16c3-2881-4f43-86f8-24c5533b9485,Tech City Baghdad 3 - Tikrit,,,,,false,false,electronics,,4.0,false,0,Salah al-Din,Tikrit,"Street 11, Tikrit, Saladin",,"Tech City Baghdad 3 - Tikrit - Store selling electronic devices, gadgets, appliances, and technology products. Located in Tikrit, Iraq.
+
+Located at Street 11, Tikrit, Saladin, Tikrit, Salah al-Din Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0291e120-beff-4ef1-b2e5-271db6e653f9,Tigris Brew - Duluiyah,,,,,false,false,cafe,,4.0,false,0,Duluiyah,Duluiyah,"Street 5, Duluiyah, Saladin",,"Tigris Brew - Duluiyah - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Duluiyah, Iraq.
+
+Located at Street 5, Duluiyah, Saladin, Duluiyah, Duluiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+029373e8-7d6e-4077-a53a-0cb148f09522,Baghdad Fuel - Rania,,,,,false,false,fuel,,4.0,false,0,Rania,Rania,"Street 2, Rania, Sulaymaniyah",,"Baghdad Fuel - Rania - Gas station providing fuel, petroleum products, and basic automotive services. Located in Rania, Iraq.
+
+Located at Street 2, Rania, Sulaymaniyah, Rania, Rania Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+029d03cc-2648-4139-b53e-dc9e855fc8f1,Baghdad Academy 4 - Afak,,,,,false,false,school,,4.0,false,0,Afak,Afak,"Street 22, Afak, Qadisiyyah",,"Baghdad Academy 4 - Afak - Educational institution providing academic instruction and learning programs for students. Located in Afak, Iraq.
+
+Located at Street 22, Afak, Qadisiyyah, Afak, Afak Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+029d587a-c21e-4044-a6da-377814fbf7e9,Sulaymaniyah Coffee - Hartha,,,,,false,false,cafe,,4.0,false,0,Hartha,Hartha,"Street 10, Hartha, Basra",,"Sulaymaniyah Coffee - Hartha - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Hartha, Iraq.
+
+Located at Street 10, Hartha, Basra, Hartha, Hartha Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02a26a40-cad3-48c8-b04c-5a517de80fc3,Al-Noor School 3 - Kanaan,,,,,false,false,school,,4.0,false,0,Kanaan,Kanaan,"Street 19, Kanaan, Diyala",,"Al-Noor School 3 - Kanaan - Educational institution providing academic instruction and learning programs for students. Located in Kanaan, Iraq.
+
+Located at Street 19, Kanaan, Diyala, Kanaan, Kanaan Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02aac0df-6757-4109-b62c-ffeceb842973,Al-Doura Gas Station - Tikrit,,,,,false,false,fuel,,4.0,false,0,Salah al-Din,Tikrit,"Street 1, Tikrit, Saladin",,"Al-Doura Gas Station - Tikrit - Gas station providing fuel, petroleum products, and basic automotive services. Located in Tikrit, Iraq.
+
+Located at Street 1, Tikrit, Saladin, Tikrit, Salah al-Din Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02ad143c-31c8-4dde-8e38-5d9d049efb47,Wellness Drugs 3 - Al-Hashimiyah,,,,,false,false,pharmacy,,4.0,false,0,Al-Hashimiyah,Al-Hashimiyah,"Street 13, Al-Hashimiyah, Babil",,"Wellness Drugs 3 - Al-Hashimiyah - Retail store dispensing prescription medications, health products, and medical supplies. Located in Al-Hashimiyah, Iraq.
+
+Located at Street 13, Al-Hashimiyah, Babil, Al-Hashimiyah, Al-Hashimiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02bbbdb7-d287-4abd-8fc8-05d5e3bbd9c0,Baghdad Furniture - Diwaniyah,,,,,false,false,furniture,,4.0,false,0,Al-Qadisiyyah,Diwaniyah,"Street 1, Diwaniyah, Qadisiyyah",,"Baghdad Furniture - Diwaniyah - Store offering home and office furniture, furnishings, and interior décor items. Located in Diwaniyah, Iraq.
+
+Located at Street 1, Diwaniyah, Qadisiyyah, Diwaniyah, Al-Qadisiyyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02c43bbb-4640-427a-aa6c-444ef33789b1,Power House - Said Sadiq,,,,,false,false,gym,,4.0,false,0,Said Sadiq,Said Sadiq,"Street 6, Said Sadiq, Halabja",,"Power House - Said Sadiq - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Said Sadiq, Iraq.
+
+Located at Street 6, Said Sadiq, Halabja, Said Sadiq, Said Sadiq Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02e68feb-0aa7-434b-8891-b4cd8ac4c1e2,Mobile World 3 - Balad Ruz,,,,,false,false,electronics,,4.0,false,0,Balad Ruz,Balad Ruz,"Street 14, Balad Ruz, Diyala",,"Mobile World 3 - Balad Ruz - Store selling electronic devices, gadgets, appliances, and technology products. Located in Balad Ruz, Iraq.
+
+Located at Street 14, Balad Ruz, Diyala, Balad Ruz, Balad Ruz Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02eab81c-f2d4-4c36-8a38-0b833497a20b,Baghdad Grand Mosque 4 - Hawija,,,,,false,false,mosque,,4.0,false,0,Hawija,Hawija,"Street 22, Hawija, Kirkuk",,"Baghdad Grand Mosque 4 - Hawija - Islamic place of worship for prayer, religious gatherings, and community activities. Located in Hawija, Iraq.
+
+Located at Street 22, Hawija, Kirkuk, Hawija, Hawija Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+02fae90e-c46c-49b4-9516-62fc3f45ffde,Al-Tawbah Mosque - Al-Dawaya,,,,,false,false,mosque,,4.0,false,0,Al-Dawaya,Al-Dawaya,"Street 9, Al-Dawaya, Maysan",,"Al-Tawbah Mosque - Al-Dawaya - Islamic place of worship for prayer, religious gatherings, and community activities. Located in Al-Dawaya, Iraq.
+
+Located at Street 9, Al-Dawaya, Maysan, Al-Dawaya, Al-Dawaya Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0305d856-06fe-43cc-9fd4-b446475f83fb,Al-Shifa Pharmacy - Samawah,,,,,false,false,pharmacy,,4.0,false,0,Al-Muthanna,Samawah,"Street 1, Samawah, Muthanna",,"Al-Shifa Pharmacy - Samawah - Retail store dispensing prescription medications, health products, and medical supplies. Located in Samawah, Iraq.
+
+Located at Street 1, Samawah, Muthanna, Samawah, Al-Muthanna Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+030b3578-5e90-4393-bfe7-a8e3feb097f1,Rafidain Bank - Al-Hayy,,,,,false,false,bank,,4.0,false,0,Al-Hayy,Al-Hayy,"Street 3, Al-Hayy, Wasit",,"Rafidain Bank - Al-Hayy - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Al-Hayy, Iraq.
+
+Located at Street 3, Al-Hayy, Wasit, Al-Hayy, Al-Hayy Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+030c44d8-3b02-49e8-b576-e51c70f778dc,Rasheed Bank - Ali al-Gharbi,,,,,false,false,bank,,4.0,false,0,Ali al-Gharbi,Ali al-Gharbi,"Street 2, Ali al-Gharbi, Maysan",,"Rasheed Bank - Ali al-Gharbi - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Ali al-Gharbi, Iraq.
+
+Located at Street 2, Ali al-Gharbi, Maysan, Ali al-Gharbi, Ali al-Gharbi Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+030d262e-f473-4b04-8a80-9b151dca1236,Najaf Lounge 3 - Sangasar,,,,,false,false,cafe,,4.0,false,0,Sangasar,Sangasar,"Street 19, Sangasar, Halabja",,"Najaf Lounge 3 - Sangasar - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Sangasar, Iraq.
+
+Located at Street 19, Sangasar, Halabja, Sangasar, Sangasar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0313e28c-370d-4cb8-a3be-0b23ffb2d326,Al-Yarmuk Hospital - Ashar,,,,,false,false,hospital,,4.0,false,0,Ashar,Ashar,"Street 6, Ashar, Basra",,"Al-Yarmuk Hospital - Ashar - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Ashar, Iraq.
+
+Located at Street 6, Ashar, Basra, Ashar, Ashar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0318f36f-b087-4810-b6c4-8b60bd6fe544,Baghdad Fitness 3 - Fallujah,,,,,false,false,gym,,4.0,false,0,Anbar,Fallujah,"Street 12, Fallujah, Anbar",,"Baghdad Fitness 3 - Fallujah - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in Fallujah, Iraq.
+
+Located at Street 12, Fallujah, Anbar, Fallujah, Anbar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0320d62d-4f40-49f6-9cc7-e1a8113ad202,Al-Zahraa School 3 - Zubaidiyah,,,,,false,false,school,,4.0,false,0,Zubaidiyah,Zubaidiyah,"Street 17, Zubaidiyah, Wasit",,"Al-Zahraa School 3 - Zubaidiyah - Educational institution providing academic instruction and learning programs for students. Located in Zubaidiyah, Iraq.
+
+Located at Street 17, Zubaidiyah, Wasit, Zubaidiyah, Zubaidiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0327ff68-3b39-4f71-b803-c6aedf5caecd,Prime Fitness - New Baghdad,,,,,false,false,gym,,4.0,false,0,New Baghdad,New Baghdad,"Street 10, New Baghdad, Baghdad",,"Prime Fitness - New Baghdad - Fitness center equipped with exercise machines, weights, and training programs for physical health. Located in New Baghdad, Iraq.
+
+Located at Street 10, New Baghdad, Baghdad, New Baghdad, New Baghdad Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+032fe826-79fa-46b0-95c0-b56373f9b496,Tigris Kitchen 4 - Sirwan,,,,,false,false,restaurant,,4.0,false,0,Sirwan,Sirwan,"Street 23, Sirwan, Halabja",,"Tigris Kitchen 4 - Sirwan - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Sirwan, Iraq.
+
+Located at Street 23, Sirwan, Halabja, Sirwan, Sirwan Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+033091a1-6d7f-4a11-8c20-71da06087b1c,Al-Wasiti Hospital 3 - Taza Khurmatu,,,,,false,false,hospital,,4.0,false,0,Taza Khurmatu,Taza Khurmatu,"Street 18, Taza Khurmatu, Kirkuk",,"Al-Wasiti Hospital 3 - Taza Khurmatu - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Taza Khurmatu, Iraq.
+
+Located at Street 18, Taza Khurmatu, Kirkuk, Taza Khurmatu, Taza Khurmatu Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+03365f9c-fad0-4ba6-9716-6ad565a85467,Baghdad Furniture - Karbala City,,,,,false,false,furniture,,4.0,false,0,Karbala City,Karbala City,"Street 1, Karbala City, Karbala",,"Baghdad Furniture - Karbala City - Store offering home and office furniture, furnishings, and interior décor items. Located in Karbala City, Iraq.
+
+Located at Street 1, Karbala City, Karbala, Karbala City, Karbala City Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+033a5b11-31b1-45f4-92d2-dcb814025182,Erbil Interiors - Sinjar,,,,,false,false,furniture,,4.0,false,0,Sinjar,Sinjar,"Street 3, Sinjar, Mosul",,"Erbil Interiors - Sinjar - Store offering home and office furniture, furnishings, and interior décor items. Located in Sinjar, Iraq.
+
+Located at Street 3, Sinjar, Mosul, Sinjar, Sinjar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+033b87e2-0219-407a-bdc3-c4f695c9e10f,Martyrs Hospital 3 - Beni Hashim,,,,,false,false,hospital,,4.0,false,0,Beni Hashim,Beni Hashim,"Street 20, Beni Hashim, Maysan",,"Martyrs Hospital 3 - Beni Hashim - Medical facility providing healthcare services, emergency care, and specialized treatments. Located in Beni Hashim, Iraq.
+
+Located at Street 20, Beni Hashim, Maysan, Beni Hashim, Beni Hashim Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0348d5a9-d3ec-4d5d-bb8c-04f33fb12550,Sulaymaniyah Palace 3 - Sargaran,,,,,false,false,hotel,,4.0,false,0,Sargaran,Sargaran,"Street 20, Sargaran, Kirkuk",,"Sulaymaniyah Palace 3 - Sargaran - Accommodation establishment providing lodging, amenities, and hospitality services for travelers. Located in Sargaran, Iraq.
+
+Located at Street 20, Sargaran, Kirkuk, Sargaran, Sargaran Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+034bacb5-f5fe-49c3-a681-f53bd984405e,Mobile World 4 - Al-Qaim,,,,,false,false,electronics,,4.0,false,0,Al-Qaim,Al-Qaim,"Street 24, Al-Qaim, Anbar",,"Mobile World 4 - Al-Qaim - Store selling electronic devices, gadgets, appliances, and technology products. Located in Al-Qaim, Iraq.
+
+Located at Street 24, Al-Qaim, Anbar, Al-Qaim, Al-Qaim Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+034e0040-94da-441f-9164-96ca53969ecb,Trade Bank of Iraq - Diwaniyah,,,,,false,false,bank,,4.0,false,0,Al-Qadisiyyah,Diwaniyah,"Street 1, Diwaniyah, Qadisiyyah",,"Trade Bank of Iraq - Diwaniyah - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Diwaniyah, Iraq.
+
+Located at Street 1, Diwaniyah, Qadisiyyah, Diwaniyah, Al-Qadisiyyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0365ffee-dfad-4c89-bb1d-e514738bfc92,Future Academy 3 - Qal'at Sukkar,,,,,false,false,school,,4.0,false,0,Qal'at Sukkar,Qal'at Sukkar,"Street 16, Qal'at Sukkar, Dhi Qar",,"Future Academy 3 - Qal'at Sukkar - Educational institution providing academic instruction and learning programs for students. Located in Qal'at Sukkar, Iraq.
+
+Located at Street 16, Qal'at Sukkar, Dhi Qar, Qal'at Sukkar, Qal'at Sukkar Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0369b736-cd8f-44f9-b517-3c9c32fd48fb,Najaf Station - Al-Miqdadiyah,,,,,false,false,bus_station,,4.0,false,0,Al-Miqdadiyah,Al-Miqdadiyah,"Street 4, Al-Miqdadiyah, Qadisiyyah",,"Najaf Station - Al-Miqdadiyah - Transportation hub for bus services, connecting passengers to various destinations. Located in Al-Miqdadiyah, Iraq.
+
+Located at Street 4, Al-Miqdadiyah, Qadisiyyah, Al-Miqdadiyah, Al-Miqdadiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0369fa50-66c8-42d1-b198-a758f729fd17,Al-Rasheed Supermarket 3 - Shinafiyah,,,,,false,false,supermarket,,4.0,false,0,Shinafiyah,Shinafiyah,"Street 15, Shinafiyah, Qadisiyyah",,"Al-Rasheed Supermarket 3 - Shinafiyah - Large retail store selling groceries, household items, and daily necessities. Located in Shinafiyah, Iraq.
+
+Located at Street 15, Shinafiyah, Qadisiyyah, Shinafiyah, Shinafiyah Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+036c12ce-ea39-451b-8a17-5945d258eff7,Nissan Coffee 4 - Al-Maimouna,,,,,false,false,cafe,,4.0,false,0,Al-Maimouna,Al-Maimouna,"Street 24, Al-Maimouna, Maysan",,"Nissan Coffee 4 - Al-Maimouna - Coffee shop offering beverages, light meals, and a comfortable space for socializing or work. Located in Al-Maimouna, Iraq.
+
+Located at Street 24, Al-Maimouna, Maysan, Al-Maimouna, Al-Maimouna Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+036dcf14-5f3b-43a9-9b8a-808b2bd3dbe8,Al-Mansour Furniture - Sawa,,,,,false,false,furniture,,4.0,false,0,Sawa,Sawa,"Street 6, Sawa, Qadisiyyah",,"Al-Mansour Furniture - Sawa - Store offering home and office furniture, furnishings, and interior décor items. Located in Sawa, Iraq.
+
+Located at Street 6, Sawa, Qadisiyyah, Sawa, Sawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+03731566-c078-49d7-9735-37a9af03af8b,Baghdad Mall Clothes 3 - Al-Daur,,,,,false,false,clothes,,4.0,false,0,Al-Daur,Al-Daur,"Street 18, Al-Daur, Saladin",,"Baghdad Mall Clothes 3 - Al-Daur - Retail store selling clothing, apparel, and fashion items for men, women, and children. Located in Al-Daur, Iraq.
+
+Located at Street 18, Al-Daur, Saladin, Al-Daur, Al-Daur Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+0373bd85-6036-460e-b904-ac3cf62b6eee,Investment Bank - Ghamas,,,,,false,false,bank,,4.0,false,0,Ghamas,Ghamas,"Street 9, Ghamas, Qadisiyyah",,"Investment Bank - Ghamas - Financial institution offering banking services, loans, savings accounts, and financial advice. Located in Ghamas, Iraq.
+
+Located at Street 9, Ghamas, Qadisiyyah, Ghamas, Ghamas Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+03798f90-3dd1-4fe5-8cd9-330e493794a9,North Bus Station 3 - Balad,,,,,false,false,bus_station,,4.0,false,0,Balad,Balad,"Street 16, Balad, Saladin",,"North Bus Station 3 - Balad - Transportation hub for bus services, connecting passengers to various destinations. Located in Balad, Iraq.
+
+Located at Street 16, Balad, Saladin, Balad, Balad Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+037c9b55-4e78-404f-855d-08b884feaf24,Basra Fuel - Safwan,,,,,false,false,fuel,,4.0,false,0,Safwan,Safwan,"Street 9, Safwan, Basra",,"Basra Fuel - Safwan - Gas station providing fuel, petroleum products, and basic automotive services. Located in Safwan, Iraq.
+
+Located at Street 9, Safwan, Basra, Safwan, Safwan Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,
+03a5d627-a237-4ac0-9dcf-c142036ede9b,Karrada Grill - Smawa,,,,,false,false,restaurant,,4.0,false,0,Smawa,Smawa,"Street 10, Smawa, Dhi Qar",,"Karrada Grill - Smawa - Food establishment serving meals, snacks, and beverages to customers on-site or for delivery. Located in Smawa, Iraq.
+
+Located at Street 10, Smawa, Dhi Qar, Smawa, Smawa Governorate. Easily accessible by car and public transportation.",,,{},,,2026-03-31 08:11:55.33832+00,,pending,,,,,,,,,,,,,,,,,

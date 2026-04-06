@@ -1,0 +1,269 @@
+name,name_en,phone,website,email,address,city,governorate,category,subcategory,latitude,longitude,facebook,instagram,data_quality,verified,source
+فندق التاج,The Taj Hotel,+9647717777664,http://www.thetajhotel.com,,,Baghdad,Baghdad,Hotel,hotel,33.2849121,44.3974773,,,real,false,osm
+فندق المهاجر,Almuhajir Hotel,+9647709744440,,almuhajir.hotel@gmaill.com,62 St.,Baghdad,Baghdad,Hotel,hotel,33.3058556,44.4485053,,,real,false,osm
+المدائن الخالصة,,+9647719722087,,,شارع الأميرات,Baghdad,Baghdad,Hotel,hotel,33.3117,44.3559,,,real,false,osm
+Yasmin hotel,,+9647733911015,,h51038464@gmail.com,"20, شارع المتحف",Baghdad,Baghdad,Hotel,hotel,33.3304731,44.3851016,,,real,false,osm
+اليآسمين,Al Yasmin hotel,+9647733911015,http://h51038464@gmail.com,h51038464@gmail.com,"2, شارع المتحف",Baghdad,Baghdad,Hotel,hotel,33.330424,44.3850843,,,real,false,osm
+فندق اليآسمين Yasmin hotel,Yasmin hotel,+9647733911015,,h51038464@gmail.com,"20, شارع المتحف",Baghdad,Baghdad,Hotel,hotel,33.3303922,44.3850786,,,real,false,osm
+فندق الدار البيضاء,White Corner,+9647711324043,,,,Baghdad,Baghdad,Hotel,hotel,33.3364135,44.3997611,,,real,false,osm
+شقق زهرة الخليج السياحي,,+9647809142391,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3198838,44.4163598,,,real,false,osm
+فندق الراية,Alraia hotel,+9647711540433,,,"07711540433, بغداد السعدون",Baghdad,Baghdad,Hotel,hotel,33.3216629,44.4159381,,,real,false,osm
+فندق قصر نينوى,Ninewa Palace Hotel,+9647733331572,,,شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.3181014,44.4198194,,,real,false,osm
+فندق رويال كاردين,Royal Garden hotel,+9647722622651,,,"07722622651, شارع السعدون",Baghdad,Baghdad,Hotel,hotel,33.3172029,44.4205482,,,real,false,osm
+فندق سيڤان,sevan hotel,+9647702532669,,,,Baghdad,Baghdad,Hotel,hotel,33.326593,44.4125476,,,real,false,osm
+فندق شناشيل,SHANASHEL PALACE HOTEL,+9647813666666,,,"4, Al-Nidhal St.",Baghdad,Baghdad,Hotel,hotel,33.3234228,44.4196549,,,real,false,osm
+فندق مينا روز;مينا روز,Mena Rooz,+9647700015023,,,شارع المشجر,Baghdad,Baghdad,Hotel,hotel,33.3267661,44.4141036,,,real,false,osm
+فندق عسل,,+9647721461888,,,قرب محطة وقود السعدون,بغداد,Baghdad,Hotel,hotel,33.3227205,44.4150099,,,real,false,osm
+فندق عسل,العربيه,+9647721461888,,,"07721461888, شارع السعدون",Baghdad,Baghdad,Hotel,hotel,33.3227501,44.4148532,,,real,false,osm
+Kasr Al-Barakat,,+9640756807654,,,,Baghdad,Baghdad,Hotel,hotel,33.3218803,44.416111,,,real,false,osm
+فندق اليسر,,+9647716128390,,,,Baghdad,Baghdad,Hotel,hotel,33.3124255,44.4369019,,,real,false,osm
+بيت حيدر الدراجي ابوعلي قطاع صفر,"خانه حیدر الدراجی، بخش ۰ Haider Al-Daraji's house, Sector 0",+9647712017531,,,"0, 521-3",Baghdad,Baghdad,Hotel,hotel,33.3576853,44.4491889,,,real,false,osm
+فندق جنة الحسين,,+9647708881759,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3798366,44.3431936,,,real,false,osm
+فندق الحطيم,AL HATEEM HOTE,+9647806636357,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3798612,44.3440032,,,real,false,osm
+فندق السبط,Al Sebt Hotel,+9647800553515,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3802247,44.3435996,,,real,false,osm
+فندق قلب العالم,World Heart Hotel,+9647733330690,,,,Baghdad,Baghdad,Hotel,hotel,33.2750577,44.3641664,https://www.facebook.com/profile.php?id=61556073369551,https://www.instagram.com/worldheartmall_hotel/?hl=ar,real,false,osm
+ليث عبد الرحمن هادي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2401346,44.3576308,,,partial,false,osm
+علي عبد الرحمن هادي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2424331,44.3551486,,,partial,false,osm
+حسين عبد الرحمن هادي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2494917,44.3608888,,,partial,false,osm
+حمزة الاغا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2334246,44.4048169,,,partial,false,osm
+مولد ابو حاتم,,,,,"12, 842-12",Baghdad,Baghdad,Hotel,hotel,33.2555733,44.420309,,,partial,false,osm
+ملابس عامرية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3002276,44.2953872,,,partial,false,osm
+قاعة بر الوالدين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2718168,44.3392995,,,partial,false,osm
+مقر شركة بلد الرجال,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3060575,44.3377832,,,partial,false,osm
+جار اليرموك,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2963217,44.34437,,,partial,false,osm
+فندق اليرموك الدولي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3005207,44.3424968,,,partial,false,osm
+بيت حسين فالح محمد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3499965,44.2719997,,,partial,false,osm
+بيت حسين فالح محمد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3512382,44.272313,,,partial,false,osm
+فندق وشقق أومري,Aumary Hotel & Residences,,,,607-3,بغداد,Baghdad,Hotel,hotel,33.3245875,44.3497074,,,partial,false,osm
+مجمع العدل,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3466198,44.3222251,,,partial,false,osm
+دكتورة پروين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3525639,44.3158386,,,partial,false,osm
+دار الضيافة ياقوت البحر,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2867993,44.3845657,,,partial,false,osm
+فندق كورال,Coral Hotel,,https://coralbaghdad.com/homepage/,,شارع الجامعة,بغداد,Baghdad,Hotel,hotel,33.2826614,44.3940286,https://www.facebook.com/coralboutiquebaghdad/,,partial,false,osm
+Coral Baghdad Hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.282766,44.394008,,,partial,false,osm
+Babylon Rotana,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2912242,44.3904889,,,partial,false,osm
+فندق بابل اوبروي,,,,,بغداد / الجادرية,Baghdad,Baghdad,Hotel,hotel,33.291224,44.3904892,,,partial,false,osm
+Babylon accommodation,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2906173,44.389341,,,partial,false,osm
+فندق ارض الزهور,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2859482,44.3974194,,,partial,false,osm
+فندق السفير,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2859956,44.398294,,,partial,false,osm
+قسم الاخراج الكمركي / الدورة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2620197,44.4250344,,,partial,false,osm
+مكتب عدي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2938353,44.4166315,,,partial,false,osm
+قصر الحياة,قصر الحياة,,,,Inner Karrada Street,Baghdad,Baghdad,Hotel,hotel,33.2941727,44.4216486,,,partial,false,osm
+فندق انور ومثنى,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2941179,44.4212123,,,partial,false,osm
+فندق بلوم,baloom hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.2914433,44.4221234,,,partial,false,osm
+فندق دجلة,,,,,شارع عرصات الهندية,Baghdad,Baghdad,Hotel,hotel,33.2910348,44.4208471,,,partial,false,osm
+فندق انوار دجلة,,,,,بغداد / عرصات الهندية,Baghdad,Baghdad,Hotel,hotel,33.2909329,44.4208047,,,partial,false,osm
+سكن الاردنيين,Development Bank,,,,929-37,Baghdad,Baghdad,Hotel,hotel,33.2921885,44.4209907,,,partial,false,osm
+العرصات بلازا,Arasat Blaza,,,,شارع عشتار,Baghdad,Baghdad,Hotel,hotel,33.2916722,44.4227308,,,partial,false,osm
+فندق بيليتوم,Bilitom,,,,,Baghdad,Baghdad,Hotel,hotel,33.2938395,44.4278355,,,partial,false,osm
+فندق ديانا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2971374,44.4136605,,,partial,false,osm
+Inter Hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3004053,44.4203156,,,partial,false,osm
+فندق قصر المسبح,,,,,Karada Kharij,Baghdad,Baghdad,Hotel,hotel,33.2996722,44.4330803,,,partial,false,osm
+فندق و مطعم هلي السياحي,Hotel and rest. Haly,,,,تقاطع المسبح,Baghdad,Baghdad,Hotel,hotel,33.3011184,44.4320521,,,partial,false,osm
+فندق قصر الشرق,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3018924,44.4330609,,,partial,false,osm
+قصر الشرق قاعة ملهى,,,,,,Baghdad,Baghdad,Hotel,hotel,33.302058,44.4329658,,,partial,false,osm
+فندق برج السلام,Tower hotel peace,,,,Al-Saadoon Street,Baghdad,Baghdad,Hotel,hotel,33.3085127,44.4265508,,,partial,false,osm
+فندق برج السلام,Tower hotel peace,,,,Al-Saadoon Street,Baghdad,Baghdad,Hotel,hotel,33.3081744,44.4268439,,,partial,false,osm
+فندق برج السلام,,,,,بغداد / شارع ابو نؤاس / السعدون,Baghdad,Baghdad,Hotel,hotel,33.308211,44.4264146,,,partial,false,osm
+الوادي الاخضر,Green valley,,,,,Baghdad,Baghdad,Hotel,hotel,33.3070955,44.4297221,,,partial,false,osm
+فندق قصر الغدير,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3023596,44.4332347,,,partial,false,osm
+قلب بغداد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3062509,44.4302167,,,partial,false,osm
+قاعة وملهى الجوهرة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3021678,44.4331198,,,partial,false,osm
+فندق قصر العرب,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3081712,44.429448,,,partial,false,osm
+فندق سبا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2934242,44.4391892,,,partial,false,osm
+مجمع الانباسي السكني,,,,,شارع المسبح,Baghdad,Baghdad,Hotel,hotel,33.2922391,44.4389158,,,partial,false,osm
+Shaheen Hotel & Restaurant-فندق ومطعم شاهين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2932056,44.4340452,,,partial,false,osm
+فندق جبل بيروت,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2998939,44.4357533,,,partial,false,osm
+قصر المسبح,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2994594,44.4341225,,,partial,false,osm
+فندق برج بغداد,Burj Baghdad Hotel,,,,Karada Kharij,Baghdad,Baghdad,Hotel,hotel,33.2996506,44.433949,,,partial,false,osm
+فندق برج بغداد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3007773,44.4378689,,,partial,false,osm
+فندق قصر السندباد,,,,,,بغداد,Baghdad,Hotel,hotel,33.3004252,44.4372355,https://ar-ar.facebook.com/sindibad.place/,,partial,false,osm
+قصر السندباد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3004507,44.4394615,,,partial,false,osm
+فندق قصر المسبح,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2998267,44.4335328,,,partial,false,osm
+فندق بيت السندباد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.299914,44.4368259,,,partial,false,osm
+فندق قصر الإعلام,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3001,44.4361097,,,partial,false,osm
+ابو عبدو المصلاوي حداد/فايبر,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2965262,44.4435794,,,partial,false,osm
+فندق البيت الصغير,,,,,بغداد /كرادةخارج قرب ساحة عقبةبن نافع,Baghdad,Baghdad,Hotel,hotel,33.3011569,44.4424524,,,partial,false,osm
+فندق اوروك,Uruk hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3031595,44.4361368,,,partial,false,osm
+فندق اوروك,,,,,بغداد / كرادةخارج قرب ساحةعقبةبن نافع,Baghdad,Baghdad,Hotel,hotel,33.3032348,44.4360988,,,partial,false,osm
+دار الضيافة,Hospatality house,,,,"62, شارع 52",Baghdad,Baghdad,Hotel,hotel,33.3074753,44.4430896,,,partial,false,osm
+فندق شهد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3024411,44.4431571,,,partial,false,osm
+سكن شركة الحفر العراقيه,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3075759,44.4428061,,,partial,false,osm
+فندق ديفان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3045089,44.4475902,,,partial,false,osm
+شركة العراق العالمية IRAG GLOBAL,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3178603,44.3847418,,,partial,false,osm
+مجمع سكني فندق الرشيد,Al-Rasheed Residential Hotel Complex,,,,,Baghdad,Baghdad,Hotel,hotel,33.3173284,44.3914533,,,partial,false,osm
+قصر المرتضى,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3278126,44.3841055,,,partial,false,osm
+فندق الخلود,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3303,44.3853,,,partial,false,osm
+فندق الساحل,,,,,شارع ٦,Baghdad,Baghdad,Hotel,hotel,33.3301118,44.3837049,,,partial,false,osm
+فندق حدائق غرناطة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3289,44.3899,,,partial,false,osm
+100 ع,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3345227,44.3877652,,,partial,false,osm
+فندق المنصور ميليا,,,,,بغداد / الصالحية,Baghdad,Baghdad,Hotel,hotel,33.3278009,44.396051,,,partial,false,osm
+فندق الميناء,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3340863,44.3985055,,,partial,false,osm
+شقة عبود,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3560503,44.3618013,,,partial,false,osm
+فندق ضيافة دجلة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3363637,44.3861496,,,partial,false,osm
+فندق الصياد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3449877,44.3874859,,,partial,false,osm
+مجمع الخلفاء السكني,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3470176,44.3863028,,,partial,false,osm
+AL Bedaa Hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3368499,44.4001535,,,partial,false,osm
+فندق عشتارشيراتون,,,,,بغداد / شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.313886,44.4190466,,,partial,false,osm
+فندق باخان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3216838,44.4129656,,,partial,false,osm
+فندق السفير,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3217851,44.4122934,,,partial,false,osm
+فندق بايلوت,pilot hotel,,,,9,Baghdad,Baghdad,Hotel,hotel,33.3217562,44.412949,,,partial,false,osm
+فندق قصر السدير,,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3205488,44.4156832,,,partial,false,osm
+فندق باخان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3179368,44.4202209,,,partial,false,osm
+Palace hotel Paradise,Palace hotel Paradise,,,,,Baghdad,Baghdad,Hotel,hotel,33.3178878,44.4183111,,,partial,false,osm
+فندق بغداد الدولي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3186963,44.4155137,,,partial,false,osm
+فندق بعداد,Baghdad Horel,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3187038,44.4153735,,,partial,false,osm
+فندق ديوان,,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3209171,44.4147921,,,partial,false,osm
+فندق بغداد,Baghdad hotel,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3191284,44.4155341,,,partial,false,osm
+فندق ريم البوادي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3178866,44.4168607,,,partial,false,osm
+فندق اوسكار,,,,,شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.3210001,44.4157497,,,partial,false,osm
+دار الظيافه,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3206357,44.4155108,,,partial,false,osm
+المنصور,Mansur,,,,,Baghdad,Baghdad,Hotel,hotel,33.3214368,44.4166048,,,partial,false,osm
+Royal Garden,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3169205,44.4199809,,,partial,false,osm
+Baghdad Hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3186679,44.4150578,,,partial,false,osm
+فندق فلسطين,,,,,بغداد / شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.3153679,44.4187673,,,partial,false,osm
+فندق بغداد,,,,,بغداد / شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.3186506,44.4150967,,,partial,false,osm
+فندق المنصور,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3179378,44.4141244,,,partial,false,osm
+فندق بحرة البجع,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3110018,44.4247584,,,partial,false,osm
+فتدق بحيرة البجع,hotel swan lake,,,,,Baghdad,Baghdad,Hotel,hotel,33.3132571,44.4252898,,,partial,false,osm
+فندق الماس,Almas Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3117937,44.4222658,,,partial,false,osm
+ركن كهرمانه,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3114441,44.4254194,,,partial,false,osm
+فندق الماس,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3135192,44.4244826,,,partial,false,osm
+الاناء الملكي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3094116,44.4259524,,,partial,false,osm
+الاناء الملكي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3096879,44.4264534,,,partial,false,osm
+فندق ركن كهرمانة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3116387,44.425538,,,partial,false,osm
+فندق جنات العراق,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3088772,44.425228,,,partial,false,osm
+فندق قصر الماس,,,,,بغداد / البتاوين,Baghdad,Baghdad,Hotel,hotel,33.3136493,44.4245069,,,partial,false,osm
+v2,al-rashid building,,,,,Baghdad,Baghdad,Hotel,hotel,33.3101086,44.4276802,,,osm,false,osm
+فندق ركن العزائم,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3095913,44.4307058,,,partial,false,osm
+فندق ركن العزائم,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3116486,44.4287525,,,partial,false,osm
+عمارة ماجد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3129222,44.4271727,,,partial,false,osm
+فندق طليطله,TOLEDO,,,,Salman Fayq Street,Baghdad,Baghdad,Hotel,hotel,33.3100961,44.4316043,,,partial,false,osm
+شقق و مطعم و قاعه افراح المحبة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3109188,44.4276662,,,partial,false,osm
+فندق شقق المحبة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3109647,44.4274295,,,partial,false,osm
+Rokn 3azaim,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3117701,44.428957,,,partial,false,osm
+ركن بيسان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3123529,44.4274655,,,partial,false,osm
+فندق السدير,,,,,بغداد / شارع النضال,Baghdad,Baghdad,Hotel,hotel,33.3152805,44.4243754,,,partial,false,osm
+فندق الشاهين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3202072,44.4205969,,,partial,false,osm
+الزاملي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.321264,44.4326347,,,partial,false,osm
+كويسان,Koesan,,,,شارع المشجر,Baghdad,Baghdad,Hotel,hotel,33.3265062,44.4135221,,,partial,false,osm
+فندق أطلس في شارع السعدون,,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3223461,44.4133478,,,partial,false,osm
+نازانين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3265515,44.4134312,,,partial,false,osm
+فندق سارا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3255238,44.4130357,,,partial,false,osm
+فندق الظهران,,,,,بغداد السعدون,Baghdad,Baghdad,Hotel,hotel,33.3257924,44.4101115,,,partial,false,osm
+فندق ارض الخيرات,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3230534,44.4134208,,,partial,false,osm
+فندق قصر العيون,,,,,شارع المشجر,Baghdad,Baghdad,Hotel,hotel,33.326647,44.4137328,,,partial,false,osm
+فدق دوكان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3246534,44.4135953,,,partial,false,osm
+فندق,بغداد,,,,,Baghdad,Baghdad,Hotel,hotel,33.3264079,44.4137012,,,partial,false,osm
+فندق الروان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.326685,44.4137356,,,partial,false,osm
+كهوة السعدون الحلوين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3264789,44.4134244,,,partial,false,osm
+فندق السفير,,,,,بغداد / شارع ابو نؤاس,Baghdad,Baghdad,Hotel,hotel,33.3219755,44.4122127,,,partial,false,osm
+فندق اللجين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3220456,44.4164072,,,partial,false,osm
+فندق سيران,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3232706,44.4151615,,,partial,false,osm
+فندق جبل زمناكو,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3268341,44.4140676,,,partial,false,osm
+فندق قصر سيوان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3261792,44.4137669,,,partial,false,osm
+فندق قصر المناخة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3226571,44.4144695,,,partial,false,osm
+فندق زهره الكاردينيا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3270758,44.414234,,,partial,false,osm
+الينبع,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3229051,44.4142855,,,partial,false,osm
+فندق قصر الشام,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3268681,44.4140838,,,partial,false,osm
+قصر سيروان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3247947,44.4146276,,,partial,false,osm
+فندق,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3269131,44.4140877,,,partial,false,osm
+فندق دجلة الخير,,,,,شارع السعدون,Baghdad,Baghdad,Hotel,hotel,33.3233209,44.4137641,,,partial,false,osm
+فندق الحديدي,Al-hadedi’s hotel;Hotel AL hdeady,,,,,Baghdad,Baghdad,Hotel,hotel,33.3283831,44.4149515,,,partial,false,osm
+فندق التساهل,al-tasahol hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3284835,44.4150775,,,partial,false,osm
+وزارة التعليم العالي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3265963,44.420473,,,partial,false,osm
+قسم التسفير والمحاكم,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3304184,44.431755,,,partial,false,osm
+فندق قصر المرجان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3125868,44.4366958,,,partial,false,osm
+ايكال,Ekal Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3123723,44.434981,,,partial,false,osm
+Al MRBEH,Al MRBEH,,,,,Baghdad,Baghdad,Hotel,hotel,33.3351983,44.4086623,,,partial,false,osm
+نادي ضباط العراق الترفيهي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3372703,44.4266456,,,partial,false,osm
+شارع فلسطين صاحب جلال دراجات,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3513812,44.4145837,,,partial,false,osm
+كراج انوار الجوادين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3760304,44.3255345,,,partial,false,osm
+فندق ملاذ الكاظميين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3711586,44.3414396,,,partial,false,osm
+جولد ستار,Gold star,,,,,Baghdad,Baghdad,Hotel,hotel,33.373667,44.338914,,,partial,false,osm
+تاج السلطان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3739368,44.3392823,,,partial,false,osm
+فندق و مطعم القائم عج,ALQAYIM HOTEL,,,,شارع النواب,Baghdad,Baghdad,Hotel,hotel,33.3741092,44.339773,,,partial,false,osm
+فندق نور الهدى,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3726334,44.3390515,,,partial,false,osm
+فندق التمار,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3719669,44.3407036,,,partial,false,osm
+فندق ضيوف الامراء,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3737248,44.338213,,,partial,false,osm
+فندق طيبة teeba hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3736434,44.341862,,,partial,false,osm
+الطيبة السياحي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.373613,44.3425821,,,partial,false,osm
+كباب اعظمية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3698585,44.3531688,,,partial,false,osm
+Shanasheel Al Kadhimiya,Shanasheel Al Kadhimiya,,,,,Baghdad,Baghdad,Hotel,hotel,33.3769016,44.3383741,,,partial,false,osm
+فندق شاطئ الكاظمية,Nil shrine hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3788822,44.3390486,,,partial,false,osm
+فندق الدهوي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3789905,44.3382477,,,partial,false,osm
+ضيوف الكاظمية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3802548,44.3398592,,,partial,false,osm
+فندق العقيله,,,,,شارع باب القبله,Baghdad,Baghdad,Hotel,hotel,33.3778663,44.3382525,,,partial,false,osm
+فندق جوهرة الكاظمين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3784514,44.3378041,,,partial,false,osm
+فندق الذهب,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3783955,44.338112,,,partial,false,osm
+فندق الدهوي,Aldahawi hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3773787,44.3384577,,,partial,false,osm
+فندق الفيحاء,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3796696,44.3396883,,,partial,false,osm
+فندق الصادق,,,,,,Baghdad,Baghdad,Hotel,hotel,33.377788,44.3382895,,,partial,false,osm
+الراية,alraya,,,,,Baghdad,Baghdad,Hotel,hotel,33.377053,44.3352591,,,partial,false,osm
+فندق الريام,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3780095,44.3385262,,,partial,false,osm
+فندق ابي طالب,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3782194,44.338898,,,partial,false,osm
+البلد الامين,,,,,شارع باب القبله,Baghdad,Baghdad,Hotel,hotel,33.3764387,44.3381956,,,partial,false,osm
+فندق ابابيل,Ababil Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3776591,44.3384858,https://www.facebook.com/فندق-ابابيل-السياحي-839013879497743/,,partial,false,osm
+فندق ومطعم ابابيل,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3776637,44.3384461,,,partial,false,osm
+فندق ضوء الماس,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3784238,44.3387474,,,partial,false,osm
+فندق فضوة الشيخ,,,,,شارع باب القبله,Baghdad,Baghdad,Hotel,hotel,33.3794127,44.3410348,,,partial,false,osm
+فندق نويش 7811,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3748763,44.3381638,,,partial,false,osm
+فندق الدهوي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3771474,44.3387847,,,partial,false,osm
+فندق الدهوي باب القبلة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3772204,44.3388121,,,partial,false,osm
+ملاذ الجوادين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3752104,44.3378288,,,partial,false,osm
+فندق شناشيل,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3767905,44.3382538,,,partial,false,osm
+فندق التاج الكاظمية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.377006,44.3380048,,,partial,false,osm
+فندق قصر الكاظمية,,,,,بغداد / الكاظمية,Baghdad,Baghdad,Hotel,hotel,33.3747034,44.3377495,,,partial,false,osm
+فندق طاوس الجنة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3839,44.3398,,,partial,false,osm
+سفينة الانوار,,,,,شارع المحيط,Baghdad,Baghdad,Hotel,hotel,33.3841515,44.339555,,,partial,false,osm
+فندق سكن محمد نور القمر,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3809652,44.3394453,,,partial,false,osm
+فندق ضيوف قصر الكاظمين,Kader Al-Kadimain hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.379587,44.3449369,,,partial,false,osm
+فندق ضيء الامامين,,,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3801791,44.341834,,,partial,false,osm
+فندق ريحانه الكاظمية,rayhana alkadimia,,,,,Baghdad,Baghdad,Hotel,hotel,33.3764759,44.3459441,,,partial,false,osm
+Bab Al Rayyan,Bab Al Rayyan,,,,المراد,Baghdad,Baghdad,Hotel,hotel,33.3802107,44.3425723,,,partial,false,osm
+فندق الراياحين,,,,,ساحة مؤمل,Baghdad,Baghdad,Hotel,hotel,33.3787302,44.3451363,,,partial,false,osm
+فندق سلسبيل,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3787871,44.3443828,,,partial,false,osm
+فندق باب المراد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3802052,44.3432916,,,partial,false,osm
+فندق جميره,,,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3798776,44.3457524,,,partial,false,osm
+فندق القباب الذهبية,Golden Domes Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3786667,44.3443903,,,partial,false,osm
+فندق راوند,,,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3805787,44.3440131,,,partial,false,osm
+انوار الكاظمين,Anwar Alkadhrmain,,,,,Baghdad,Baghdad,Hotel,hotel,33.3792769,44.3442364,,,partial,false,osm
+ضيوف قصر الكاظمية,Deuf kasr kadhimia d.k.k,,,,,Baghdad,Baghdad,Hotel,hotel,33.3790274,44.3445934,,,partial,false,osm
+فندق برج الصفا,burj alsafa hotel,,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.3783516,44.3450899,,,partial,false,osm
+فندق اوار الكاظمين,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3792554,44.3439307,,,partial,false,osm
+فندق البراق,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3764229,44.3447133,,,partial,false,osm
+فندق برج الكاظمية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3795864,44.344245,,,partial,false,osm
+فندق,fndq,,,,شارع اكد,Baghdad,Baghdad,Hotel,hotel,33.379336,44.3441229,,,partial,false,osm
+فندق سيد الرسل,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3807013,44.342324,,,partial,false,osm
+فندق السبط,,,,,شارع باب المراد,Baghdad,Baghdad,Hotel,hotel,33.380168,44.3421001,,,partial,false,osm
+فندق الازهران,,,,,شارع المحيط,Baghdad,Baghdad,Hotel,hotel,33.3799517,44.343504,,,partial,false,osm
+فندق السلطان,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3803172,44.3435814,,,partial,false,osm
+مديريه الاستخبارات العسكريه,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3803442,44.3479944,,,partial,false,osm
+الكاظمية شارع باب المراد,,,,,شارع باب القبله,Baghdad,Baghdad,Hotel,hotel,33.3796877,44.3439121,,,partial,false,osm
+فندق الخفاجي 2,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3794177,44.3437925,,,partial,false,osm
+فندق الاقمار السياحي,,,,,بغداد / الكاظمية,Baghdad,Baghdad,Hotel,hotel,33.3796604,44.3447608,,,partial,false,osm
+Burj Al Jawad Hotel,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3799739,44.3447473,,,partial,false,osm
+فندق فدك الزهراء,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3812463,44.3447653,,,partial,false,osm
+فندق الخفاجي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3810011,44.3448282,,,partial,false,osm
+فندق قرطاج,,,,,,Baghdad,Baghdad,Hotel,hotel,33.381415,44.3435329,,,partial,false,osm
+فندق العرش,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3835735,44.3418603,,,partial,false,osm
+فندق السراج المنير,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3809322,44.3433307,,,partial,false,osm
+فندق ضيافة الامام محمد الجواد,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3825619,44.3429304,,,partial,false,osm
+فندق دار ضيافة الامام الجواد,,,,,شارع المحيط,Baghdad,Baghdad,Hotel,hotel,33.3825235,44.3430128,,,partial,false,osm
+فندق سبأ السياحي,,,,,Safiy Ad Din Al-Hilli Street,Baghdad,Baghdad,Hotel,hotel,33.3715552,44.4054881,,,partial,false,osm
+مجمع كلشي وكلاشي دراجات الاعظمية,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3846103,44.3850935,,,partial,false,osm
+كهوة عمار,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3887984,44.3682097,,,partial,false,osm
+بيت ابو فقار الكناني,,,,,شارع الفلاح,Baghdad,Baghdad,Hotel,hotel,33.3692698,44.4417104,,,partial,false,osm
+مجمع الاعراس السياحي,,,,,,Baghdad,Baghdad,Hotel,hotel,33.2852859,44.373031,,,partial,false,osm
+فندق بابل - وارويك,Warwick Babylon Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.2912001,44.3903846,,,partial,false,osm
+Rayhaan Rotana Hotel,,,,,شارع الكندي,بغداد,Baghdad,Hotel,hotel,33.3117965,44.3649862,,,partial,false,osm
+فندق الرشيد,Al Rasheed Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3159605,44.3896594,,,partial,false,osm
+فندق الرشيد,Royal Tulip Al Rasheed Hotel,,https://royal-tulip-al-rasheed-hotel.goldentulip.com,,,Baghdad,Baghdad,Hotel,hotel,33.3163952,44.3899043,,,partial,false,osm
+فندق المنصور ميليا,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3280277,44.396356,,,partial,false,osm
+فندق المنصور,Al Mansour Hotel,,,,,بغداد,Baghdad,Hotel,hotel,33.3278896,44.3966459,https://www.facebook.com/pages/%D9%81%D9%86%D8%AF%D9%82-%D9%85%D9%86%D8%B5%D9%88%D8%B1-%D9%85%D9%8A%D9%84%D9%8A%D8%A7/303651809754998,,partial,false,osm
+فندق العراق الحديث,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3488233,44.3859656,,,partial,false,osm
+فندق دار الجامعة,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3484463,44.3880545,,,partial,false,osm
+Crystal Grand Hotel Ishtar,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3139268,44.4190626,,,partial,false,osm
+فندق فلسطين الدولي,International Palestine Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3152176,44.4185351,IPH.official,,partial,false,osm
+فندق السدير,Sadeer Hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3156065,44.4244952,,,partial,false,osm
+فندق نبع الفرات,,,,,,Baghdad,Baghdad,Hotel,hotel,33.3318973,44.4075822,,,partial,false,osm
+فندق الكنايري,canary hotel,,,,,Baghdad,Baghdad,Hotel,hotel,33.3837116,44.3304609,,,partial,false,osm

@@ -1,0 +1,36 @@
+
+BUSINESS DATA PROCESSING REPORT
+===============================
+Processing Date: 2026-04-05 14:39:13
+Input Folder: C:\Users\HB LAPTOP STORE\Downloads\csv-busineses
+Output Folder: C:\Users\HB LAPTOP STORE\Downloads\csv-busineses\output
+
+SUMMARY STATISTICS:
+------------------
+Files Processed: 37
+Total Rows: 6500
+Valid Phone Numbers: 635
+Invalid/Suspicious Phone Numbers: 2478
+No Phone Numbers: 3387
+
+OUTPUT FILES:
+------------
+- valid_phones_20260405_143913.csv (635 rows)
+- no_phone_20260405_143913.csv (3387 rows)
+- invalid_phones_20260405_143913.csv (2478 rows)
+
+PHONE NUMBER VALIDATION:
+-----------------------
+- Iraqi mobile numbers: 07xxx xxx xxx format (11 digits with 0 prefix)
+- Iraqi landline numbers: 01-09 + 9 digits (11 digits total with 0 prefix)
+- Country code normalization: +964 → 0 prefix
+- Duplicate removal based on phone and business name
+
+DATA QUALITY CHECKS:
+-------------------
+- Suspicious pattern detection
+- Fake/test data identification
+- Duplicate removal
+- Original data preservation
+
+Processing log saved to: processing.log
