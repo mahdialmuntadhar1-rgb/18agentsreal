@@ -104,6 +104,7 @@ export async function fetchBusinesses(filters?: {
     }
     if (filters?.limit) {
       query = query.limit(filters.limit);
+      console.log(`[fetchBusinesses] ⚠️ Applying limit: ${filters.limit}`);
     }
 
     const { data, error } = await query;
@@ -113,14 +114,53 @@ export async function fetchBusinesses(filters?: {
       throw error;
     }
     
-    console.log(`[fetchBusinesses] Fetched ${data?.length || 0} businesses`);
+    console.log(`[fetchBusinesses] ✅ Raw rows fetched: ${data?.length || 0}`);
+    
+    // 🔍 AUDIT: Log raw data before transformation
+    if (data && data.length > 0) {
+      console.log('[fetchBusinesses] 📊 Raw sample (first row):', {
+        id: data[0].id,
+        name: data[0].business_name,
+        governorate: data[0].governorate,
+        category: data[0].category,
+        hasArabicName: !!data[0].arabic_name,
+        hasPhone: !!data[0].phone_1,
+        confidence: data[0].confidence_score
+      });
+      
+      // Check for null values that might cause issues
+      const nullChecks = {
+        noName: data.filter(r => !r.business_name).length,
+        noGovernorate: data.filter(r => !r.governorate).length,
+        noCategory: data.filter(r => !r.category).length,
+        noConfidence: data.filter(r => r.confidence_score === null || r.confidence_score === undefined).length
+      };
+      
+      if (nullChecks.noName > 0 || nullChecks.noGovernorate > 0 || nullChecks.noCategory > 0) {
+        console.warn('[fetchBusinesses] ⚠️ Rows with null values:', nullChecks);
+      }
+    }
     
     // Enrich with frontend-only fields
-    const enriched = (data || []).map(enrichBusiness);
+    const enriched = (data || []).map((record, index) => {
+      const enrichedRecord = enrichBusiness(record);
+      
+      // 🔍 AUDIT: Log any enrichment that drops data
+      if (!enrichedRecord.business_name && record.business_name) {
+        console.warn(`[fetchBusinesses] Row ${index}: Lost business_name during enrichment`);
+      }
+      
+      return enrichedRecord;
+    });
+    
+    console.log(`[fetchBusinesses] ✅ Rows after enrichment: ${enriched.length}`);
     
     // Filter featured if requested
     if (filters?.featured) {
-      return enriched.filter(b => b.isFeatured);
+      const beforeFilter = enriched.length;
+      const featured = enriched.filter(b => b.isFeatured);
+      console.log(`[fetchBusinesses] Featured filter: ${beforeFilter} → ${featured.length} rows`);
+      return featured;
     }
     
     return enriched;

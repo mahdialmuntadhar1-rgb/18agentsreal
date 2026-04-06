@@ -27,14 +27,35 @@ export default function HomePage() {
           category: selectedCategory
         });
         
+        // 🔍 AUDIT: Log before fetch
+        console.log('[HomePage] ⏳ Starting fetch from Supabase...');
+        
         const data = await fetchBusinesses({
           governorate: selectedGovernorate || undefined,
           city: selectedCity || undefined,
           category: selectedCategory || undefined,
-          limit: 100,
+          // ❌ REMOVED: limit: 100 - This was hiding ~1,700 rows!
         });
         
-        console.log(`[HomePage] Loaded ${data.length} businesses`);
+        // 🔍 AUDIT: Log detailed results
+        console.log(`[HomePage] ✅ Loaded ${data.length} businesses`);
+        console.log('[HomePage] 📊 Sample data (first 3):', data.slice(0, 3).map(b => ({ 
+          id: b.id, 
+          name: b.business_name,
+          governorate: b.governorate,
+          category: b.category,
+          confidence: b.confidence_score 
+        })));
+        
+        // 🔍 AUDIT: Check if we're missing expected data
+        if (data.length < 100) {
+          console.warn(`[HomePage] ⚠️ Only ${data.length} businesses returned - expected ~1,800`);
+        } else if (data.length === 100) {
+          console.warn('[HomePage] 🚨 Exactly 100 businesses returned - check if limit(100) is still applied');
+        } else {
+          console.log(`[HomePage] ✅ Good: ${data.length} businesses loaded (no hard limit)`);
+        }
+        
         setBusinesses(data);
       } catch (err) {
         console.error('[HomePage] Failed to load businesses:', err);
