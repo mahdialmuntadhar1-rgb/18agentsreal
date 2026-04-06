@@ -1,13 +1,13 @@
 {
-  "batch_id": "batch_1775462924673",
-  "timestamp": "2026-04-06T08:08:47.631Z",
+  "batch_id": "batch_1775463709080",
+  "timestamp": "2026-04-06T08:21:51.160Z",
   "files_processed": 19,
   "total_rows_imported": 15590,
   "total_rows_standardized": 15590,
   "missing_required_fields": 13496,
   "phone_stats": {
-    "valid": 1294,
-    "invalid": 3880,
+    "valid": 4292,
+    "invalid": 882,
     "missing": 0
   },
   "file_details": [
@@ -47,6 +47,7 @@
       ],
       "standardized": 1000,
       "unmappedFields": [
+        "nameKu",
         "imageUrl",
         "coverImage",
         "isPremium",
@@ -99,6 +100,7 @@
       ],
       "standardized": 1000,
       "unmappedFields": [
+        "nameKu",
         "imageUrl",
         "coverImage",
         "isPremium",
@@ -261,7 +263,9 @@
         "main_phone",
         "maps_link",
         "maps_url",
+        "nameKu",
         "name_en",
+        "name_ku",
         "needs_review",
         "normalized_address",
         "normalized_facebook",
@@ -484,6 +488,7 @@
       "standardized": 1760,
       "unmappedFields": [
         "name_en",
+        "nameKu",
         "lat",
         "lng",
         "_status",
@@ -805,7 +810,9 @@
         "main_email",
         "main_phone",
         "maps_url",
+        "nameKu",
         "name_en",
+        "nameku",
         "needs_review",
         "normalized_address",
         "normalized_facebook",
@@ -930,6 +937,7 @@
         "maps_link",
         "maps_url",
         "name_en",
+        "name_ku",
         "needs_review",
         "normalized_address",
         "normalized_facebook",
@@ -1002,6 +1010,7 @@
       ],
       "standardized": 100,
       "unmappedFields": [
+        "nameKu",
         "imageUrl",
         "coverImage",
         "isPremium",
@@ -1019,6 +1028,7 @@
         "distance",
         "descriptionAr",
         "descriptionKu",
+        "nameku",
         "imageurl",
         "coverimage",
         "descriptionar",
@@ -1075,6 +1085,7 @@
         "original_name",
         "translated_name",
         "created_at",
+        "name_ku",
         "directions_link",
         "data_quality",
         "is_published"
@@ -1131,6 +1142,7 @@
       ],
       "standardized": 100,
       "unmappedFields": [
+        "nameKu",
         "imageUrl",
         "coverImage",
         "isPremium",
@@ -1148,6 +1160,7 @@
         "distance",
         "descriptionAr",
         "descriptionKu",
+        "nameku",
         "imageurl",
         "coverimage",
         "descriptionar",

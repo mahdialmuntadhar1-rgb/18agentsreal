@@ -50,12 +50,13 @@ const headerMappings = {
   'arabic_name': 'Arabic Name',
   'الاسم': 'Arabic Name',
   
-  // English name
-  'nameKu': 'English Name',
-  'name_ku': 'English Name',
-  'nameku': 'English Name',
+  // English name - REMOVED nameKu mapping (Kurdish, not English)
+  // Only true English names should go here
   'english_name': 'English Name',
   'en_name': 'English Name',
+  
+  // Kurdish name (Sorani) - preserved in unmapped, not mapped to English
+  // nameKu is intentionally NOT mapped to English Name
   
   // Category
   'category': 'Category',
@@ -148,35 +149,79 @@ function ensureOutputDir() {
   }
 }
 
-// Normalize phone number
+// Extract and normalize Iraqi phone numbers
 function normalizePhone(phone) {
   if (!phone || phone === '' || phone === null || phone === undefined) {
-    return { normalized: null, valid: false, type: 'missing' };
+    return { normalized: null, valid: false, type: 'missing', original: '' };
   }
   
-  let normalized = String(phone).trim();
+  let original = String(phone).trim();
   
-  // Remove all non-numeric characters except + at start
-  normalized = normalized.replace(/[^\d+]/g, '');
-  
-  // Handle various Iraqi phone formats
-  if (normalized.startsWith('+964')) {
-    normalized = normalized.replace('+964', '0');
-  } else if (normalized.startsWith('964')) {
-    normalized = '0' + normalized.slice(3);
-  } else if (normalized.startsWith('00964')) {
-    normalized = '0' + normalized.slice(5);
-  } else if (!normalized.startsWith('0') && normalized.length === 10) {
-    normalized = '0' + normalized;
+  // Extract all digit sequences from the text (handles "Call 07701234567 or 07801234568")
+  const digitMatches = original.match(/\d+/g);
+  if (!digitMatches) {
+    return { normalized: null, valid: false, type: 'invalid', original };
   }
   
-  // Check if it's a valid Iraqi format (should be 11 digits starting with 0)
-  const isValid = /^0\d{10}$/.test(normalized);
+  // Join digits and try to find phone numbers
+  let allDigits = digitMatches.join('');
+  
+  // Try to extract Iraqi phone numbers from the digit string
+  // Pattern: (964|00964|\+964)?0?7[3-9]\d{8}
+  const iraqiPhoneRegex = /(?:964|00964|\+964)?0?7[3-9]\d{8}/g;
+  const matches = allDigits.match(iraqiPhoneRegex);
+  
+  if (!matches || matches.length === 0) {
+    // No clear Iraqi pattern found - try to extract anything that looks like a phone
+    // Look for 10-11 digit sequences starting with 07 or 7
+    const looseMatches = allDigits.match(/0?7\d{9}/g);
+    if (looseMatches && looseMatches.length > 0) {
+      const normalized = looseMatches.map(m => m.startsWith('0') ? m : '0' + m);
+      return { 
+        normalized: normalized[0], 
+        valid: true, 
+        type: 'valid',
+        additional: normalized.slice(1),
+        original 
+      };
+    }
+    return { normalized: original, valid: false, type: 'unparseable', original };
+  }
+  
+  // Normalize each match to 07XXXXXXXXX format
+  const normalized = matches.map(match => {
+    let digits = match;
+    
+    // Remove country code prefixes
+    if (digits.startsWith('+964')) {
+      digits = digits.slice(4);
+    } else if (digits.startsWith('00964')) {
+      digits = digits.slice(5);
+    } else if (digits.startsWith('964')) {
+      digits = digits.slice(3);
+    }
+    
+    // Ensure leading zero
+    if (!digits.startsWith('0')) {
+      digits = '0' + digits;
+    }
+    
+    return digits;
+  });
+  
+  // Return first number as primary, rest as additional
+  const primary = normalized[0];
+  const additional = normalized.slice(1);
+  
+  // Validate: should be 11 digits starting with 07
+  const isValid = /^07\d{9}$/.test(primary);
   
   return {
-    normalized: isValid ? normalized : phone,
+    normalized: isValid ? primary : original,
     valid: isValid,
-    type: isValid ? 'valid' : 'invalid'
+    type: isValid ? 'valid' : 'invalid',
+    additional: isValid ? additional : [],
+    original
   };
 }
 
@@ -240,40 +285,59 @@ function processRow(row, fileName, batchId, rowIndex) {
     }
   }
   
-  // Handle phone normalization
+  // Handle phone normalization with multi-number extraction
   let phone1 = '';
   let phone2 = '';
   let hasValidPhone = false;
+  let allExtractedPhones = [];
   
+  // First, try to get phones from the 'phone' field (mapped to Phone 1)
   if (mappedRow['Phone 1']) {
     const phoneResult = normalizePhone(mappedRow['Phone 1']);
+    
     if (phoneResult.valid) {
       phone1 = phoneResult.normalized;
       hasValidPhone = true;
       results.phoneStats.valid++;
+      
+      // Capture additional numbers found in the same field
+      if (phoneResult.additional && phoneResult.additional.length > 0) {
+        allExtractedPhones.push(...phoneResult.additional);
+      }
+    } else if (phoneResult.type === 'unparseable') {
+      // Keep original if we couldn't parse it
+      phone1 = phoneResult.original;
+      results.phoneStats.invalid++;
     } else {
       phone1 = mappedRow['Phone 1'];
       results.phoneStats.invalid++;
     }
   }
   
+  // Also check Phone 2 field
   if (mappedRow['Phone 2']) {
-    const phoneResult = normalizePhone(mappedRow['Phone 2']);
-    phone2 = phoneResult.valid ? phoneResult.normalized : mappedRow['Phone 2'];
+    const phone2Result = normalizePhone(mappedRow['Phone 2']);
+    if (phone2Result.valid) {
+      phone2 = phone2Result.normalized;
+      results.phoneStats.valid++;
+    } else {
+      phone2 = phone2Result.original || mappedRow['Phone 2'];
+    }
   }
   
-  // Check for multiple phones in Phone 1
-  if (phone1.includes(',') || phone1.includes('/') || phone1.includes('&')) {
-    const phones = phone1.split(/[,/&]/).map(p => p.trim()).filter(p => p);
-    if (phones.length > 0) {
-      const firstResult = normalizePhone(phones[0]);
-      phone1 = firstResult.valid ? firstResult.normalized : phones[0];
-      hasValidPhone = firstResult.valid;
-      
-      if (phones.length > 1 && !mappedRow['Phone 2']) {
-        const secondResult = normalizePhone(phones[1]);
-        phone2 = secondResult.valid ? secondResult.normalized : phones[1];
-      }
+  // If we have additional extracted phones and Phone 2 is empty, use the first additional
+  if (allExtractedPhones.length > 0 && !phone2) {
+    phone2 = allExtractedPhones[0];
+    results.phoneStats.valid++;
+  }
+  
+  // Also check whatsapp field as potential phone source
+  if (!phone1 && mappedRow['WhatsApp']) {
+    const waResult = normalizePhone(mappedRow['WhatsApp']);
+    if (waResult.valid) {
+      phone1 = waResult.normalized;
+      hasValidPhone = true;
+      results.phoneStats.valid++;
     }
   }
   

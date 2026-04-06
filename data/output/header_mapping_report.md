@@ -1,6 +1,6 @@
 # Header Mapping Report
 
-Generated: 2026-04-06T08:08:47.629Z
+Generated: 2026-04-06T08:21:51.157Z
 
 ## Files Processed
 
@@ -14,7 +14,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `id` → **ID** ✓
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `imageUrl` → (unmapped)
 - `coverImage` → (unmapped)
 - `isPremium` → (unmapped)
@@ -42,6 +42,7 @@ Generated: 2026-04-06T08:08:47.629Z
 
 #### Unmapped Fields
 
+- `nameKu`
 - `imageUrl`
 - `coverImage`
 - `isPremium`
@@ -68,7 +69,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `id` → **ID** ✓
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `imageUrl` → (unmapped)
 - `coverImage` → (unmapped)
 - `isPremium` → (unmapped)
@@ -97,6 +98,7 @@ Generated: 2026-04-06T08:08:47.629Z
 
 #### Unmapped Fields
 
+- `nameKu`
 - `imageUrl`
 - `coverImage`
 - `isPremium`
@@ -171,10 +173,10 @@ Generated: 2026-04-06T08:08:47.629Z
 - `maps_url` → (unmapped)
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `name_ar` → **Arabic Name** ✓
 - `name_en` → (unmapped)
-- `name_ku` → **English Name** ✓
+- `name_ku` → (unmapped)
 - `needs_review` → (unmapped)
 - `normalized_address` → (unmapped)
 - `normalized_facebook` → (unmapped)
@@ -262,7 +264,9 @@ Generated: 2026-04-06T08:08:47.629Z
 - `main_phone`
 - `maps_link`
 - `maps_url`
+- `nameKu`
 - `name_en`
+- `name_ku`
 - `needs_review`
 - `normalized_address`
 - `normalized_facebook`
@@ -478,7 +482,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `name` → **Business Name** ✓
 - `name_en` → (unmapped)
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `city` → **City** ✓
 - `governorate` → **Governorate** ✓
 - `lat` → (unmapped)
@@ -497,6 +501,7 @@ Generated: 2026-04-06T08:08:47.629Z
 #### Unmapped Fields
 
 - `name_en`
+- `nameKu`
 - `lat`
 - `lng`
 - `_status`
@@ -732,10 +737,10 @@ Generated: 2026-04-06T08:08:47.629Z
 - `maps_url` → (unmapped)
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `name_en` → (unmapped)
 - `namear` → **Arabic Name** ✓
-- `nameku` → **English Name** ✓
+- `nameku` → (unmapped)
 - `needs_review` → (unmapped)
 - `normalized_address` → (unmapped)
 - `normalized_facebook` → (unmapped)
@@ -827,7 +832,9 @@ Generated: 2026-04-06T08:08:47.629Z
 - `main_email`
 - `main_phone`
 - `maps_url`
+- `nameKu`
 - `name_en`
+- `nameku`
 - `needs_review`
 - `normalized_address`
 - `normalized_facebook`
@@ -903,7 +910,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `name` → **Business Name** ✓
 - `name_ar` → **Arabic Name** ✓
 - `name_en` → (unmapped)
-- `name_ku` → **English Name** ✓
+- `name_ku` → (unmapped)
 - `needs_review` → (unmapped)
 - `normalized_address` → (unmapped)
 - `normalized_facebook` → (unmapped)
@@ -955,6 +962,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `maps_link`
 - `maps_url`
 - `name_en`
+- `name_ku`
 - `needs_review`
 - `normalized_address`
 - `normalized_facebook`
@@ -987,7 +995,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `id` → **ID** ✓
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `imageUrl` → (unmapped)
 - `coverImage` → (unmapped)
 - `isPremium` → (unmapped)
@@ -1020,7 +1028,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `descriptionAr` → (unmapped)
 - `descriptionKu` → (unmapped)
 - `namear` → **Arabic Name** ✓
-- `nameku` → **English Name** ✓
+- `nameku` → (unmapped)
 - `imageurl` → (unmapped)
 - `coverimage` → (unmapped)
 - `descriptionar` → (unmapped)
@@ -1030,6 +1038,7 @@ Generated: 2026-04-06T08:08:47.629Z
 
 #### Unmapped Fields
 
+- `nameKu`
 - `imageUrl`
 - `coverImage`
 - `isPremium`
@@ -1047,6 +1056,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `distance`
 - `descriptionAr`
 - `descriptionKu`
+- `nameku`
 - `imageurl`
 - `coverimage`
 - `descriptionar`
@@ -1084,7 +1094,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `subcategory` → **Subcategory** ✓
 - `type` → **Category** ✓
 - `name_ar` → **Arabic Name** ✓
-- `name_ku` → **English Name** ✓
+- `name_ku` → (unmapped)
 - `facebook` → **Facebook** ✓
 - `instagram` → **Instagram** ✓
 - `directions_link` → (unmapped)
@@ -1106,6 +1116,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `original_name`
 - `translated_name`
 - `created_at`
+- `name_ku`
 - `directions_link`
 - `data_quality`
 - `is_published`
@@ -1122,7 +1133,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `id` → **ID** ✓
 - `name` → **Business Name** ✓
 - `nameAr` → **Arabic Name** ✓
-- `nameKu` → **English Name** ✓
+- `nameKu` → (unmapped)
 - `imageUrl` → (unmapped)
 - `coverImage` → (unmapped)
 - `isPremium` → (unmapped)
@@ -1155,7 +1166,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `descriptionAr` → (unmapped)
 - `descriptionKu` → (unmapped)
 - `namear` → **Arabic Name** ✓
-- `nameku` → **English Name** ✓
+- `nameku` → (unmapped)
 - `imageurl` → (unmapped)
 - `coverimage` → (unmapped)
 - `descriptionar` → (unmapped)
@@ -1165,6 +1176,7 @@ Generated: 2026-04-06T08:08:47.629Z
 
 #### Unmapped Fields
 
+- `nameKu`
 - `imageUrl`
 - `coverImage`
 - `isPremium`
@@ -1182,6 +1194,7 @@ Generated: 2026-04-06T08:08:47.629Z
 - `distance`
 - `descriptionAr`
 - `descriptionKu`
+- `nameku`
 - `imageurl`
 - `coverimage`
 - `descriptionar`
