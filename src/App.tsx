@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import HomePage from '@/pages/HomePage';
 import Scraper from '@/pages/Scraper';
 import Review from '@/pages/Review';
+import MessagingDashboard from '@/pages/MessagingDashboard';
 import './styles/humus-design.css';
 
 export default function App() {
@@ -19,6 +20,9 @@ export default function App() {
         {/* Existing Scraper Pages */}
         <Route path="/scraper" element={<Scraper />} />
         <Route path="/review" element={<Review />} />
+
+        {/* Messaging Dashboard */}
+        <Route path="/messaging" element={<MessagingDashboard />} />
 
         {/* Catch-all 404 route */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -76,22 +76,28 @@ export function enrichBusiness(dbRecord: any): Business {
   };
 }
 
-// Helper function to fetch businesses
+// Helper function to fetch businesses with pagination
 export async function fetchBusinesses(filters?: {
   city?: string;
   governorate?: string;
   category?: string;
+  search?: string;
+  offset?: number;
   limit?: number;
   featured?: boolean;
 }) {
   try {
-    console.log('[fetchBusinesses] Starting fetch with filters:', filters);
+    const offset = filters?.offset ?? 0;
+    const limit = filters?.limit ?? 50; // Default page size
+    
+    console.log(`[fetchBusinesses] Starting fetch: offset=${offset}, limit=${limit}`, filters);
     
     let query = supabase
       .from('businesses')
-      .select('*')
+      .select('*', { count: 'exact' })  // Get total count for pagination
       .eq('status', 'active')
-      .order('confidence_score', { ascending: false });
+      .order('confidence_score', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (filters?.city) {
       query = query.ilike('city', `%${filters.city}%`);
@@ -102,68 +108,40 @@ export async function fetchBusinesses(filters?: {
     if (filters?.category) {
       query = query.ilike('category', `%${filters.category}%`);
     }
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-      console.log(`[fetchBusinesses] ⚠️ Applying limit: ${filters.limit}`);
+    if (filters?.search) {
+      query = query.ilike('business_name', `%${filters.search}%`);
     }
 
-    const { data, error } = await query;
+    const { data, error, count } = await query;
     
     if (error) {
       console.error('[fetchBusinesses] Database error:', error);
       throw error;
     }
     
-    console.log(`[fetchBusinesses] ✅ Raw rows fetched: ${data?.length || 0}`);
-    
-    // 🔍 AUDIT: Log raw data before transformation
-    if (data && data.length > 0) {
-      console.log('[fetchBusinesses] 📊 Raw sample (first row):', {
-        id: data[0].id,
-        name: data[0].business_name,
-        governorate: data[0].governorate,
-        category: data[0].category,
-        hasArabicName: !!data[0].arabic_name,
-        hasPhone: !!data[0].phone_1,
-        confidence: data[0].confidence_score
-      });
-      
-      // Check for null values that might cause issues
-      const nullChecks = {
-        noName: data.filter(r => !r.business_name).length,
-        noGovernorate: data.filter(r => !r.governorate).length,
-        noCategory: data.filter(r => !r.category).length,
-        noConfidence: data.filter(r => r.confidence_score === null || r.confidence_score === undefined).length
-      };
-      
-      if (nullChecks.noName > 0 || nullChecks.noGovernorate > 0 || nullChecks.noCategory > 0) {
-        console.warn('[fetchBusinesses] ⚠️ Rows with null values:', nullChecks);
-      }
-    }
+    console.log(`[fetchBusinesses] ✅ Rows fetched: ${data?.length || 0} (total available: ${count || 'unknown'})`);
     
     // Enrich with frontend-only fields
     const enriched = (data || []).map((record, index) => {
-      const enrichedRecord = enrichBusiness(record);
-      
-      // 🔍 AUDIT: Log any enrichment that drops data
-      if (!enrichedRecord.business_name && record.business_name) {
-        console.warn(`[fetchBusinesses] Row ${index}: Lost business_name during enrichment`);
-      }
-      
-      return enrichedRecord;
+      return enrichBusiness(record);
     });
     
-    console.log(`[fetchBusinesses] ✅ Rows after enrichment: ${enriched.length}`);
-    
-    // Filter featured if requested
+    // Filter featured if requested (after fetch since isFeatured is computed)
     if (filters?.featured) {
-      const beforeFilter = enriched.length;
       const featured = enriched.filter(b => b.isFeatured);
-      console.log(`[fetchBusinesses] Featured filter: ${beforeFilter} → ${featured.length} rows`);
-      return featured;
+      console.log(`[fetchBusinesses] Featured filter: ${enriched.length} → ${featured.length} rows`);
+      return {
+        businesses: featured,
+        totalCount: count || 0,
+        hasMore: (offset + data!.length) < (count || 0)
+      };
     }
     
-    return enriched;
+    return {
+      businesses: enriched,
+      totalCount: count || 0,
+      hasMore: (offset + (data?.length || 0)) < (count || 0)
+    };
   } catch (error) {
     console.error('[fetchBusinesses] Failed:', error);
     throw error;
@@ -193,28 +171,16 @@ export async function fetchBusinessById(id: string) {
   }
 }
 
-// Helper to search businesses by name
-export async function searchBusinesses(query: string, limit: number = 10) {
-  try {
-    console.log('[searchBusinesses] Searching:', query);
-    
-    const { data, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('status', 'active')
-      .ilike('business_name', `%${query}%`)
-      .limit(limit);
-      
-    if (error) {
-      console.error('[searchBusinesses] Database error:', error);
-      throw error;
-    }
-    
-    return (data || []).map(enrichBusiness);
-  } catch (error) {
-    console.error('[searchBusinesses] Failed:', error);
-    throw error;
-  }
+// Helper to search businesses by name - now uses fetchBusinesses with pagination
+export async function searchBusinesses(query: string, options?: { offset?: number; limit?: number }) {
+  const offset = options?.offset ?? 0;
+  const limit = options?.limit ?? 20; // Remove hardcoded 10, default to 20
+  
+  return fetchBusinesses({
+    search: query,
+    offset,
+    limit
+  });
 }
 
 // Categories for the UI

@@ -1,14 +1,27 @@
-import React from 'react';
 import { motion } from 'motion/react';
-import { Star, MapPin } from 'lucide-react';
-import { Business } from '@/lib/supabase';
+import { Loader2, ChevronDown } from 'lucide-react';
+import type { Business } from '@/lib/supabase';
+import BusinessCard from './BusinessCard';
 
 interface BusinessGridProps {
   businesses: Business[];
   loading?: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  totalCount?: number;
+  onBusinessClick?: (business: Business) => void;
 }
 
-export default function BusinessGrid({ businesses, loading }: BusinessGridProps) {
+export default function BusinessGrid({ 
+  businesses, 
+  loading, 
+  loadingMore, 
+  hasMore, 
+  onLoadMore,
+  totalCount = 0,
+  onBusinessClick
+}: BusinessGridProps) {
   if (loading) return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4">
       {[...Array(8)].map((_, i) => (
@@ -18,48 +31,78 @@ export default function BusinessGrid({ businesses, loading }: BusinessGridProps)
   );
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 mb-12">
-      {businesses.map((biz) => (
-        <motion.div
-          key={biz.id}
-          whileHover={{ scale: 1.02 }}
-          className="bg-white rounded-[16px] overflow-hidden shadow-[0_6px_18px_rgba(0,0,0,0.08)] border border-[#E5E7EB] flex flex-col group cursor-pointer"
-        >
-          {/* Image Section (60%) */}
-          <div className="relative aspect-[4/3] overflow-hidden">
-            <img 
-              src={biz.image} 
-              alt={biz.business_name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              referrerPolicy="no-referrer"
-            />
-            
-            {/* Overlays */}
-            <div className="absolute top-2 left-2">
-              <span className="px-2 py-0.5 bg-[#2CA6A4] text-white text-[8px] font-bold rounded-md shadow-sm uppercase tracking-wider">
-                {biz.category.split('_')[0]}
-              </span>
-            </div>
-            <div className="absolute top-2 right-2">
-              <div className="flex items-center gap-0.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-md shadow-sm">
-                <Star className="w-2.5 h-2.5 text-[#E87A41] fill-[#E87A41]" />
-                <span className="text-[9px] font-bold text-[#2B2F33]">{biz.rating}</span>
-              </div>
-            </div>
-          </div>
+    <div className="px-4 mb-12">
+      {/* Stats bar */}
+      {!loading && businesses.length > 0 && (
+        <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
+          <span>
+            Showing <strong className="text-gray-900">{businesses.length}</strong> of{' '}
+            <strong className="text-gray-900">{totalCount}</strong> businesses
+          </span>
+          {hasMore && (
+            <span className="text-xs text-gray-400">
+              {Math.round((businesses.length / totalCount) * 100)}% loaded
+            </span>
+          )}
+        </div>
+      )}
 
-          {/* Info Section */}
-          <div className="p-3 flex flex-col justify-between flex-1">
-            <h3 className="text-sm font-bold text-[#2B2F33] mb-1 line-clamp-1 poppins-semibold">
-              {biz.business_name}
-            </h3>
-            <div className="flex items-center gap-1 text-[#6B7280] text-[10px]">
-              <MapPin className="w-2.5 h-2.5" />
-              <span className="line-clamp-1">{biz.city}</span>
-            </div>
-          </div>
-        </motion.div>
-      ))}
+      {/* Grid with new BusinessCard */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {businesses.map((biz, index) => (
+          <motion.div
+            key={biz.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: Math.min(index * 0.02, 0.5) }}
+          >
+            <BusinessCard 
+              business={biz} 
+              variant="compact"
+              onClick={() => onBusinessClick?.(biz)}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-full shadow-sm hover:shadow-md hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+                <span className="text-sm font-medium text-gray-500">Loading...</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  Load More ({businesses.length} / {totalCount})
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* End of list indicator */}
+      {!hasMore && businesses.length > 0 && !loading && (
+        <div className="text-center mt-8 text-sm text-gray-500">
+          <p>✨ All {businesses.length} businesses loaded</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && businesses.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No businesses found</p>
+        </div>
+      )}
     </div>
   );
 }

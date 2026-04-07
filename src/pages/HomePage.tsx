@@ -1,73 +1,120 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, User, PlusCircle } from "lucide-react";
 import HeroSection from "@/components/home/HeroSection";
 import LocationFilter from "@/components/home/LocationFilter";
 import StoryRow from "@/components/home/StoryRow";
 import CategoryGrid from "@/components/home/CategoryGrid";
-import TrendingSection from "@/components/home/TrendingSection";
 import BusinessGrid from "@/components/home/BusinessGrid";
-import FeedComponent from "@/components/home/FeedComponent";
+import FeaturedBusinesses from "@/components/home/FeaturedBusinesses";
+import DiscoverySection from "@/components/home/DiscoverySection";
+import PlatformReviews from "@/components/home/PlatformReviews";
+import BusinessDetails from "@/components/home/BusinessDetails";
 import { useHomeStore } from "@/stores/homeStore";
 import { fetchBusinesses, type Business } from "@/lib/supabase";
 
 export default function HomePage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const hasMore = businesses.length < totalCount;
+  
   const { selectedGovernorate, selectedCategory, selectedCity } = useHomeStore();
+  const PAGE_SIZE = 50;
 
+  // Reset and fetch first page when filters change
   useEffect(() => {
-    const loadBusinesses = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        console.log('[HomePage] Fetching businesses with filters:', {
-          governorate: selectedGovernorate,
-          city: selectedCity,
-          category: selectedCategory
-        });
-        
-        // 🔍 AUDIT: Log before fetch
-        console.log('[HomePage] ⏳ Starting fetch from Supabase...');
-        
-        const data = await fetchBusinesses({
-          governorate: selectedGovernorate || undefined,
-          city: selectedCity || undefined,
-          category: selectedCategory || undefined,
-          // ❌ REMOVED: limit: 100 - This was hiding ~1,700 rows!
-        });
-        
-        // 🔍 AUDIT: Log detailed results
-        console.log(`[HomePage] ✅ Loaded ${data.length} businesses`);
-        console.log('[HomePage] 📊 Sample data (first 3):', data.slice(0, 3).map(b => ({ 
-          id: b.id, 
-          name: b.business_name,
-          governorate: b.governorate,
-          category: b.category,
-          confidence: b.confidence_score 
-        })));
-        
-        // 🔍 AUDIT: Check if we're missing expected data
-        if (data.length < 100) {
-          console.warn(`[HomePage] ⚠️ Only ${data.length} businesses returned - expected ~1,800`);
-        } else if (data.length === 100) {
-          console.warn('[HomePage] 🚨 Exactly 100 businesses returned - check if limit(100) is still applied');
-        } else {
-          console.log(`[HomePage] ✅ Good: ${data.length} businesses loaded (no hard limit)`);
-        }
-        
-        setBusinesses(data);
-      } catch (err) {
-        console.error('[HomePage] Failed to load businesses:', err);
-        setError('Failed to load businesses. Please try again.');
-        setBusinesses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadBusinesses();
+    setBusinesses([]);
+    setCurrentPage(0);
+    setTotalCount(0);
+    loadBusinesses(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGovernorate, selectedCategory, selectedCity]);
+
+  const loadBusinesses = useCallback(async (isInitial: boolean = false) => {
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    setError(null);
+    
+    try {
+      const offset = isInitial ? 0 : currentPage * PAGE_SIZE;
+      
+      console.log(`[HomePage] Fetching page: offset=${offset}, limit=${PAGE_SIZE}`, {
+        governorate: selectedGovernorate,
+        city: selectedCity,
+        category: selectedCategory,
+        currentLoaded: businesses.length,
+        totalKnown: totalCount
+      });
+      
+      const result = await fetchBusinesses({
+        governorate: selectedGovernorate || undefined,
+        city: selectedCity || undefined,
+        category: selectedCategory || undefined,
+        offset,
+        limit: PAGE_SIZE,
+      });
+      
+      console.log(`[HomePage] ✅ Fetched ${result.businesses.length} rows (total in DB: ${result.totalCount}, hasMore: ${result.hasMore})`);
+      
+      if (isInitial) {
+        setBusinesses(result.businesses);
+        console.log(`[HomePage] 📊 Initial load: ${result.businesses.length} businesses`);
+      } else {
+        setBusinesses(prev => {
+          const combined = [...prev, ...result.businesses];
+          console.log(`[HomePage] 📊 Load more: ${prev.length} + ${result.businesses.length} = ${combined.length} total`);
+          return combined;
+        });
+      }
+      
+      setTotalCount(result.totalCount);
+      
+      if (!isInitial) {
+        setCurrentPage(prev => prev + 1);
+      }
+      
+      // 🔍 AUDIT: Progress check
+      const loadedCount = isInitial ? result.businesses.length : businesses.length + result.businesses.length;
+      const percent = result.totalCount > 0 ? Math.round((loadedCount / result.totalCount) * 100) : 0;
+      console.log(`[HomePage] 📈 Progress: ${loadedCount}/${result.totalCount} (${percent}%)`);
+      
+    } catch (err) {
+      console.error('[HomePage] Failed to load businesses:', err);
+      setError('Failed to load businesses. Please try again.');
+      if (isInitial) {
+        setBusinesses([]);
+      }
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [currentPage, selectedGovernorate, selectedCategory, selectedCity, PAGE_SIZE, businesses.length, totalCount]);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      loadBusinesses(false);
+    }
+  }, [loadingMore, hasMore, loadBusinesses]);
+
+  // State for business details modal
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const handleBusinessClick = useCallback((business: Business) => {
+    setSelectedBusiness(business);
+    setIsDetailsOpen(true);
+  }, []);
+
+  const handleCloseDetails = useCallback(() => {
+    setIsDetailsOpen(false);
+    setSelectedBusiness(null);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F5F7F9]">
@@ -120,7 +167,7 @@ export default function HomePage() {
         )}
 
         {/* HERO / FEATURED CAROUSEL */}
-        <HeroSection businesses={businesses} />
+        <HeroSection businesses={businesses} onBusinessClick={handleBusinessClick} />
 
         {/* Governorate & City Filters */}
         <LocationFilter />
@@ -132,16 +179,44 @@ export default function HomePage() {
           {/* CATEGORY GRID */}
           <CategoryGrid />
 
-          {/* FEATURED BUSINESSES (Vertical Cards) */}
-          <TrendingSection businesses={businesses} loading={loading} />
+          {/* FEATURED BUSINESSES - Horizontal Carousel */}
+          <FeaturedBusinesses 
+            businesses={businesses} 
+            locationName={selectedCity || selectedGovernorate || undefined}
+            onBusinessClick={handleBusinessClick}
+          />
+
+          {/* DISCOVERY SECTION - Recently Added & Trending */}
+          <DiscoverySection 
+            businesses={businesses}
+            onBusinessClick={handleBusinessClick}
+          />
+
+          {/* PLATFORM REVIEWS */}
+          <PlatformReviews />
 
           {/* MAIN BUSINESS GRID (Compact Cards) */}
           <div className="px-4 mb-4 mt-12">
-            <h2 className="text-xl font-bold text-[#2B2F33] poppins-bold">Explore Businesses</h2>
-            <p className="text-sm text-[#6B7280]">Discover top-rated places in your area</p>
+            <h2 className="text-xl font-bold text-gray-900">Explore All Businesses</h2>
+            <p className="text-sm text-gray-500">Discover more places in your area</p>
           </div>
-          <BusinessGrid businesses={businesses} loading={loading} />
+          <BusinessGrid 
+            businesses={businesses} 
+            loading={loading} 
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            onLoadMore={handleLoadMore}
+            totalCount={totalCount}
+            onBusinessClick={handleBusinessClick}
+          />
         </div>
+
+        {/* BUSINESS DETAILS MODAL */}
+        <BusinessDetails 
+          business={selectedBusiness}
+          isOpen={isDetailsOpen}
+          onClose={handleCloseDetails}
+        />
       </main>
 
       {/* Footer */}
